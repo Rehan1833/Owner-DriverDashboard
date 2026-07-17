@@ -1,0 +1,103 @@
+:root {
+  --color-bg: #F5F7FB;
+  --color-card: #FFFFFF;
+  --color-sidebar: #0B1C30;
+  --color-navbar: #FFFFFF;
+  --color-surface-container: #EFF4FF;
+  --color-surface-low: #F5F7FB;
+  --color-surface-highest: #EFF4FF;
+  --color-surface-dim: #EFF4FF;
+
+  --color-primary: #006A6A;
+  --color-primary-container: #008B8B;
+  --color-primary-fixed: #7DF5F5;
+  --color-primary-fixed-dim: #7DF5F5;
+  --color-on-primary-container: #0B1C30;
+
+  --color-secondary: #344054;
+  --color-secondary-container: #EFF4FF;
+  --color-secondary-fixed-dim: #EFF4FF;
+
+  --color-tertiary: #14B8A6;
+  --color-tertiary-container: #14B8A6;
+
+  --color-text-primary: #0B1C30;
+  --color-text-secondary: #344054;
+  --color-text-muted: #667085;
+  --color-text-disabled: #98A2B3;
+
+  --color-outline: #344054;
+  --color-border: rgba(11, 28, 48, 0.08);
+
+  --color-success: #10B981;
+  --color-success-container: #DCFCE7;
+
+  --color-warning: #F59E0B;
+  --color-warning-container: #FEF3C7;
+
+  --color-info: #0284C7;
+  --color-info-container: #E0F2FE;
+
+  --color-danger: #EF4444;
+  --color-danger-container: #FFDAD4;
+
+  /* Dashboard Custom chart variables */
+  --color-revenue: #10B981;
+  --color-inventory: #006A6A;
+  --color-fleet: #0284C7;
+  --color-attendance: #8B5CF6;
+  --color-salary: #F59E0B;
+  --color-notifications: #EF4444;
+}
+
+.dark {
+  --color-bg: #0B1220;
+  --color-card: #1E293B;
+  --color-sidebar: #0B1C30; /* Keep sidebar dark navy as requested */
+  --color-navbar: #111827;
+  --color-surface-container: #111827;
+  --color-surface-low: #151F32;
+  --color-surface-highest: #2D3748;
+  --color-surface-dim: #1F2937;
+
+  --color-primary: #14B8A6;
+  --color-primary-container: #006A6A;
+  --color-primary-fixed: #7DF5F5;
+  --color-primary-fixed-dim: #7DF5F5;
+  --color-on-primary-container: #0B1C30;
+
+  --color-secondary: #BCC7DE;
+  --color-secondary-container: #3B4758;
+  --color-secondary-fixed-dim: #545F73;
+
+  --color-tertiary: #14B8A6;
+  --color-tertiary-container: #00687A;
+
+  --color-text-primary: #E5EEFF;
+  --color-text-secondary: #BCC7DE;
+  --color-text-muted: #8E9E9D;
+  --color-text-disabled: #4A5756;
+
+  --color-outline: #8E9E9D;
+  --color-border: rgba(255, 255, 255, 0.08);
+
+  --color-success: #10B981;
+  --color-success-container: #14532D;
+
+  --color-warning: #F59E0B;
+  --color-warning-container: #78350F;
+
+  --color-info: #38BDF8;
+  --color-info-container: #0369A1;
+
+  --color-danger: #EF4444;
+  --color-danger-container: #7A1C1C;
+
+  /* Dashboard Custom chart variables */
+  --color-revenue: #10B981;
+  --color-inventory: #006A6A;
+  --color-fleet: #38BDF8;
+  --color-attendance: #8B5CF6;
+  --color-salary: #FBBF24;
+  --color-notifications: #EF4444;
+}
