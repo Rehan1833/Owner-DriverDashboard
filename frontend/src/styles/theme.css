@@ -150,3 +150,44 @@ input:-webkit-autofill:focus {
 .signature-canvas {
   touch-action: none;
 }
+
+/* Forms inputs restyling - premium inputs, rounded-xl, soft focus glow */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+select,
+textarea {
+  height: 48px;
+  border-radius: 12px !important;
+  border: 1px solid var(--color-border) !important;
+  background-color: var(--color-card) !important;
+  color: var(--color-text-primary) !important;
+  padding: 0 16px !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 1px 2px 0 rgba(11, 28, 48, 0.02) !important;
+  transition: border-color 200ms ease, box-shadow 200ms ease !important;
+}
+
+textarea {
+  height: auto !important;
+  padding: 12px 16px !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 4px rgba(0, 106, 106, 0.12), 0 1px 2px 0 rgba(11, 28, 48, 0.02) !important;
+}
+
+/* Checkboxes & Switches */
+input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 4px !important;
+  accent-color: var(--color-primary) !important;
+}
