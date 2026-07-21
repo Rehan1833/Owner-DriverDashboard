@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -40,7 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
           items: [
             { name: 'Dashboard', path: '/driver', icon: LayoutDashboard },
             { name: 'My Trips', path: '/driver/trips', icon: Truck },
-            { name: 'Active Trip', path: '/driver/gps', icon: Activity },
+            { name: 'Active Trip', path: '/driver/active-trip', icon: Activity },
             { name: 'Proof of Delivery', path: '/driver/pod', icon: FileText },
           ],
         },
@@ -63,6 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
             { name: 'Fleet Tracker', path: '/owner/fleet', icon: Truck },
             { name: 'Attendance Status', path: '/owner/attendance', icon: Users },
             { name: 'Workers Directory', path: '/owner/workers', icon: Users },
+            { name: 'Proof of Delivery', path: '/owner/pod', icon: FileText },
           ],
         },
         {
@@ -98,28 +99,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
   return (
     <motion.aside
       animate={{ width: isCollapsed ? 80 : 280 }}
-      transition={{ type: 'spring', damping: 24, stiffness: 220 }}
-      className="hidden md:flex flex-col h-screen sticky top-0 bg-sidebar text-slate-300 dark:text-slate-400 border-r border-white/5 z-20 overflow-hidden shrink-0 shadow-2xl"
+      transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+      className="hidden md:flex flex-col h-screen sticky top-0 bg-white dark:bg-[#111827] text-[#545F73] dark:text-[#CBD5E1] border-r border-[#E5EEFF] dark:border-[#334155] z-20 overflow-hidden shrink-0 shadow-sm"
     >
       {/* Brand Header */}
-      <div className="flex items-center justify-between h-16 px-5 border-b border-white/5 shrink-0">
+      <div className="flex items-center justify-between h-20 px-6 shrink-0 border-b border-[#E5EEFF]/80 dark:border-[#334155]/60">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-600 to-aqua flex items-center justify-center shadow-lg shadow-teal-500/20" style={{ background: 'linear-gradient(135deg, #006A6A 0%, #00A3A3 100%)' }}>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#006A6A] to-[#00A3A3] flex items-center justify-center shadow-md shadow-teal-500/10">
             <ShieldCheck className="h-5 w-5 text-white" />
           </div>
           {!isCollapsed && (
             <motion.span
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              className="font-black text-base text-white tracking-wide"
+              className="font-black text-lg text-[#0B1C30] dark:text-white tracking-tight"
             >
-              Smart<span className="text-teal-400">Ops</span>
+              Smart<span className="text-[#006A6A] dark:text-[#7DF5F5]">Ops</span>
             </motion.span>
           )}
         </div>
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
+          className="p-1.5 rounded-lg hover:bg-[#EFF4FF] dark:hover:bg-slate-800/40 text-slate-400 dark:text-[#6D7A79] hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
         >
           {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
@@ -128,12 +129,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
       {/* Navigation Links */}
       <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
         {sections.map((section, sIdx) => (
-          <div key={sIdx} className="space-y-1.5">
+          <div key={sIdx} className="space-y-2">
             {!isCollapsed && (
               <motion.span
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block pl-3"
+                className="text-[10px] font-bold text-[#6D7A79] dark:text-[#94A3B8] uppercase tracking-widest block pl-3"
               >
                 {section.title}
               </motion.span>
@@ -147,21 +148,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
                   <Link
                     key={idx}
                     to={item.path}
-                    className={`relative flex items-center gap-3 px-3 py-2 text-xs font-bold rounded-xl transition-all duration-150 group cursor-pointer ${
+                    className={`relative flex items-center gap-3.5 px-3.5 py-2.5 text-xs font-bold rounded-xl transition-all duration-200 group cursor-pointer ${
                       isActive
-                        ? 'text-white bg-primary shadow-md shadow-primary/10 pl-4'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        ? 'text-white bg-[#006A6A] dark:bg-[#006A6A] dark:text-white shadow-md shadow-[#006A6A]/10 pl-5'
+                        : 'text-[#545F73] hover:text-[#0B1C30] hover:bg-[#EFF4FF]/60 dark:text-[#CBD5E1] dark:hover:text-white dark:hover:bg-white/5'
                     }`}
                   >
                     {isActive && (
-                      <span className="absolute left-0 top-2 bottom-2 w-1 bg-accent rounded-r-full shadow-[0_0_8px_#14B8A6]" />
+                      <span className="absolute left-0 top-2.5 bottom-2.5 w-1 bg-[#00A3A3] dark:bg-[#7DF5F5] rounded-r-full shadow-[0_0_8px_#00A3A3]" />
                     )}
-                    <Icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-white' : 'text-slate-450 group-hover:text-white'}`} />
+                    <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-[#545F73] group-hover:text-[#0B1C30] dark:text-[#CBD5E1] dark:group-hover:text-white transition-colors'}`} />
                     {!isCollapsed && (
                       <motion.span
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="truncate"
+                        className="whitespace-normal break-words leading-tight"
                       >
                         {item.name}
                       </motion.span>
@@ -175,12 +176,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
       </nav>
 
       {/* Footer Profile Details */}
-      <div className="p-4 border-t border-white/5 bg-black/10 shrink-0">
-        <div className="flex items-center gap-3 overflow-hidden p-1.5 rounded-xl hover:bg-slate-800">
+      <div className="p-4 bg-[#F8F9FF] dark:bg-[#0F172A]/50 border-t border-[#E5EEFF] dark:border-[#334155] shrink-0">
+        <div className="flex items-center gap-3 overflow-hidden p-2 rounded-xl hover:bg-[#EFF4FF] dark:hover:bg-slate-800/40 transition-colors">
           <img
-            src={user?.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=Harsh'}
+            src={user?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.fullName || 'SmartOps'}&backgroundColor=006A6A`}
             alt="Avatar"
-            className="w-9 h-9 rounded-full bg-slate-800 shrink-0 border border-slate-700"
+            className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0 border border-[#E5EEFF] dark:border-[#334155]"
           />
           {!isCollapsed && (
             <motion.div
@@ -188,16 +189,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
               animate={{ opacity: 1 }}
               className="flex-1 min-w-0 text-left"
             >
-              <p className="text-xs font-bold text-white truncate">{user?.fullName || 'Owner User'}</p>
-              <p className="text-[9px] font-bold text-slate-500 truncate">{user?.role || 'Executive'}</p>
+              <p className="text-xs font-bold text-[#0B1C30] dark:text-[#F8FAFC] whitespace-normal break-words leading-tight">{user?.fullName || 'Owner User'}</p>
+              <p className="text-[10px] font-bold text-[#6D7A79] dark:text-[#94A3B8] whitespace-normal break-words leading-tight">{user?.role || 'Executive'}</p>
             </motion.div>
           )}
         </div>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2 mt-2.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all font-bold group cursor-pointer"
+          className="flex items-center gap-3 w-full px-3.5 py-2.5 mt-3 text-xs text-[#BA1A1A] hover:text-[#BA1A1A] hover:bg-[#FFDAD4]/50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-500/10 rounded-xl transition-all font-bold group cursor-pointer"
         >
-          <LogOut className="h-4.5 w-4.5 shrink-0 text-red-400 group-hover:text-red-350" />
+          <LogOut className="h-4 w-4 shrink-0 text-[#BA1A1A] dark:text-red-400 group-hover:opacity-80" />
           {!isCollapsed && (
             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               Logout
@@ -208,3 +209,5 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
     </motion.aside>
   );
 };
+
+

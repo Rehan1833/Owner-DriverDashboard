@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { ChevronDown, ChevronUp, Search, Download } from 'lucide-react';
 import { Button } from '../ui/Button';
 
@@ -125,13 +125,13 @@ export function Table<T extends { id: string | number }>({
   };
 
   return (
-    <div className="flex flex-col h-full glass-panel shadow-sm overflow-hidden">
+    <div className="flex flex-col h-full bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-[18px] shadow-sm overflow-hidden animate-fade-in">
       {/* Table Header Controls */}
-      <div className="flex flex-col sm:flex-row items-center justify-between p-5 gap-4 border-b border-gray-100 dark:border-slate-800 bg-transparent">
+      <div className="flex flex-col sm:flex-row items-center justify-between p-6 gap-4 border-b border-[#E5EEFF] dark:border-[#334155] bg-transparent">
         {searchKey ? (
           <div className="relative w-full sm:max-w-xs">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Search className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+              <Search className="h-4 w-4 text-[#6D7A79] dark:text-[#94A3B8]" />
             </span>
             <input
               type="text"
@@ -141,14 +141,14 @@ export function Table<T extends { id: string | number }>({
                 setCurrentPage(1);
               }}
               placeholder={searchPlaceholder}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-slate-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-200 transition-all placeholder-gray-400 dark:placeholder-slate-500"
+              className="w-full pl-10 pr-4 h-11 text-xs border border-[#E5EEFF] dark:border-[#334155] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] bg-[#EFF4FF] dark:bg-[#111827] text-[#0B1C30] dark:text-[#F8FAFC] transition-all placeholder-slate-400 font-medium shadow-sm"
             />
           </div>
         ) : (
           <div />
         )}
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <Button variant="outline" size="sm" onClick={handleExport} className="flex items-center gap-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-55 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300">
+        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+          <Button variant="secondary" size="sm" onClick={handleExport} className="flex items-center gap-2 border border-[#E5EEFF] dark:border-[#334155] shadow-sm hover:shadow text-[#545F73] dark:text-[#CBD5E1]">
             <Download className="h-4 w-4" />
             Export CSV
           </Button>
@@ -158,32 +158,32 @@ export function Table<T extends { id: string | number }>({
       {/* Main Table */}
       <div className="overflow-x-auto flex-1 min-h-[300px]">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-slate-50/75 dark:bg-slate-800/40 border-b border-gray-100 dark:border-slate-800 sticky top-0 backdrop-blur-md z-10">
+          <thead className="bg-[#EFF4FF] dark:bg-[#111827] border-b border-[#E5EEFF] dark:border-[#334155] sticky top-0 backdrop-blur-md z-10">
             <tr>
               {columns.map((col, idx) => (
                 <th
                   key={idx}
                   onClick={() => handleSort(col.sortKey)}
-                  className={`px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 select-none ${
-                    col.sortKey ? 'cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/55 hover:text-slate-800 dark:hover:text-slate-200' : ''
+                  className={`px-6 py-4 text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] select-none ${
+                    col.sortKey ? 'cursor-pointer hover:bg-[#E5EEFF]/55 dark:hover:bg-[#1E293B]/55 hover:text-[#0B1C30] dark:hover:text-white' : ''
                   } ${col.className || ''}`}
                 >
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     {col.header}
                     {col.sortKey && col.sortKey === sortKey && (
-                      sortDirection === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
+                      sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 text-[#006A6A] dark:text-[#7DF5F5]" /> : <ChevronDown className="h-4 w-4 text-[#006A6A] dark:text-[#7DF5F5]" />
                     )}
                   </div>
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50 dark:divide-slate-800/80">
+          <tbody className="divide-y divide-[#E5EEFF] dark:divide-[#334155]">
             {paginatedData.length > 0 ? (
               paginatedData.map((row, rIdx) => (
-                <tr key={row.id || rIdx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                <tr key={row.id || rIdx} className="hover:bg-[#EFF4FF]/40 dark:hover:bg-[#111827]/40 transition-colors">
                   {columns.map((col, cIdx) => (
-                    <td key={cIdx} className={`px-6 py-4.5 text-sm text-slate-600 dark:text-slate-300 ${col.className || ''}`}>
+                    <td key={cIdx} className={`px-6 py-4.5 text-[15px] font-medium text-[#0B1C30] dark:text-[#F8FAFC] ${col.className || ''}`}>
                       {typeof col.accessor === 'function'
                         ? col.accessor(row)
                         : (row[col.accessor] as React.ReactNode)}
@@ -193,7 +193,7 @@ export function Table<T extends { id: string | number }>({
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="px-6 py-12 text-center text-sm text-slate-400 dark:text-slate-500">
+                <td colSpan={columns.length} className="px-6 py-12 text-center text-[15px] text-[#6D7A79] dark:text-[#94A3B8]">
                   No matching records found.
                 </td>
               </tr>
@@ -204,13 +204,13 @@ export function Table<T extends { id: string | number }>({
 
       {/* Table Footer / Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 dark:border-slate-800/80 bg-transparent">
-          <div className="text-xs text-slate-500 dark:text-slate-400">
-            Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
-            <span className="font-semibold text-slate-700 dark:text-slate-200">
+        <div className="flex items-center justify-between px-6 py-5 border-t border-[#E5EEFF] dark:border-[#334155] bg-transparent">
+          <div className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] font-medium">
+            Showing <span className="font-semibold text-[#0B1C30] dark:text-[#F8FAFC]">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+            <span className="font-semibold text-[#0B1C30] dark:text-[#F8FAFC]">
               {Math.min(currentPage * itemsPerPage, sortedData.length)}
             </span>{' '}
-            of <span className="font-semibold text-slate-700 dark:text-slate-200">{sortedData.length}</span> results
+            of <span className="font-semibold text-[#0B1C30] dark:text-[#F8FAFC]">{sortedData.length}</span> results
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -218,7 +218,7 @@ export function Table<T extends { id: string | number }>({
               size="sm"
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+              className="border border-[#E5EEFF] dark:border-[#334155] bg-white hover:bg-[#F8F9FF] text-[#545F73] dark:text-[#CBD5E1] rounded-xl"
             >
               Previous
             </Button>
@@ -227,8 +227,10 @@ export function Table<T extends { id: string | number }>({
                 key={index}
                 variant={currentPage === index + 1 ? 'primary' : 'outline'}
                 size="sm"
-                className={`w-8 h-8 p-0 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 ${
-                  currentPage === index + 1 ? 'bg-primary dark:bg-blue-600 text-white' : 'text-slate-705 dark:text-slate-300'
+                className={`w-9 h-9 p-0 border border-[#E5EEFF] dark:border-[#334155] rounded-xl ${
+                  currentPage === index + 1 
+                    ? 'bg-gradient-to-r from-[#006A6A] to-[#00A3A3] text-white shadow-md shadow-[#006A6A]/10' 
+                    : 'text-[#545F73] dark:text-[#CBD5E1] bg-white hover:bg-[#F8F9FF]'
                 }`}
                 onClick={() => setCurrentPage(index + 1)}
               >
@@ -240,7 +242,7 @@ export function Table<T extends { id: string | number }>({
               size="sm"
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              className="border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+              className="border border-[#E5EEFF] dark:border-[#334155] bg-white hover:bg-[#F8F9FF] text-[#545F73] dark:text-[#CBD5E1] rounded-xl"
             >
               Next
             </Button>
@@ -250,3 +252,4 @@ export function Table<T extends { id: string | number }>({
     </div>
   );
 }
+

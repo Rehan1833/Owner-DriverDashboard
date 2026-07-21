@@ -1,49 +1,61 @@
-/* Card design mappings - 18px border radius, solid backgrounds, soft shadows, hover lift */
+/* ================================================================
+   SmartOps Enterprise — Theme Overrides
+   Premium card design, form styling, button effects, status pills
+   ================================================================ */
+
+/* ── Card Design — frosted glass, rounded-2xl, soft elevation ── */
 main .bg-white.rounded-3xl,
+main .bg-white.rounded-2xl,
 main .glass-panel,
 .glass-panel {
-  background: var(--color-card) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
   border: 1px solid var(--color-border) !important;
   border-radius: 18px !important;
-  box-shadow: 0 4px 12px 0 rgba(11, 28, 48, 0.02), 0 1px 3px 0 rgba(11, 28, 48, 0.01) !important;
-  transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1), border-color 250ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 1px 3px 0 rgba(11, 28, 48, 0.03), 0 4px 12px -4px rgba(11, 28, 48, 0.04) !important;
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1), border-color 280ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 main .bg-white.rounded-3xl:hover,
+main .bg-white.rounded-2xl:hover,
 main .glass-panel:hover,
 .glass-panel:hover {
-  transform: translateY(-4px) !important;
-  box-shadow: 0 12px 24px -4px rgba(11, 28, 48, 0.05), 0 8px 16px -6px rgba(11, 28, 48, 0.03) !important;
-  border-color: rgba(0, 106, 106, 0.15) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 24px -4px rgba(0, 106, 106, 0.08), 0 4px 12px -4px rgba(11, 28, 48, 0.04) !important;
+  border-color: rgba(0, 106, 106, 0.18) !important;
 }
 
-.dark main .dark\:bg-slate-900.rounded-3xl {
-  background: var(--color-card) !important;
-  border: 1px solid var(--color-border) !important;
+/* Dark mode cards */
+.dark main .dark\:bg-slate-900.rounded-3xl,
+.dark main .dark\:bg-slate-900.rounded-2xl,
+.dark main .dark\:bg-\[1E293B\].rounded-2xl {
+  background: rgba(30, 41, 59, 0.78) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1px solid #334155 !important;
   border-radius: 18px !important;
-  box-shadow: 0 8px 30px -10px rgba(0, 0, 0, 0.35) !important;
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Floating table container - rounded 20px */
+/* ── Tables — floating container ── */
 .floating-table-container,
 main table,
 main .overflow-x-auto {
-  border-radius: 20px !important;
+  border-radius: 18px !important;
   border: 1px solid var(--color-border) !important;
 }
 
-/* Primary Button - Teal Gradient */
+/* ── Primary Button — Teal Gradient ── */
 .btn-primary,
 button.bg-primary,
 button.bg-teal-600 {
-  background: linear-gradient(135deg, #006A6A 0%, #008B8B 100%) !important;
+  background: linear-gradient(135deg, #006A6A 0%, #00A3A3 100%) !important;
   border: none !important;
   color: #FFFFFF !important;
   font-weight: 600 !important;
-  border-radius: 12px !important; /* rounded-xl */
-  box-shadow: 0 4px 12px 0 rgba(0, 106, 106, 0.12) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px 0 rgba(0, 106, 106, 0.15) !important;
   transition: transform 200ms ease, box-shadow 200ms ease, opacity 200ms ease !important;
 }
 
@@ -51,20 +63,20 @@ button.bg-teal-600 {
 button.bg-primary:hover,
 button.bg-teal-600:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 16px 0 rgba(0, 106, 106, 0.22) !important;
+  box-shadow: 0 6px 20px 0 rgba(0, 106, 106, 0.25) !important;
   opacity: 0.95 !important;
 }
 
-/* Secondary Button - White */
+/* ── Secondary Button ── */
 .btn-secondary,
 button.bg-secondary,
 button.border-slate-700 {
   background: #FFFFFF !important;
   border: 1px solid var(--color-border) !important;
-  color: #344054 !important;
+  color: #545F73 !important;
   font-weight: 600 !important;
   border-radius: 12px !important;
-  box-shadow: 0 1px 2px 0 rgba(11, 28, 48, 0.04) !important;
+  box-shadow: 0 1px 3px 0 rgba(11, 28, 48, 0.03) !important;
   transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease !important;
 }
 
@@ -72,29 +84,29 @@ button.border-slate-700 {
 button.bg-secondary:hover,
 button.border-slate-700:hover {
   transform: translateY(-2px) !important;
-  background-color: #F9FAFB !important;
-  box-shadow: 0 4px 12px 0 rgba(11, 28, 48, 0.04) !important;
+  background-color: #F8F9FF !important;
+  box-shadow: 0 4px 12px 0 rgba(11, 28, 48, 0.05) !important;
 }
 
-/* Danger Button - Red */
+/* ── Danger Button ── */
 .btn-danger,
 button.bg-danger {
-  background: #EF4444 !important;
+  background: #BA1A1A !important;
   border: none !important;
   color: #FFFFFF !important;
   font-weight: 600 !important;
   border-radius: 12px !important;
-  box-shadow: 0 4px 12px 0 rgba(239, 68, 68, 0.12) !important;
+  box-shadow: 0 2px 8px 0 rgba(186, 26, 26, 0.15) !important;
   transition: transform 200ms ease, box-shadow 200ms ease !important;
 }
 
 .btn-danger:hover,
 button.bg-danger:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 16px 0 rgba(239, 68, 68, 0.22) !important;
+  box-shadow: 0 6px 20px 0 rgba(186, 26, 26, 0.25) !important;
 }
 
-/* Status Badges - pills */
+/* ── Status Pills ── */
 span.bg-emerald-50,
 span.bg-emerald-950\/20,
 .status-pill-success {
@@ -102,7 +114,7 @@ span.bg-emerald-950\/20,
   color: #10B981 !important;
   border: 1px solid rgba(16, 185, 129, 0.15) !important;
   border-radius: 9999px !important;
-  padding: 4px 10px !important;
+  padding: 4px 12px !important;
   font-weight: 600 !important;
   font-size: 11px !important;
   text-transform: uppercase !important;
@@ -116,7 +128,7 @@ span.bg-amber-950\/20,
   color: #F59E0B !important;
   border: 1px solid rgba(245, 158, 11, 0.15) !important;
   border-radius: 9999px !important;
-  padding: 4px 10px !important;
+  padding: 4px 12px !important;
   font-weight: 600 !important;
   font-size: 11px !important;
   text-transform: uppercase !important;
@@ -126,18 +138,23 @@ span.bg-amber-950\/20,
 span.bg-red-50,
 span.bg-red-950\/20,
 .status-pill-danger {
-  background-color: rgba(239, 68, 68, 0.1) !important;
-  color: #EF4444 !important;
-  border: 1px solid rgba(239, 68, 68, 0.15) !important;
+  background-color: rgba(186, 26, 26, 0.08) !important;
+  color: #BA1A1A !important;
+  border: 1px solid rgba(186, 26, 26, 0.15) !important;
   border-radius: 9999px !important;
-  padding: 4px 10px !important;
+  padding: 4px 12px !important;
   font-weight: 600 !important;
   font-size: 11px !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
 }
 
-/* Chrome autofill overrides */
+/* Dark status pills - keep bright for readability */
+.dark span.bg-emerald-950\/20 { color: #34D399 !important; }
+.dark span.bg-amber-950\/20 { color: #FBBF24 !important; }
+.dark span.bg-red-950\/20 { color: #FCA5A5 !important; }
+
+/* ── Chrome Autofill ── */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
@@ -146,12 +163,12 @@ input:-webkit-autofill:focus {
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* Custom signature canvas context */
+/* ── Signature Canvas ── */
 .signature-canvas {
   touch-action: none;
 }
 
-/* Forms inputs restyling - premium inputs, rounded-xl, soft focus glow */
+/* ── Form Inputs — premium, rounded-xl, soft focus glow ── */
 input[type="text"],
 input[type="password"],
 input[type="email"],
@@ -165,7 +182,7 @@ textarea {
   background-color: var(--color-card) !important;
   color: var(--color-text-primary) !important;
   padding: 0 16px !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
   box-shadow: 0 1px 2px 0 rgba(11, 28, 48, 0.02) !important;
   transition: border-color 200ms ease, box-shadow 200ms ease !important;
@@ -180,14 +197,36 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none !important;
-  border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 4px rgba(0, 106, 106, 0.12), 0 1px 2px 0 rgba(11, 28, 48, 0.02) !important;
+  border-color: #006A6A !important;
+  box-shadow: 0 0 0 3px rgba(0, 106, 106, 0.12), 0 1px 2px 0 rgba(11, 28, 48, 0.02) !important;
 }
 
-/* Checkboxes & Switches */
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: #7DF5F5 !important;
+  box-shadow: 0 0 0 3px rgba(125, 245, 245, 0.12), 0 1px 2px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ── Checkboxes ── */
 input[type="checkbox"] {
   width: 18px !important;
   height: 18px !important;
   border-radius: 4px !important;
-  accent-color: var(--color-primary) !important;
+  accent-color: #006A6A !important;
+}
+
+.dark input[type="checkbox"] {
+  accent-color: #7DF5F5 !important;
+}
+
+/* ── Focus-visible for accessibility ── */
+*:focus-visible {
+  outline: 2px solid #006A6A;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.dark *:focus-visible {
+  outline-color: #7DF5F5;
 }

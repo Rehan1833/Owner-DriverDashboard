@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Table } from '../../components/tables/Table';
 import { Badge } from '../../components/ui/Badge';
@@ -136,13 +136,13 @@ export const Payroll: React.FC = () => {
     {
       header: 'Employee Name',
       accessor: (row: PayrollRecord) => (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 text-left">
           <img
-            src={`https://api.dicebear.com/7.x/initials/svg?seed=${row.employee}&backgroundColor=2563EB`}
+            src={`https://api.dicebear.com/7.x/initials/svg?seed=${row.employee}&backgroundColor=006A6A`}
             alt=""
-            className="w-8 h-8 rounded-full bg-slate-50 border border-gray-100"
+            className="w-8.5 h-8.5 rounded-full bg-[#F8F9FF] border border-slate-200"
           />
-          <span className="font-bold text-slate-800 text-xs block">{row.employee}</span>
+          <span className="font-bold text-[#0B1C30] text-sm block">{row.employee}</span>
         </div>
       ),
       sortKey: 'employee' as keyof PayrollRecord,
@@ -163,7 +163,7 @@ export const Payroll: React.FC = () => {
     {
       header: 'Net Pay',
       accessor: (row: PayrollRecord) => (
-        <span className="font-bold text-slate-800">INR {row.finalSalary.toLocaleString()}</span>
+        <span className="font-bold text-slate-800 dark:text-[#F8FAFC] text-sm">INR {row.finalSalary.toLocaleString()}</span>
       ),
       sortKey: 'finalSalary' as keyof PayrollRecord,
     },
@@ -187,26 +187,26 @@ export const Payroll: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => handleQuickRelease(row)}
-                className="text-[10px] py-1 px-2 border-emerald-250 text-emerald-600 hover:bg-emerald-50"
+                className="text-[11px] py-1 px-3 border-[#10B981]/25 text-[#10B981] hover:bg-[#10B981]/10 rounded-xl"
               >
                 Release
               </Button>
             ) : (
-              <span className="text-slate-400 text-xs font-semibold flex items-center gap-0.5">
-                <CheckCircle className="h-3.5 w-3.5 text-emerald-500" /> Paid
+              <span className="text-[#10B981] text-xs font-bold flex items-center gap-0.5 px-2">
+                <CheckCircle className="h-4 w-4" /> Paid
               </span>
             )}
             <button
               onClick={() => handleEditClick(row)}
-              className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-800 transition-colors"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[#6D7A79] hover:text-slate-800 transition-colors cursor-pointer"
             >
-              <Edit2 className="h-3.5 w-3.5" />
+              <Edit2 className="h-4 w-4" />
             </button>
             <button
               onClick={() => handleDeleteClick(row.id)}
-              className="p-1 hover:bg-red-50 rounded text-slate-400 hover:text-red-600 transition-colors"
+              className="p-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-slate-400 hover:text-[#EF4444] transition-colors cursor-pointer"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-4 w-4" />
             </button>
           </div>
         );
@@ -215,16 +215,17 @@ export const Payroll: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in text-left">
       {/* Title */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Salary & Payout Console</h2>
-          <p className="text-xs text-slate-405 dark:text-slate-500 mt-1">Directly execute full CRUD operations over employee payroll slips.</p>
+          <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-slate-100 tracking-tight leading-none">Salary & Payout Console</h2>
+          <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">Directly execute full CRUD operations over employee payroll slips.</p>
         </div>
         <Button
           onClick={() => { resetForm(); setCreateModalOpen(true); }}
-          className="bg-blue-600 hover:bg-blue-700 text-xs font-bold py-2 px-3 rounded-xl flex items-center gap-1 self-start sm:self-auto cursor-pointer border border-transparent"
+          variant="primary"
+          className="text-xs py-2 rounded-xl flex items-center gap-1.5 shadow-md shadow-teal-900/10 self-start sm:self-auto"
         >
           <Plus className="h-4 w-4" /> Calculate Pay
         </Button>
@@ -232,36 +233,36 @@ export const Payroll: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-450">
-            <CreditCard className="h-5 w-5" />
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="p-3.5 rounded-xl bg-[#006A6A]/10 text-[#006A6A]">
+            <CreditCard className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase block">Total Net Payroll</span>
-            <h4 className="text-lg font-bold text-slate-808 dark:text-white">INR {totalPayout.toLocaleString()}</h4>
-            <p className="text-[10px] text-slate-400 dark:text-slate-550 mt-0.5">Aggregated payouts</p>
+            <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">Total Net Payroll</span>
+            <h4 className="text-[22px] font-extrabold text-[#0B1C30] dark:text-white leading-tight">INR {totalPayout.toLocaleString()}</h4>
+            <p className="text-[11px] text-[#6D7A79] mt-0.5 font-medium">Aggregated payouts</p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400">
-            <Clock className="h-5 w-5" />
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400">
+            <Clock className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-505 uppercase block">Pending Salary Releases</span>
-            <h4 className="text-lg font-bold text-amber-600 dark:text-amber-400">{pendingCount} Accounts</h4>
-            <p className="text-[10px] text-slate-400 dark:text-slate-505 mt-0.5">Authorization required</p>
+            <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">Pending Salary Releases</span>
+            <h4 className="text-[22px] font-extrabold text-[#F59E0B] leading-tight">{pendingCount} Accounts</h4>
+            <p className="text-[11px] text-[#6D7A79] mt-0.5 font-medium">Authorization required</p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">
-            <Landmark className="h-5 w-5" />
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">
+            <Landmark className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-505 uppercase block">Disbursed Payouts</span>
-            <h4 className="text-lg font-bold text-emerald-605 dark:text-emerald-400">{approvedCount} Accounts</h4>
-            <p className="text-[10px] text-slate-400 dark:text-slate-505 mt-0.5">Successfully sent</p>
+            <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">Disbursed Payouts</span>
+            <h4 className="text-[22px] font-extrabold text-[#10B981] leading-tight">{approvedCount} Accounts</h4>
+            <p className="text-[11px] text-[#6D7A79] mt-0.5 font-medium">Successfully sent</p>
           </div>
         </div>
       </div>
@@ -276,12 +277,12 @@ export const Payroll: React.FC = () => {
       />
 
       {/* Historical Trend */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-gray-100 dark:border-slate-800 shadow-sm">
-        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-6">Historical Monthly Payroll Trend</h3>
+      <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm">
+        <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC] mb-5 uppercase tracking-wide">Historical Monthly Payroll Trend</h3>
         <OperationsChart
           data={payrollTrendData}
           xKey="month"
-          series={[{ key: 'payroll', name: 'Total Payout Value (INR)', color: 'var(--color-salary)', type: 'bar' }]}
+          series={[{ key: 'payroll', name: 'Total Payout Value (INR)', color: '#006A6A', type: 'bar' }]}
           type="bar"
         />
       </div>
@@ -292,9 +293,9 @@ export const Payroll: React.FC = () => {
         { isOpen: editModalOpen, setOpen: setEditModalOpen, title: 'Modify Salary Slip', submit: handleEditSubmit }
       ].map((modal, idx) => (
         <Modal key={idx} isOpen={modal.isOpen} onClose={() => modal.setOpen(false)} title={modal.title} size="md">
-          <form onSubmit={modal.submit} className="space-y-4">
+          <form onSubmit={modal.submit} className="space-y-4 text-left">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Employee Name</label>
+              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Employee Name</label>
               <input
                 type="text"
                 required
@@ -302,104 +303,104 @@ export const Payroll: React.FC = () => {
                 placeholder="e.g. Rajesh Kumar"
                 value={form.employee}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Basic Salary (INR)</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Basic Salary (INR)</label>
                 <input
                   type="number"
                   required
                   name="basicSalary"
                   value={form.basicSalary}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Overtime Allowance (INR)</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Overtime Allowance (INR)</label>
                 <input
                   type="number"
                   name="overtime"
                   value={form.overtime}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Bonuses (INR)</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Bonuses (INR)</label>
                 <input
                   type="number"
                   name="bonus"
                   value={form.bonus}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Other Allowances (INR)</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Other Allowances (INR)</label>
                 <input
                   type="number"
                   name="allowance"
                   value={form.allowance}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Deductions (INR)</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Deductions (INR)</label>
                 <input
                   type="number"
                   name="deduction"
                   value={form.deduction}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Tax Withholdings (INR)</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Tax Withholdings (INR)</label>
                 <input
                   type="number"
                   name="tax"
                   value={form.tax}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5 text-left">
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Initial Payment Status</label>
+              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Initial Payment Status</label>
               <select
                 name="paymentStatus"
                 value={form.paymentStatus}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-primary focus:outline-none"
+                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
               >
                 <option value="Pending">Pending Approval</option>
                 <option value="Paid">Disbursed (Paid)</option>
               </select>
             </div>
 
-            <div className="bg-slate-55 dark:bg-slate-950/60 rounded-xl p-3 border border-slate-100 dark:border-slate-800/80 flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-300">
+            <div className="bg-[#F8F9FF] dark:bg-[#0F172A]/60 rounded-xl p-4.5 border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800/80 flex justify-between items-center text-sm font-bold text-slate-700 dark:text-[#CBD5E1]">
               <span>Auto-Calculated Net Pay:</span>
-              <span className="text-blue-600 dark:text-blue-400">
+              <span className="text-[#006A6A] dark:text-[#14B8A6]">
                 INR {calculateFinalSalary(form.basicSalary, form.overtime, form.bonus, form.allowance, form.deduction, form.tax).toLocaleString()}
               </span>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4 border-t border-gray-50">
+            <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155]">
               <Button type="button" variant="outline" onClick={() => modal.setOpen(false)}>
                 Cancel
               </Button>
@@ -413,3 +414,5 @@ export const Payroll: React.FC = () => {
     </div>
   );
 };
+
+

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { ShieldAlert } from 'lucide-react';
@@ -8,12 +8,12 @@ export const Unauthorized: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg p-6 text-center text-slate-800 dark:text-slate-100">
-      <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-lg space-y-5">
+      <div className="bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-lg space-y-5">
         <div className="p-3 bg-red-500/10 text-red-500 rounded-full w-fit mx-auto animate-pulse">
           <ShieldAlert className="h-10 w-10" />
         </div>
         <h2 className="text-2xl font-black tracking-tight">403 - Access Forbidden</h2>
-        <p className="text-xs text-slate-400 dark:text-slate-500 leading-normal">
+        <p className="text-xs text-slate-400 dark:text-[#6D7A79] leading-normal">
           You do not possess the required JWT role claim bindings to inspect this console node.
         </p>
         <Button
@@ -26,3 +26,4 @@ export const Unauthorized: React.FC = () => {
     </div>
   );
 };
+

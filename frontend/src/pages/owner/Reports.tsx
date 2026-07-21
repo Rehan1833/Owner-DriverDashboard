@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -33,10 +33,10 @@ export const Reports: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in text-left">
       <div>
-        <h2 className="text-xl font-bold text-slate-800">Operational Report Center</h2>
-        <p className="text-xs text-slate-400 mt-1">Select and download aggregated database logs for local inspection, printing, or compliance auditing.</p>
+        <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-slate-100 tracking-tight leading-none">Operational Report Center</h2>
+        <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">Select and download aggregated database logs for local inspection, printing, or compliance auditing.</p>
       </div>
 
       {/* Grid of Report Cards */}
@@ -44,14 +44,14 @@ export const Reports: React.FC = () => {
         {reportOptions.map(report => (
           <div
             key={report.id}
-            className="bg-white dark:bg-slate-900 p-5 border border-gray-100 dark:border-slate-800 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-5 hover:border-gray-200 dark:hover:border-slate-700 hover:shadow-sm transition-all"
+            className="bg-white dark:bg-[#1E293B] p-6 border border-[#E5EEFF] dark:border-[#334155] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-5 hover:shadow-sm transition-all"
           >
-            <div className="space-y-1.5 flex-1 max-w-2xl text-left">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">{report.name}</h4>
+            <div className="space-y-2 flex-1 max-w-2xl text-left">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h4 className="text-[15px] font-semibold text-[#0B1C30] dark:text-slate-100 leading-tight">{report.name}</h4>
                 <Badge variant="neutral">{report.duration}</Badge>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal">{report.description}</p>
+              <p className="text-[15px] text-[#6D7A79] dark:text-[#94A3B8] leading-relaxed font-medium">{report.description}</p>
             </div>
             
             {/* Formats Actions */}
@@ -59,28 +59,28 @@ export const Reports: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-1.5 text-xs text-slate-600"
+                className="flex items-center gap-1.5 border border-[#E5EEFF] dark:border-[#334155] text-slate-700 hover:bg-[#F9FAFB]"
                 disabled={generating !== null}
                 onClick={() => handleGenerate(report.id, 'PDF')}
               >
                 {generating === `${report.id}-PDF` ? (
-                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  <RefreshCw className="h-4 w-4 animate-spin" />
                 ) : (
-                  <FileText className="h-3.5 w-3.5 text-red-500" />
+                  <FileText className="h-4 w-4 text-[#EF4444]" />
                 )}
                 Export PDF
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-1.5 text-xs text-slate-600"
+                className="flex items-center gap-1.5 border border-[#E5EEFF] dark:border-[#334155] text-slate-700 hover:bg-[#F9FAFB]"
                 disabled={generating !== null}
                 onClick={() => handleGenerate(report.id, 'Excel')}
               >
                 {generating === `${report.id}-Excel` ? (
-                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  <RefreshCw className="h-4 w-4 animate-spin" />
                 ) : (
-                  <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" />
+                  <FileSpreadsheet className="h-4 w-4 text-[#10B981]" />
                 )}
                 Export Excel
               </Button>
@@ -90,19 +90,21 @@ export const Reports: React.FC = () => {
       </div>
 
       {/* Export Schedule Config Mock */}
-      <div className="bg-slate-50 border border-gray-100 rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+      <div className="bg-[#F8F9FF] dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-[20px] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5 shadow-sm text-left">
         <div className="space-y-1">
-          <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-            <Calendar className="h-4 w-4 text-blue-500" /> Auto-Scheduler Desk
+          <h4 className="text-[15px] font-bold text-[#0B1C30] flex items-center gap-1.5">
+            <Calendar className="h-4 w-4 text-[#006A6A] dark:text-[#14B8A6]" /> Auto-Scheduler Desk
           </h4>
-          <p className="text-[11px] text-slate-500 leading-normal">
+          <p className="text-[13px] text-[#6D7A79] font-medium leading-normal">
             Configure automated report generation loops to deliver weekly Excel sheets to managers.
           </p>
         </div>
-        <Button variant="outline" size="sm" className="text-xs self-start sm:self-auto">
+        <Button variant="outline" size="sm" className="text-xs self-start sm:self-auto border border-[#E5EEFF] dark:border-[#334155] bg-white text-slate-700">
           Configure Scheduler
         </Button>
       </div>
     </div>
   );
 };
+
+

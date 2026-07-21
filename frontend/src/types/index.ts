@@ -183,3 +183,25 @@ export interface ActivityItem {
   timestamp: string;
   category: 'attendance' | 'task' | 'inventory' | 'fleet' | 'payroll' | 'gate';
 }
+
+export interface PODRecord {
+  id: string;
+  podId: string;
+  driverId: string;
+  driverName: string;
+  vehicleNumber: string;
+  orderNumber: string;
+  customerName: string;
+  customerAddress: string;
+  imageUrl: string;
+  signatureUrl?: string;
+  remarks?: string;
+  latitude?: number;
+  longitude?: number;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}

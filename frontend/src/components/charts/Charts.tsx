@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -34,14 +34,14 @@ interface ChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white dark:bg-slate-900 border border-gray-150 dark:border-slate-800 p-3.5 rounded-xl shadow-lg backdrop-blur-md">
-        <p className="text-xs font-bold text-slate-850 dark:text-slate-200 mb-2">{label}</p>
-        <div className="space-y-1.5">
+      <div className="bg-white/95 dark:bg-[#1E293B]/95 border border-[#E5EEFF] dark:border-[#334155] p-4 rounded-xl shadow-xl backdrop-blur-md text-left">
+        <p className="text-[13px] font-bold text-[#0B1C30] dark:text-[#F8FAFC] mb-2.5">{label}</p>
+        <div className="space-y-2">
           {payload.map((item: any, index: number) => (
-            <div key={index} className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-              <span className="text-xs text-slate-500 dark:text-slate-400">{item.name}:</span>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+            <div key={index} className="flex items-center gap-2.5">
+              <span className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }} />
+              <span className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] font-medium">{item.name}:</span>
+              <span className="text-[13px] font-extrabold text-[#0B1C30] dark:text-white">
                 {typeof item.value === 'number' ? item.value.toLocaleString() : item.value}
               </span>
             </div>
@@ -63,32 +63,38 @@ export const OperationsChart: React.FC<ChartProps & { type?: 'area' | 'line' | '
   type = 'area'
 }) => {
   return (
-    <div style={{ width: '100%', height }}>
+    <div style={{ width: '100%', height }} className="animate-fade-in">
       <ResponsiveContainer>
         {type === 'area' ? (
           <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
               {series.map((s, idx) => (
                 <linearGradient key={idx} id={`colorUv-${s.key}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={s.color} stopOpacity={0.2} />
+                  <stop offset="5%" stopColor={s.color} stopOpacity={0.25} />
                   <stop offset="95%" stopColor={s.color} stopOpacity={0.0} />
                 </linearGradient>
               ))}
             </defs>
-            {grid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" className="opacity-60" />}
+            {grid && <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(11,28,48,0.06)" />}
             <XAxis
               dataKey={xKey}
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+              tick={{ fontSize: 12, fill: '#667085', fontWeight: 600 }}
+              dy={10}
             />
             <YAxis
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+              tick={{ fontSize: 12, fill: '#667085', fontWeight: 600 }}
+              dx={-10}
             />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 10, color: 'var(--color-text-secondary)' }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(11,28,48,0.06)', strokeWidth: 1 }} />
+            <Legend 
+              iconType="circle" 
+              iconSize={8}
+              wrapperStyle={{ fontSize: 13, paddingTop: 20, fontWeight: 600, color: '#344054' }} 
+            />
             {series.map((s, idx) => (
               <Area
                 key={idx}
@@ -96,55 +102,68 @@ export const OperationsChart: React.FC<ChartProps & { type?: 'area' | 'line' | '
                 dataKey={s.key}
                 name={s.name}
                 stroke={s.color}
-                strokeWidth={2}
+                strokeWidth={2.5}
                 fillOpacity={1}
                 fill={`url(#colorUv-${s.key})`}
+                activeDot={{ r: 6, strokeWidth: 0, fill: s.color }}
               />
             ))}
           </AreaChart>
         ) : type === 'bar' ? (
           <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            {grid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" className="opacity-60" />}
+            {grid && <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(11,28,48,0.06)" />}
             <XAxis
               dataKey={xKey}
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+              tick={{ fontSize: 12, fill: '#667085', fontWeight: 600 }}
+              dy={10}
             />
             <YAxis
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+              tick={{ fontSize: 12, fill: '#667085', fontWeight: 600 }}
+              dx={-10}
             />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 10, color: 'var(--color-text-secondary)' }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(11,28,48,0.02)' }} />
+            <Legend 
+              iconType="circle" 
+              iconSize={8}
+              wrapperStyle={{ fontSize: 13, paddingTop: 20, fontWeight: 600, color: '#344054' }} 
+            />
             {series.map((s, idx) => (
               <Bar
                 key={idx}
                 dataKey={s.key}
                 name={s.name}
                 fill={s.color}
-                radius={[4, 4, 0, 0]}
-                maxBarSize={30}
+                radius={[8, 8, 0, 0]}
+                maxBarSize={28}
               />
             ))}
           </BarChart>
         ) : (
           <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            {grid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" className="opacity-60" />}
+            {grid && <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(11,28,48,0.06)" />}
             <XAxis
               dataKey={xKey}
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+              tick={{ fontSize: 12, fill: '#667085', fontWeight: 600 }}
+              dy={10}
             />
             <YAxis
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
+              tick={{ fontSize: 12, fill: '#667085', fontWeight: 600 }}
+              dx={-10}
             />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 10, color: 'var(--color-text-secondary)' }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(11,28,48,0.06)', strokeWidth: 1 }} />
+            <Legend 
+              iconType="circle" 
+              iconSize={8}
+              wrapperStyle={{ fontSize: 13, paddingTop: 20, fontWeight: 600, color: '#344054' }} 
+            />
             {series.map((s, idx) => (
               <Line
                 key={idx}
@@ -152,9 +171,9 @@ export const OperationsChart: React.FC<ChartProps & { type?: 'area' | 'line' | '
                 dataKey={s.key}
                 name={s.name}
                 stroke={s.color}
-                strokeWidth={2.5}
-                dot={{ r: 3, strokeWidth: 1 }}
-                activeDot={{ r: 5 }}
+                strokeWidth={3}
+                dot={{ r: 4, strokeWidth: 0, fill: s.color }}
+                activeDot={{ r: 6, strokeWidth: 0, fill: s.color }}
               />
             ))}
           </LineChart>
@@ -172,35 +191,42 @@ interface DonutProps {
 
 export const OperationsDonut: React.FC<DonutProps> = ({ data, height = 240 }) => {
   return (
-    <div style={{ width: '100%', height }}>
+    <div style={{ width: '100%', height }} className="animate-fade-in">
       <ResponsiveContainer>
         <PieChart>
           <Pie
             data={data}
             cx="50%"
             cy="50%"
-            innerRadius={60}
-            outerRadius={80}
-            paddingAngle={3}
+            innerRadius={65}
+            outerRadius={85}
+            paddingAngle={4}
             dataKey="value"
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
+              <Cell key={`cell-${index}`} fill={entry.color} stroke="var(--color-card)" strokeWidth={2} />
             ))}
           </Pie>
           <Tooltip
             formatter={((value: any) => [`${value?.toLocaleString()}`, 'Count']) as any}
             contentStyle={{ 
               borderRadius: 12, 
-              border: '1px solid var(--color-border)', 
+              border: '1px solid rgba(11,28,48,0.08)', 
               backgroundColor: 'var(--color-card)', 
               color: 'var(--color-text-primary)', 
-              fontSize: 12 
+              fontSize: 13,
+              fontWeight: 600,
+              boxShadow: '0 10px 25px -5px rgba(11, 28, 48, 0.05)'
             }}
           />
-          <Legend iconType="circle" wrapperStyle={{ fontSize: 12, bottom: 0, color: 'var(--color-text-secondary)' }} />
+          <Legend 
+            iconType="circle" 
+            iconSize={8}
+            wrapperStyle={{ fontSize: 13, bottom: 0, fontWeight: 600, color: '#344054' }} 
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>
   );
 };
+

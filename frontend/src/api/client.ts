@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, Vehicle, Trip, Task, InventoryItem, PayrollRecord, AttendanceRecord } from '../types';
+import { User, Vehicle, Trip, Task, InventoryItem, PayrollRecord, AttendanceRecord, PODRecord } from '../types';
 import { mockVehicles, mockTrips, mockTasks, mockInventory, mockPayroll, mockAttendance } from './mockData';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -559,6 +559,63 @@ export const api = {
         return LocalStorageFallback.get<Trip>('local_trips', mockTrips);
       }
     },
+    getActive: async (): Promise<Trip | null> => {
+      try {
+        const res = await axiosInstance.get('/trips/active');
+        return res.data ? { ...res.data, id: res.data._id || res.data.id } : null;
+      } catch (err) {
+        const local = LocalStorageFallback.get<Trip>('local_trips', mockTrips);
+        const active = local.find(t => t.status !== 'Completed' && (t as any).status !== 'Cancelled');
+        return active || local[0] || null;
+      }
+    },
+    getById: async (id: string): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.get(`/trips/${id}`);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        const local = LocalStorageFallback.get<Trip>('local_trips', mockTrips);
+        const trip = local.find(t => t.id === id);
+        if (!trip) throw new Error('Trip not found');
+        return trip;
+      }
+    },
+    start: async (id: string): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.put('/trips/start', { id });
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'In Transit');
+      }
+    },
+    updateLocation: async (payload: { id: string; latitude?: number; longitude?: number; distanceRemaining?: number; eta?: string }): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.put('/trips/update-location', payload);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        const local = LocalStorageFallback.get<Trip>('local_trips', mockTrips);
+        const updated = local.map(t => {
+          if (t.id === payload.id) {
+            return {
+              ...t,
+              ...(payload.distanceRemaining !== undefined ? { distanceRemaining: payload.distanceRemaining } : {}),
+              ...(payload.eta ? { eta: payload.eta } : {})
+            };
+          }
+          return t;
+        });
+        LocalStorageFallback.set('local_trips', updated);
+        return updated.find(t => t.id === payload.id) as Trip;
+      }
+    },
+    complete: async (id: string, details?: { signatureData?: string; photo?: string }): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.put('/trips/complete', { id, ...details });
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'Completed', details);
+      }
+    },
     updateStatus: async (id: string, status: Trip['status'], details?: any): Promise<Trip> => {
       try {
         const res = await axiosInstance.put(`/trips/${id}`, { status, ...details });
@@ -583,5 +640,139 @@ export const api = {
         return updated.find(t => t.id === id) as Trip;
       }
     }
+  },
+
+  // 7. PROOF OF DELIVERY (POD) API
+  pod: {
+    getAll: async (params?: { status?: string; driver?: string; vehicle?: string; customer?: string; orderNumber?: string; date?: string }): Promise<PODRecord[]> => {
+      try {
+        const res = await axiosInstance.get('/pod', { params });
+        return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
+      } catch (err) {
+        let local = LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
+        if (params) {
+          if (params.status) local = local.filter(p => p.status === params.status);
+          if (params.driver) local = local.filter(p => p.driverName.toLowerCase().includes(params.driver!.toLowerCase()));
+          if (params.vehicle) local = local.filter(p => p.vehicleNumber.toLowerCase().includes(params.vehicle!.toLowerCase()));
+          if (params.customer) local = local.filter(p => p.customerName.toLowerCase().includes(params.customer!.toLowerCase()));
+          if (params.orderNumber) local = local.filter(p => p.orderNumber.toLowerCase().includes(params.orderNumber!.toLowerCase()));
+          if (params.date) local = local.filter(p => p.createdAt.startsWith(params.date!));
+        }
+        return local;
+      }
+    },
+    getDriverPODs: async (): Promise<PODRecord[]> => {
+      try {
+        const res = await axiosInstance.get('/pod/driver');
+        return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
+      } catch (err) {
+        return LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
+      }
+    },
+    getById: async (id: string): Promise<PODRecord> => {
+      try {
+        const res = await axiosInstance.get(`/pod/${id}`);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        const local = LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
+        const item = local.find(p => p.id === id || p.podId === id);
+        if (!item) throw new Error('POD record not found');
+        return item;
+      }
+    },
+    upload: async (payload: {
+      orderNumber: string;
+      vehicleNumber: string;
+      customerName: string;
+      customerAddress: string;
+      imageUrl: string;
+      signatureUrl?: string;
+      remarks?: string;
+      latitude?: number;
+      longitude?: number;
+    }): Promise<PODRecord> => {
+      try {
+        const res = await axiosInstance.post('/pod/upload', payload);
+        return res.data;
+      } catch (err) {
+        const local = LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
+        
+        // Prevent duplicate
+        const duplicate = local.find(p => p.orderNumber === payload.orderNumber);
+        if (duplicate) {
+          throw new Error(`POD for Order ${payload.orderNumber} has already been uploaded.`);
+        }
+
+        const podId = `POD-2026-${String(local.length + 8801).padStart(4, '0')}`;
+        
+        const newRecord: PODRecord = {
+          id: `pod-${Date.now()}`,
+          podId,
+          driverId: 'u-driver',
+          driverName: 'Rajesh Kumar',
+          vehicleNumber: payload.vehicleNumber,
+          orderNumber: payload.orderNumber,
+          customerName: payload.customerName,
+          customerAddress: payload.customerAddress,
+          imageUrl: payload.imageUrl,
+          signatureUrl: payload.signatureUrl,
+          remarks: payload.remarks,
+          latitude: payload.latitude,
+          longitude: payload.longitude,
+          status: 'Pending',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        local.unshift(newRecord);
+        LocalStorageFallback.set('local_pods', local);
+        return newRecord;
+      }
+    },
+    approve: async (id: string): Promise<PODRecord> => {
+      try {
+        const res = await axiosInstance.put(`/pod/approve/${id}`);
+        return res.data;
+      } catch (err) {
+        const local = LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
+        const updated = local.map(p => p.id === id || p.podId === id ? { 
+          ...p, 
+          status: 'Approved' as const, 
+          approvedBy: 'Harsh Vardhan', 
+          approvedAt: new Date().toISOString(),
+          rejectedReason: undefined
+        } : p);
+        LocalStorageFallback.set('local_pods', updated);
+        return updated.find(p => p.id === id || p.podId === id) as PODRecord;
+      }
+    },
+    reject: async (id: string, rejectedReason: string): Promise<PODRecord> => {
+      try {
+        const res = await axiosInstance.put(`/pod/reject/${id}`, { rejectedReason });
+        return res.data;
+      } catch (err) {
+        const local = LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
+        const updated = local.map(p => p.id === id || p.podId === id ? { 
+          ...p, 
+          status: 'Rejected' as const, 
+          rejectedReason,
+          approvedBy: undefined,
+          approvedAt: undefined
+        } : p);
+        LocalStorageFallback.set('local_pods', updated);
+        return updated.find(p => p.id === id || p.podId === id) as PODRecord;
+      }
+    },
+    delete: async (id: string): Promise<void> => {
+      try {
+        await axiosInstance.delete(`/pod/${id}`);
+      } catch (err) {
+        const local = LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
+        const filtered = local.filter(p => p.id !== id && p.podId !== id);
+        LocalStorageFallback.set('local_pods', filtered);
+      }
+    }
   }
 };
+
+import { mockPODs } from './mockData';

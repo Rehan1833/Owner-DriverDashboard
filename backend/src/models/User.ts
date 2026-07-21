@@ -4,9 +4,12 @@ import bcrypt from 'bcryptjs';
 export interface IUser extends Document {
   fullName: string;
   email: string;
-  mobileNumber: string;
+  mobileNumber?: string;
   role: 'Owner' | 'Driver';
-  passwordHash: string;
+  passwordHash?: string;
+  googleId?: string;
+  provider?: 'local' | 'google';
+  isEmailVerified?: boolean;
   // Owner Fields
   companyName?: string;
   // Driver Fields
@@ -19,9 +22,12 @@ export interface IUser extends Document {
 const UserSchema = new Schema<IUser>({
   fullName: { type: String, required: true },
   email: { type: String, required: true, unique: true, index: true },
-  mobileNumber: { type: String, required: true },
+  mobileNumber: { type: String, required: false },
   role: { type: String, enum: ['Owner', 'Driver'], required: true },
-  passwordHash: { type: String, required: true },
+  passwordHash: { type: String, required: false },
+  googleId: { type: String, unique: true, sparse: true },
+  provider: { type: String, enum: ['local', 'google'], default: 'local' },
+  isEmailVerified: { type: Boolean, default: false },
   companyName: { type: String },
   driverId: { type: String, unique: true, sparse: true },
   vehicleNumber: { type: String },
@@ -32,6 +38,7 @@ const UserSchema = new Schema<IUser>({
 
 // Password verification method
 UserSchema.methods.comparePassword = async function(password: string): Promise<boolean> {
+  if (!this.passwordHash) return false;
   return bcrypt.compare(password, this.passwordHash);
 };
 

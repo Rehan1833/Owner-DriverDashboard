@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+﻿import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { OperationsProvider } from './store/OperationsContext';
 import { ThemeProvider } from './store/ThemeContext';
@@ -39,11 +39,13 @@ const OwnerNotifications = lazy(() => import('./pages/owner/Notifications').then
 const OwnerWorkers = lazy(() => import('./pages/owner/Workers').then(m => ({ default: m.Workers })));
 const OwnerAnalytics = lazy(() => import('./pages/owner/Analytics').then(m => ({ default: m.Analytics })));
 const OwnerProfile = lazy(() => import('./pages/owner/Profile').then(m => ({ default: m.Profile })));
+const OwnerPOD = lazy(() => import('./pages/owner/POD').then(m => ({ default: m.POD })));
 
 // Driver Pages (Lazy Loaded)
 const DriverDashboard = lazy(() => import('./pages/driver/Dashboard').then(m => ({ default: m.Home })));
 const DriverAttendance = lazy(() => import('./pages/driver/Attendance').then(m => ({ default: m.GPS })));
 const DriverTrips = lazy(() => import('./pages/driver/Trips').then(m => ({ default: m.Trips })));
+const DriverActiveTrip = lazy(() => import('./pages/driver/ActiveTrip').then(m => ({ default: m.ActiveTrip })));
 const DriverPOD = lazy(() => import('./pages/driver/POD').then(m => ({ default: m.POD })));
 const DriverVehicle = lazy(() => import('./pages/driver/Vehicle').then(m => ({ default: m.VehicleInfo })));
 const DriverNotifications = lazy(() => import('./pages/driver/Notifications').then(m => ({ default: m.Notifications })));
@@ -86,6 +88,7 @@ const App: React.FC = () => {
                   <Route path="workers" element={<OwnerWorkers />} />
                   <Route path="analytics" element={<OwnerAnalytics />} />
                   <Route path="profile" element={<OwnerProfile />} />
+                  <Route path="pod" element={<OwnerPOD />} />
                 </Route>
               </Route>
 
@@ -95,6 +98,8 @@ const App: React.FC = () => {
                   <Route index element={<DriverDashboard />} />
                   <Route path="attendance" element={<DriverAttendance />} />
                   <Route path="trips" element={<DriverTrips />} />
+                  <Route path="active-trip" element={<DriverActiveTrip />} />
+                  <Route path="gps" element={<Navigate to="/driver/active-trip" replace />} />
                   <Route path="pod" element={<DriverPOD />} />
                   <Route path="fleet" element={<DriverVehicle />} />
                   <Route path="notifications" element={<DriverNotifications />} />

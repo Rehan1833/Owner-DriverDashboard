@@ -1,4 +1,4 @@
-import { Vehicle, Trip, Task, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord } from '../types';
+import { Vehicle, Trip, Task, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord, PODRecord } from '../types';
 
 export const mockVehicles: Vehicle[] = [
   {
@@ -200,4 +200,25 @@ export const mockActivities: ActivityItem[] = [
   { id: 'ac1', user: 'System Agent', action: 'Trip Started', details: 'Began trip TRP-2026-8802 in Vehicle KA-03-MN-4512.', timestamp: '1 Hour Ago', category: 'fleet' },
   { id: 'ac3', user: 'Harsh Vardhan', action: 'Salary Approved', details: 'Approved June payroll for Rajesh Kumar.', timestamp: '3 Hours Ago', category: 'payroll' },
   { id: 'ac4', user: 'Rajesh Kumar', action: 'POD Uploaded', details: 'Customer signature & cargo photo submitted for trip TRP-2026-8800.', timestamp: '4 Hours Ago', category: 'fleet' }
+];
+
+export const mockPODs: PODRecord[] = [
+  {
+    id: 'pod-1',
+    podId: 'POD-2026-8801',
+    driverId: 'u-driver',
+    driverName: 'Rajesh Kumar',
+    vehicleNumber: 'MH-12-QW-9874',
+    orderNumber: 'TRP-2026-8801',
+    customerName: 'Tata Motors Manufacturing',
+    customerAddress: 'Mumbai DC Gate 4, Maharashtra',
+    imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80',
+    signatureUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=200&q=80',
+    remarks: 'Delivered in clean, safe condition, standard verification checked.',
+    latitude: 19.076,
+    longitude: 72.8777,
+    status: 'Pending',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
 ];

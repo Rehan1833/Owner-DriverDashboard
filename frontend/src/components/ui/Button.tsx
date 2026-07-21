@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -15,29 +15,29 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props
 }) => {
-  const baseStyle = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyle = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer';
   
   const variants = {
-    primary: 'bg-primary text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-750 shadow-md shadow-blue-500/10 focus:ring-blue-500 border border-transparent',
-    secondary: 'bg-secondary text-white hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 shadow-md shadow-sky-500/10 focus:ring-sky-500 border border-transparent',
-    success: 'bg-success text-white hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700 shadow-md shadow-emerald-500/10 focus:ring-emerald-500 border border-transparent',
-    warning: 'bg-warning text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700 shadow-md shadow-amber-500/10 focus:ring-amber-500 border border-transparent',
-    danger: 'bg-danger text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 shadow-md shadow-red-500/10 focus:ring-red-500 border border-transparent',
-    outline: 'border border-gray-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 focus:ring-blue-500',
-    ghost: 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent focus:ring-slate-300',
+    primary: 'bg-gradient-to-r from-[#006A6A] to-[#00A3A3] text-white hover:opacity-95 shadow-md shadow-[#006A6A]/10 focus:ring-[#006A6A] border border-transparent',
+    secondary: 'bg-white dark:bg-[#1E293B] text-[#545F73] dark:text-[#CBD5E1] hover:bg-[#F8F9FF] dark:hover:bg-[#111827] border border-[#E5EEFF] dark:border-[#334155] shadow-sm hover:shadow focus:ring-[#006A6A]',
+    success: 'bg-[#10B981] text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/10 focus:ring-emerald-500 border border-transparent',
+    warning: 'bg-[#F59E0B] text-white hover:bg-amber-600 shadow-md shadow-amber-500/10 focus:ring-amber-500 border border-transparent',
+    danger: 'bg-[#BA1A1A] text-white hover:opacity-95 shadow-md shadow-[#BA1A1A]/10 focus:ring-[#BA1A1A] border border-transparent',
+    outline: 'border border-[#E5EEFF] dark:border-[#334155] text-[#545F73] dark:text-[#CBD5E1] bg-white dark:bg-[#1E293B] hover:bg-[#F8F9FF] dark:hover:bg-[#111827] focus:ring-[#006A6A]',
+    ghost: 'text-[#545F73] dark:text-[#CBD5E1] hover:bg-[#EFF4FF] dark:hover:bg-[#1E293B] hover:text-[#0B1C30] dark:hover:text-white border border-transparent focus:ring-[#006A6A]',
   };
 
   const sizes = {
-    sm: 'px-3 py-1.5 text-xs',
+    sm: 'px-3.5 py-1.5 text-xs',
     md: 'px-4 py-2 text-sm',
-    lg: 'px-5 py-2.5 text-base',
+    lg: 'px-6 py-3 text-base',
     icon: 'p-2',
   };
 
   return (
     <motion.button
-      whileHover={{ y: -1 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.97 }}
       className={`${baseStyle} ${variants[variant]} ${sizes[size]} ${className}`}
       {...props as any}
     >
@@ -51,3 +51,4 @@ export const Button: React.FC<ButtonProps> = ({
     </motion.button>
   );
 };
+

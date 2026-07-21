@@ -6,6 +6,7 @@ import attendanceRoutes from './routes/attendanceRoutes';
 import salaryRoutes from './routes/salaryRoutes';
 import fleetRoutes from './routes/fleetRoutes';
 import tripRoutes from './routes/tripRoutes';
+import podRoutes from './routes/podRoutes';
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/salary', salaryRoutes);
 app.use('/api/fleet', fleetRoutes);
 app.use('/api/trips', tripRoutes);
+app.use('/api/pod', podRoutes);
 
 // Global Error Handler middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

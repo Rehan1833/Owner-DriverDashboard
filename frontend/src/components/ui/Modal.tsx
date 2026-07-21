@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+﻿import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
@@ -43,10 +43,10 @@ export const Modal: React.FC<ModalProps> = ({
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.4 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900"
+            className="fixed inset-0 bg-[#0B1C30]/40 backdrop-blur-md"
           />
 
           {/* Modal Content */}
@@ -67,26 +67,26 @@ export const Modal: React.FC<ModalProps> = ({
               scale: window.innerWidth < 640 ? 1 : 0.98
             }}
             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className={`relative w-full bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden ${sizes[size]} z-10 border border-gray-100/60 dark:border-slate-800/80`}
+            className={`relative w-full bg-white dark:bg-[#1E293B] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden ${sizes[size]} z-10 border border-[#E5EEFF] dark:border-[#334155]`}
           >
             {/* Mobile Swipe Bar */}
             <div className="sm:hidden w-full flex justify-center pt-3 pb-1">
-              <div className="w-12 h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full" onClick={onClose} />
+              <div className="w-12 h-1.5 bg-[#CBDBF5] dark:bg-[#334155] rounded-full" onClick={onClose} />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4.5 border-b border-gray-50 dark:border-slate-800/60 bg-white dark:bg-slate-900">
-              <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
+            <div className="flex items-center justify-between px-6 py-4.5 border-b border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#1E293B]">
+              <h3 className="text-base font-bold text-[#0B1C30] dark:text-[#F8FAFC]">{title}</h3>
               <button
                 onClick={onClose}
-                className="text-gray-405 hover:text-slate-600 dark:hover:text-slate-300 p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-lg transition-colors cursor-pointer"
+                className="text-[#6D7A79] hover:text-[#0B1C30] dark:hover:text-white p-1.5 hover:bg-[#EFF4FF] dark:hover:bg-slate-800/60 rounded-lg transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-5 text-sm text-slate-650 dark:text-slate-350">
+            <div className="flex-1 overflow-y-auto px-6 py-5 text-sm text-[#545F73] dark:text-[#CBD5E1]">
               {children}
             </div>
           </motion.div>
@@ -95,3 +95,4 @@ export const Modal: React.FC<ModalProps> = ({
     </AnimatePresence>
   );
 };
+

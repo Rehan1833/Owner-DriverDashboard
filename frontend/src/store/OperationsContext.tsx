@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole, Vehicle, Trip, Task, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord } from '../types';
 import { mockTasks, mockNotifications, mockActivities } from '../api/mockData';
 import { api } from '../api/client';
+import { io } from 'socket.io-client';
 
 interface OperationsContextType {
   user: User | null;
@@ -112,6 +113,75 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   useEffect(() => {
     refreshAllData();
+  }, [user]);
+
+  // Synthetic sound play helper
+  const playAlertSound = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = 587.33; // D5 tone
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+      osc.stop(audioCtx.currentTime + 0.35);
+    } catch (e) {
+      console.warn('Audio Context tone trigger blocked by browser policy.', e);
+    }
+  };
+
+  // Real-time Socket.io synchronizer
+  useEffect(() => {
+    const socket = io('http://localhost:5000');
+
+    socket.on('connect', () => {
+      console.log('Operational telemetry link active.');
+    });
+
+    socket.on('podUpdate', (data: any) => {
+      console.log('Real-time POD update received:', data);
+      playAlertSound();
+
+      if (data.type === 'UPLOAD') {
+        triggerNotification(
+          'System Alert',
+          'New POD Uploaded',
+          `Driver ${data.pod.driverName} uploaded POD ${data.pod.podId} for Order ${data.pod.orderNumber}.`,
+          'Info'
+        );
+      } else if (data.type === 'APPROVE') {
+        triggerNotification(
+          'System Alert',
+          'POD Approved',
+          `Order ${data.pod.orderNumber} POD has been Approved by ${data.pod.approvedBy || 'Owner'}.`,
+          'Info'
+        );
+      } else if (data.type === 'REJECT') {
+        triggerNotification(
+          'Critical',
+          'POD Rejected',
+          `Order ${data.pod.orderNumber} POD has been Rejected. Reason: ${data.pod.rejectedReason || 'Discrepancy'}.`,
+          'Error'
+        );
+      }
+
+      // Dispatch custom window event to force live tables re-fetch
+      const syncEvent = new CustomEvent('pod-sync-event', { detail: data });
+      window.dispatchEvent(syncEvent);
+    });
+
+    socket.on('telemetryUpdate', (data: any) => {
+      console.log('Telemetry path update received:', data);
+      refreshAllData();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [user]);
 
   const login = async (email: string, role: UserRole) => {

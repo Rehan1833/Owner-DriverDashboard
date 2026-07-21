@@ -11,14 +11,21 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.2",
+    "@tanstack/react-query": "^5.101.3",
+    "@types/qrcode.react": "^1.0.5",
+    "@types/react-is": "^19.2.0",
     "axios": "^1.18.1",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.24.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-is": "^19.2.7",
     "react-router-dom": "^7.18.1",
     "recharts": "^3.9.2",
-    "tailwindcss": "^4.3.2"
+    "socket.io-client": "^4.8.3",
+    "tailwindcss": "^4.3.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",

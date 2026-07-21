@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Navbar } from '../components/layout/Navbar';
@@ -38,7 +38,7 @@ export const DriverLayout: React.FC = () => {
   const showAttendanceModal = user.role === 'Driver' && !isModalDismissed;
 
   return (
-    <div className="flex bg-bg min-h-screen text-slate-800 dark:text-slate-100 relative transition-all duration-300">
+    <div className="flex bg-[#F8F9FF] dark:bg-[#0F172A] min-h-screen text-[#0B1C30] dark:text-[#F8FAFC] relative transition-all duration-300">
       {/* Collapsible Sidebar */}
       <div className={`transition-all duration-300 flex ${showAttendanceModal ? 'filter blur-sm pointer-events-none select-none' : ''}`}>
         <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -48,24 +48,24 @@ export const DriverLayout: React.FC = () => {
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${showAttendanceModal ? 'filter blur-sm pointer-events-none select-none' : ''}`}>
         <Navbar />
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 max-w-[1600px] w-full mx-auto pb-16">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 max-w-[1600px] w-full mx-auto pb-16 bg-[#F8F9FF] dark:bg-[#0F172A]/5">
           <Outlet />
         </main>
         
         {/* Footer status bar */}
-        <footer className="h-10 bg-white dark:bg-slate-950 border-t border-gray-100 dark:border-slate-900 px-6 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 shrink-0">
+        <footer className="h-10 bg-white dark:bg-[#111827] border-t border-[#E5EEFF] dark:border-[#334155] px-6 flex items-center justify-between text-[11px] text-[#6D7A79] dark:text-[#94A3B8] shrink-0 font-semibold">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-success animate-ping" />
-              GPS Core Status: <span className="font-semibold text-slate-600 dark:text-slate-400">Active (Looping)</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping" />
+              GPS Core Status: <span className="text-[#0B1C30] dark:text-[#F8FAFC]">Active (Looping)</span>
             </span>
-            <span className="w-[1px] h-3 bg-gray-200 dark:bg-slate-800" />
+            <span className="w-[1px] h-3 bg-[#E5EEFF] dark:bg-[#334155]" />
             <span className="flex items-center gap-1">
-              Telemetry Server: <span className="font-semibold text-slate-600 dark:text-slate-400">Syncing (MongoDB Connected)</span>
+              Telemetry Server: <span className="text-[#0B1C30] dark:text-[#F8FAFC]">Syncing (MongoDB Connected)</span>
             </span>
           </div>
           <div>
-            System Version: <span className="font-semibold text-slate-600 dark:text-slate-400">v4.1.2-DriverSaaS</span>
+            System Version: <span className="text-[#0B1C30] dark:text-[#F8FAFC]">v4.1.2-DriverSaaS</span>
           </div>
         </footer>
       </div>

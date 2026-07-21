@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Table } from '../../components/tables/Table';
 import { Badge } from '../../components/ui/Badge';
@@ -170,7 +170,7 @@ export const Fleet: React.FC = () => {
   const activeTripColumns = [
     {
       header: 'Trip ID',
-      accessor: (row: Trip) => <span className="font-mono text-xs font-semibold text-slate-800">{row.tripNumber}</span>,
+      accessor: (row: Trip) => <span className="font-mono text-xs font-semibold text-[#0B1C30] dark:text-[#CBD5E1]">{row.tripNumber}</span>,
       sortKey: 'tripNumber' as keyof Trip,
     },
     {
@@ -186,13 +186,13 @@ export const Fleet: React.FC = () => {
     {
       header: 'Locations Map',
       accessor: (row: Trip) => (
-        <div className="flex flex-col gap-0.5 max-w-xs">
-          <span className="text-xs text-slate-700 font-medium truncate flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+        <div className="flex flex-col gap-1 max-w-xs text-left">
+          <span className="text-xs text-[#545F73] dark:text-[#CBD5E1] font-semibold whitespace-normal break-words leading-tight flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#006A6A] shrink-0" />
             Pick: {row.pickupLocation}
           </span>
-          <span className="text-xs text-slate-500 truncate flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+          <span className="text-xs text-[#6D7A79] whitespace-normal break-words leading-tight flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] shrink-0" />
             Drop: {row.dropLocation}
           </span>
         </div>
@@ -201,11 +201,11 @@ export const Fleet: React.FC = () => {
     {
       header: 'Remaining dist',
       accessor: (row: Trip) => (
-        <div className="flex flex-col gap-1 w-24">
-          <span className="font-semibold text-slate-700 text-xs">{row.distanceRemaining} km left</span>
-          <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+        <div className="flex flex-col gap-1.5 w-28 text-left">
+          <span className="font-bold text-slate-700 dark:text-[#CBD5E1] text-xs">{row.distanceRemaining} km left</span>
+          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-primary" 
+              className="h-full bg-[#006A6A] rounded-full" 
               style={{ width: `${Math.max(10, Math.min(100, 100 - (row.distanceRemaining / 4.8)))}%` }} 
             />
           </div>
@@ -215,7 +215,7 @@ export const Fleet: React.FC = () => {
     },
     {
       header: 'ETA Clock',
-      accessor: (row: Trip) => <span className="font-medium text-slate-700">{row.eta}</span>,
+      accessor: (row: Trip) => <span className="font-semibold text-slate-700 dark:text-[#CBD5E1]">{row.eta}</span>,
     },
     {
       header: 'Transit Status',
@@ -247,12 +247,12 @@ export const Fleet: React.FC = () => {
                 variant="primary"
                 size="sm"
                 onClick={() => setSelectedPODTrip(row)}
-                className="bg-blue-600 hover:bg-blue-700 text-[10px] font-bold py-1 px-2.5 rounded-lg text-white cursor-pointer"
+                className="text-[10px] py-1 px-3.5 rounded-lg shadow-md shadow-teal-900/10 cursor-pointer"
               >
                 View POD
               </Button>
             ) : (
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium italic">In Progress</span>
+              <span className="text-[11px] text-slate-400 dark:text-[#6D7A79] font-bold italic">In Progress</span>
             )}
           </div>
         );
@@ -264,9 +264,9 @@ export const Fleet: React.FC = () => {
     {
       header: 'Vehicle Registration',
       accessor: (row: Vehicle) => (
-        <div>
-          <span className="font-bold text-slate-800 text-xs block">{row.vehicleNumber}</span>
-          <span className="text-[10px] text-slate-400 block mt-0.5">{row.vehicleType}</span>
+        <div className="text-left">
+          <span className="font-bold text-[#0B1C30] text-sm block">{row.vehicleNumber}</span>
+          <span className="text-[11px] text-[#6D7A79] block mt-0.5">{row.vehicleType}</span>
         </div>
       ),
       sortKey: 'vehicleNumber' as keyof Vehicle,
@@ -279,9 +279,9 @@ export const Fleet: React.FC = () => {
     {
       header: 'Fuel / Mileage',
       accessor: (row: Vehicle) => (
-        <div className="text-xs">
-          <span className="font-semibold text-slate-700 block">{row.fuelType}</span>
-          <span className="text-[10px] text-slate-400 block">({row.mileage} km/l)</span>
+        <div className="text-left">
+          <span className="font-bold text-slate-700 dark:text-[#CBD5E1] block">{row.fuelType}</span>
+          <span className="text-[11px] text-[#6D7A79] block mt-0.5">({row.mileage} km/l)</span>
         </div>
       ),
     },
@@ -293,9 +293,9 @@ export const Fleet: React.FC = () => {
     {
       header: 'Expiry Dates',
       accessor: (row: Vehicle) => (
-        <div className="text-[10px] text-slate-500 space-y-0.5">
-          <div>Permit: <span className="font-mono text-slate-700">{row.permit}</span></div>
-          <div>Fitness: <span className="font-mono text-slate-700">{row.fitness}</span></div>
+        <div className="text-[11px] text-[#6D7A79] space-y-0.5 text-left">
+          <div>Permit: <span className="font-mono text-slate-700 dark:text-[#CBD5E1]">{row.permit}</span></div>
+          <div>Fitness: <span className="font-mono text-slate-700 dark:text-[#CBD5E1]">{row.fitness}</span></div>
         </div>
       ),
     },
@@ -314,34 +314,33 @@ export const Fleet: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleEditClick(row)}
-            className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-800 transition-colors"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[#6D7A79] hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
           >
-            <Edit2 className="h-3.5 w-3.5" />
+            <Edit2 className="h-4 w-4" />
           </button>
           <button
             onClick={() => handleDeleteClick(row.id)}
-            className="p-1 hover:bg-red-50 rounded text-slate-400 hover:text-red-600 transition-colors"
+            className="p-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-slate-400 hover:text-[#EF4444] transition-colors cursor-pointer"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       )
     }
   ];
 
-
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in text-left">
       {/* Title */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Fleet & Diagnostics Registry</h2>
-          <p className="text-xs text-slate-400 mt-1">Directly execute full CRUD operations over transport vehicles.</p>
+          <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-slate-100 tracking-tight leading-none">Fleet & Diagnostics Registry</h2>
+          <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">Directly execute full CRUD operations over transport vehicles.</p>
         </div>
         <Button
           onClick={() => { resetForm(); setCreateModalOpen(true); }}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded-xl flex items-center gap-1 self-start sm:self-auto cursor-pointer"
+          variant="primary"
+          className="text-xs py-2 rounded-xl flex items-center gap-1.5 shadow-md shadow-teal-900/10 cursor-pointer self-start sm:self-auto"
         >
           <Plus className="h-4 w-4" /> Add Vehicle
         </Button>
@@ -349,43 +348,43 @@ export const Fleet: React.FC = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm flex items-start gap-4">
-          <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400">
-            <Truck className="h-5 w-5" />
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="p-3.5 rounded-xl bg-[#006A6A]/10 text-[#006A6A] dark:text-[#14B8A6]">
+            <Truck className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Fleet Size</span>
-            <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200">{vehicles.length} Carriers</h4>
-            <p className="text-[10px] text-slate-400 mt-0.5">Medium to heavy cargo haulers</p>
+            <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">Total Fleet Size</span>
+            <h4 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-white leading-tight">{vehicles.length} Carriers</h4>
+            <p className="text-[11px] text-[#6D7A79] mt-0.5 font-medium">Medium to heavy cargo haulers</p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm flex items-start gap-4">
-          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">
-            <MapPin className="h-5 w-5" />
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="p-3.5 rounded-xl bg-[#10B981]/10 text-[#10B981]">
+            <MapPin className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase block">Transit Cargo Runs</span>
-            <h4 className="text-lg font-bold text-emerald-600">{trips.filter(t => t.status !== 'Completed').length} active</h4>
-            <p className="text-[10px] text-slate-400 mt-0.5">GPS trackers synced</p>
+            <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">Transit Cargo Runs</span>
+            <h4 className="text-[26px] font-extrabold text-[#10B981] leading-tight">{trips.filter(t => t.status !== 'Completed').length} active</h4>
+            <p className="text-[11px] text-[#6D7A79] mt-0.5 font-medium">GPS trackers synced</p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm flex items-start gap-4">
-          <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 animate-pulse">
-            <ShieldAlert className="h-5 w-5" />
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="p-3.5 rounded-xl bg-[#EF4444]/10 text-[#EF4444]">
+            <ShieldAlert className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase block">Yard Maintenance Alerts</span>
-            <h4 className="text-lg font-bold text-red-600">{vehicles.filter(v => v.status === 'Maintenance').length} Flags</h4>
-            <p className="text-[10px] text-slate-400 mt-0.5">Servicing in progress</p>
+            <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">Yard Maintenance Alerts</span>
+            <h4 className="text-[26px] font-extrabold text-[#EF4444] leading-tight">{vehicles.filter(v => v.status === 'Maintenance').length} Flags</h4>
+            <p className="text-[11px] text-[#6D7A79] mt-0.5 font-medium">Servicing in progress</p>
           </div>
         </div>
       </div>
 
       {/* Trips list */}
-      <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-4">Active Cargo Trips (Real-time telemetry)</h3>
+      <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm">
+        <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC] mb-5 uppercase tracking-wide">Active Cargo Trips (Real-time telemetry)</h3>
         <Table
           data={trips}
           columns={activeTripColumns}
@@ -396,8 +395,8 @@ export const Fleet: React.FC = () => {
       </div>
 
       {/* Vehicles CRUD list */}
-      <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-4">Diagnostics Registry</h3>
+      <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm">
+        <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC] mb-5 uppercase tracking-wide">Diagnostics Registry</h3>
         <Table
           data={vehicles}
           columns={vehicleColumns}
@@ -413,10 +412,10 @@ export const Fleet: React.FC = () => {
         { isOpen: editModalOpen, setOpen: setEditModalOpen, title: 'Modify Vehicle Details', submit: handleEditSubmit }
       ].map((modal, idx) => (
         <Modal key={idx} isOpen={modal.isOpen} onClose={() => modal.setOpen(false)} title={modal.title} size="lg">
-          <form onSubmit={modal.submit} className="space-y-4">
+          <form onSubmit={modal.submit} className="space-y-5 text-left">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Vehicle Registration No.</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Vehicle Registration No.</label>
                 <input
                   type="text"
                   required
@@ -424,17 +423,17 @@ export const Fleet: React.FC = () => {
                   placeholder="e.g. MH-12-QW-9874"
                   value={form.vehicleNumber}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Vehicle Type</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Vehicle Type</label>
                 <select
                   name="vehicleType"
                   value={form.vehicleType}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
                 >
                   <option>Container Truck (18T)</option>
                   <option>Flatbed Trailer (24T)</option>
@@ -446,7 +445,7 @@ export const Fleet: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Assigned Driver</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Assigned Driver</label>
                 <input
                   type="text"
                   required
@@ -454,12 +453,12 @@ export const Fleet: React.FC = () => {
                   placeholder="e.g. Rajesh Kumar"
                   value={form.driver}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">RC Smartcard Number</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">RC Smartcard Number</label>
                 <input
                   type="text"
                   required
@@ -467,57 +466,57 @@ export const Fleet: React.FC = () => {
                   placeholder="e.g. RC-MH-12-9874"
                   value={form.rcNumber}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Insurance Expiry</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Insurance Expiry</label>
                 <input
                   type="date"
                   required
                   name="insurance"
                   value={form.insurance}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Permit Expiry</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Permit Expiry</label>
                 <input
                   type="date"
                   required
                   name="permit"
                   value={form.permit}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Fitness Cert Expiry</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Fitness Cert Expiry</label>
                 <input
                   type="date"
                   required
                   name="fitness"
                   value={form.fitness}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Fuel Type</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Fuel Type</label>
                 <select
                   name="fuelType"
                   value={form.fuelType}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
                 >
                   <option value="Diesel">Diesel</option>
                   <option value="CNG">CNG</option>
@@ -526,7 +525,7 @@ export const Fleet: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Mileage (km/l)</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Mileage (km/l)</label>
                 <input
                   type="number"
                   step="0.1"
@@ -534,17 +533,17 @@ export const Fleet: React.FC = () => {
                   name="mileage"
                   value={form.mileage}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Diagnostics Status</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Diagnostics Status</label>
                 <select
                   name="status"
                   value={form.status}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
                 >
                   <option value="Idle">Idle (Yard)</option>
                   <option value="Moving">Moving (Transit)</option>
@@ -555,7 +554,7 @@ export const Fleet: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Current GPS Location</label>
+              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Current GPS Location</label>
               <input
                 type="text"
                 required
@@ -563,11 +562,11 @@ export const Fleet: React.FC = () => {
                 placeholder="e.g. Pune Highway"
                 value={form.currentLocation}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-4 border-t border-gray-100 dark:border-slate-800">
+            <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
               <Button type="button" variant="outline" onClick={() => modal.setOpen(false)}>
                 Cancel
               </Button>
@@ -587,66 +586,67 @@ export const Fleet: React.FC = () => {
         size="xl"
       >
         {selectedPODTrip && (
-          <div className="space-y-6 text-slate-800 dark:text-slate-100">
+          <div className="space-y-6 text-[#0B1C30] dark:text-slate-100 text-left">
             {/* Header Status Bar */}
-            <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-gray-100 dark:border-slate-800">
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Official Receipt Code</span>
-                <p className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
+            <div className="flex justify-between items-center bg-[#F8F9FF] dark:bg-[#1E293B]/60 p-5 rounded-2xl border border-[#E5EEFF] dark:border-[#334155]">
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-bold text-[#6D7A79] uppercase tracking-wider block">Official Receipt Code</span>
+                <p className="font-mono text-xs font-bold text-[#006A6A] dark:text-[#14B8A6]">
                   POD-RECEIPT-{selectedPODTrip.tripNumber}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="success">✓ Verified & Audited</Badge>
+              <div className="flex items-center gap-2.5">
+                <Badge variant="success">? Verified & Audited</Badge>
                 <Button
                   onClick={() => downloadPODPDF(selectedPODTrip)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-3 rounded-lg text-[10px] flex items-center gap-1.5 cursor-pointer animate-pulse"
+                  variant="primary"
+                  className="text-xs py-1.5 px-3 rounded-lg shadow-sm"
                 >
-                  <Download className="h-3.5 w-3.5" /> Print PDF Receipt
+                  <Download className="h-4 w-4" /> Print PDF Receipt
                 </Button>
               </div>
             </div>
 
             {/* Side-by-Side Metadata Cards */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-slate-50 dark:bg-slate-900/40 border border-gray-100 dark:border-slate-800 rounded-2xl space-y-3">
-                <h5 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide border-b border-gray-100 dark:border-slate-800 pb-1.5">
+              <div className="p-5 bg-white dark:bg-[#1E293B]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-2xl space-y-3.5 shadow-sm">
+                <h5 className="text-[13px] font-bold text-[#0B1C30] dark:text-[#6D7A79] uppercase tracking-wide border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-2.5">
                   Consignment & Vehicle
                 </h5>
-                <div className="grid grid-cols-2 gap-y-2.5 text-xs">
+                <div className="grid grid-cols-2 gap-y-3 text-xs">
                   <div>
-                    <span className="text-slate-400 dark:text-slate-500 block">Operator Name</span>
-                    <span className="font-bold text-slate-700 dark:text-slate-200">{selectedPODTrip.driverName}</span>
+                    <span className="text-[#6D7A79] block font-medium">Operator Name</span>
+                    <span className="font-bold text-slate-800 dark:text-[#F8FAFC]">{selectedPODTrip.driverName}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 dark:text-slate-500 block">Vehicle Reg</span>
-                    <span className="font-bold text-slate-700 dark:text-slate-200">{selectedPODTrip.vehicleNumber}</span>
+                    <span className="text-[#6D7A79] block font-medium">Vehicle Reg</span>
+                    <span className="font-bold text-slate-800 dark:text-[#F8FAFC]">{selectedPODTrip.vehicleNumber}</span>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-slate-400 dark:text-slate-505 block">Invoice Number</span>
-                    <span className="font-bold text-slate-700 dark:text-slate-200 font-mono">{selectedPODTrip.invoiceNumber}</span>
+                    <span className="text-[#6D7A79] block font-medium">Invoice Number</span>
+                    <span className="font-bold text-slate-800 dark:text-[#F8FAFC] font-mono">{selectedPODTrip.invoiceNumber}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 bg-slate-50 dark:bg-slate-900/40 border border-gray-100 dark:border-slate-800 rounded-2xl space-y-3">
-                <h5 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide border-b border-gray-100 dark:border-slate-800 pb-1.5">
+              <div className="p-5 bg-white dark:bg-[#1E293B]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-2xl space-y-3.5 shadow-sm">
+                <h5 className="text-[13px] font-bold text-[#0B1C30] dark:text-[#6D7A79] uppercase tracking-wide border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-2.5">
                   Client & Transit Info
                 </h5>
-                <div className="grid grid-cols-2 gap-y-2.5 text-xs">
+                <div className="grid grid-cols-2 gap-y-3 text-xs">
                   <div>
-                    <span className="text-slate-400 dark:text-slate-500 block">Consignee Client</span>
-                    <span className="font-bold text-slate-700 dark:text-slate-200">{selectedPODTrip.customerName}</span>
+                    <span className="text-[#6D7A79] block font-medium">Consignee Client</span>
+                    <span className="font-bold text-slate-800 dark:text-[#F8FAFC]">{selectedPODTrip.customerName}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 dark:text-slate-500 block">GPS Telemetry</span>
-                    <span className="font-bold text-emerald-600 font-mono flex items-center gap-1">
-                      <MapPin className="h-3 w-3 shrink-0" /> Verified GPS
+                    <span className="text-[#6D7A79] block font-medium">GPS Telemetry</span>
+                    <span className="font-bold text-emerald-600 font-mono flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 shrink-0 text-[#10B981]" /> Verified GPS
                     </span>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-slate-400 dark:text-slate-505 block">Completion Clock</span>
-                    <span className="font-bold text-slate-700 dark:text-slate-200 font-mono">
+                    <span className="text-[#6D7A79] block font-medium">Completion Clock</span>
+                    <span className="font-bold text-slate-800 dark:text-[#F8FAFC] font-mono">
                       {new Date((selectedPODTrip as any).updatedAt || selectedPODTrip.timestamp).toLocaleString()}
                     </span>
                   </div>
@@ -655,14 +655,14 @@ export const Fleet: React.FC = () => {
             </div>
 
             {/* Delivery Photos Gallery Section */}
-            <div className="space-y-2">
-              <h5 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+            <div className="space-y-3">
+              <h5 className="text-[13px] font-bold text-[#0B1C30] dark:text-[#6D7A79] uppercase tracking-wide">
                 Cargo Delivery Verification Photos ({selectedPODTrip.deliveryPhoto?.length || 0})
               </h5>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-4">
                 {selectedPODTrip.deliveryPhoto && selectedPODTrip.deliveryPhoto.length > 0 ? (
                   selectedPODTrip.deliveryPhoto.map((photoUrl, idx) => (
-                    <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-gray-250 dark:border-slate-800 bg-slate-950 group">
+                    <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-[#E5EEFF] dark:border-[#334155] bg-slate-950 group shadow-sm">
                       <img
                         src={photoUrl}
                         alt={`Verification capture ${idx + 1}`}
@@ -671,7 +671,7 @@ export const Fleet: React.FC = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-3 p-8 border border-dashed border-gray-200 dark:border-slate-800 rounded-2xl text-center text-xs text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-950/20">
+                  <div className="col-span-3 p-8 border border-dashed border-gray-200 dark:border-slate-800 rounded-2xl text-center text-xs text-slate-400 dark:text-[#6D7A79] bg-[#F8F9FF] dark:bg-[#0F172A]/20">
                     No physical cargo photo verification documents uploaded.
                   </div>
                 )}
@@ -679,11 +679,11 @@ export const Fleet: React.FC = () => {
             </div>
 
             {/* Signature Block */}
-            <div className="space-y-2">
-              <h5 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+            <div className="space-y-3">
+              <h5 className="text-[13px] font-bold text-[#0B1C30] dark:text-[#6D7A79] uppercase tracking-wide">
                 Consignee E-Signature Verification
               </h5>
-              <div className="p-4 bg-white dark:bg-slate-950 border border-gray-200 dark:border-slate-800 rounded-2xl flex items-center justify-center h-32 relative">
+              <div className="p-5 bg-white dark:bg-[#0F172A] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl flex items-center justify-center h-36 relative shadow-sm">
                 {selectedPODTrip.signatureData ? (
                   <img
                     src={selectedPODTrip.signatureData}
@@ -691,10 +691,10 @@ export const Fleet: React.FC = () => {
                     className="max-h-full max-w-xs object-contain"
                   />
                 ) : (
-                  <p className="text-xs text-slate-400 dark:text-slate-500 italic">No signature file archived.</p>
+                  <p className="text-xs text-slate-400 dark:text-[#6D7A79] italic">No signature file archived.</p>
                 )}
-                <div className="absolute bottom-2 right-3 flex items-center gap-1 text-[9px] text-slate-450 dark:text-slate-550">
-                  <FileCheck className="h-3 w-3 text-emerald-500" /> Signature Match ID
+                <div className="absolute bottom-2.5 right-3.5 flex items-center gap-1 text-[11px] text-[#6D7A79] font-semibold">
+                  <FileCheck className="h-4 w-4 text-emerald-500" /> Signature Match ID
                 </div>
               </div>
             </div>
@@ -704,3 +704,6 @@ export const Fleet: React.FC = () => {
     </div>
   );
 };
+
+
+

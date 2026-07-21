@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 interface BadgeProps {
   children: React.ReactNode;
@@ -12,16 +12,17 @@ export const Badge: React.FC<BadgeProps> = ({
   className = ''
 }) => {
   const styles = {
-    success: 'bg-emerald-50 text-emerald-700 border-emerald-200/60 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-800/30',
-    warning: 'bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-800/30',
-    danger: 'bg-red-50 text-red-700 border-red-200/60 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800/30',
-    info: 'bg-blue-50 text-blue-700 border-blue-200/60 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-800/30',
-    neutral: 'bg-slate-50 text-slate-700 border-slate-200/60 dark:bg-slate-800/50 dark:text-slate-350 dark:border-slate-700/40',
+    success: 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20 dark:bg-[#10B981]/15 dark:text-[#34D399]',
+    warning: 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20 dark:bg-[#F59E0B]/15 dark:text-[#FBBF24]',
+    danger: 'bg-[#FFDAD4] text-[#BA1A1A] border-[#BA1A1A]/20 dark:bg-[#7F1D1D]/30 dark:text-[#FCA5A5] dark:border-[#FCA5A5]/25',
+    info: 'bg-[#0284C7]/10 text-[#0284C7] border-[#0284C7]/20 dark:bg-[#0369A1]/30 dark:text-[#38BDF8] dark:border-[#38BDF8]/20',
+    neutral: 'bg-[#EFF4FF] text-[#545F73] border-[#E5EEFF] dark:bg-[#1E293B] dark:text-[#CBD5E1] dark:border-[#334155]',
   };
 
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${styles[variant]} ${className}`}>
+    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border tracking-wide uppercase ${styles[variant]} ${className}`}>
       {children}
     </span>
   );
 };
+

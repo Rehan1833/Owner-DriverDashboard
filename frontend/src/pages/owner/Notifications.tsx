@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { soundPlayer } from '../../utils/audio';
@@ -67,22 +67,22 @@ export const Notifications: React.FC = () => {
     switch (severity) {
       case 'Error':
         return {
-          bg: 'bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900/30 text-red-650 dark:text-red-400',
+          bg: 'bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 shadow-sm',
           icon: XCircle
         };
       case 'Warning':
         return {
-          bg: 'bg-amber-50 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/30 text-amber-600 dark:text-amber-450',
+          bg: 'bg-amber-50 dark:bg-amber-950/20 border border-amber-105 dark:border-amber-900/30 text-amber-600 dark:text-amber-450 shadow-sm',
           icon: AlertTriangle
         };
       case 'Success':
         return {
-          bg: 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-450',
+          bg: 'bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-450 shadow-sm',
           icon: CheckCircle2
         };
       default:
         return {
-          bg: 'bg-blue-50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900/30 text-blue-600 dark:text-blue-450',
+          bg: 'bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 text-blue-600 dark:text-blue-450 shadow-sm',
           icon: Info
         };
     }
@@ -117,25 +117,25 @@ export const Notifications: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-16">
+    <div className="space-y-6 max-w-5xl mx-auto pb-16 animate-fade-in text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 dark:border-slate-800 pb-5 gap-4 text-left">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-5 gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-850 dark:text-white tracking-tight flex items-center gap-2">
-            <Bell className="h-6 w-6 text-primary dark:text-blue-500 animate-pulse" />
+          <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-white tracking-tight flex items-center gap-2.5 leading-none">
+            <Bell className="h-7 w-7 text-[#006A6A] dark:text-[#14B8A6] animate-pulse" />
             Notifications Center
           </h2>
-          <p className="text-xs text-slate-450 dark:text-slate-500 mt-1 font-semibold">
+          <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">
             Track real-time system alerts, fleet telemetry updates, salary approvals, and stock limits.
           </p>
         </div>
-        <div className="flex gap-2 w-full sm:w-auto shrink-0">
+        <div className="flex gap-2.5 w-full sm:w-auto shrink-0 self-stretch sm:self-auto">
           <Button
             type="button"
             variant="outline"
             onClick={handleMarkAllRead}
             disabled={filteredNotifs.every(n => n.read)}
-            className="flex-1 sm:flex-none text-xs font-semibold py-2 rounded-xl flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-40"
+            className="flex-1 sm:flex-none text-xs font-semibold py-2 border border-[#E5EEFF] dark:border-[#334155] bg-white hover:bg-[#F8F9FF]"
           >
             <CheckCheck className="h-4 w-4" /> Mark All Read
           </Button>
@@ -143,7 +143,8 @@ export const Notifications: React.FC = () => {
             type="button"
             onClick={handleClearAll}
             disabled={filteredNotifs.length === 0}
-            className="flex-1 sm:flex-none text-xs font-bold py-2 rounded-xl bg-red-500 hover:bg-red-650 text-white flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
+            variant="danger"
+            className="flex-1 sm:flex-none text-xs font-bold py-2 shadow-md shadow-red-900/10"
           >
             <Trash2 className="h-4 w-4" /> Clear Logs
           </Button>
@@ -151,10 +152,10 @@ export const Notifications: React.FC = () => {
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-gray-105 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-[20px] p-5 shadow-sm flex flex-col md:flex-row gap-4 items-center">
         {/* Search */}
         <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-2.5 h-4.5 w-4.5 text-slate-400" />
+          <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search alerts detail..."
@@ -163,7 +164,7 @@ export const Notifications: React.FC = () => {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-10 pr-4 py-2 text-xs border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/20 dark:bg-slate-950 text-slate-750 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary focus:border-transparent transition-all"
+            className="w-full pl-10 pr-4 h-11 text-xs border border-[#E5EEFF] dark:border-[#334155] rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] transition-all font-semibold placeholder-slate-400"
           />
         </div>
 
@@ -178,8 +179,8 @@ export const Notifications: React.FC = () => {
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 filterCategory === category
-                  ? 'bg-primary text-white dark:bg-blue-600'
-                  : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                  ? 'bg-[#006A6A] text-white shadow-sm'
+                  : 'text-[#6D7A79] hover:text-slate-800 hover:bg-[#F8F9FF] dark:hover:bg-slate-800'
               }`}
             >
               {category}
@@ -196,7 +197,7 @@ export const Notifications: React.FC = () => {
               setFilterSeverity(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full md:w-32 px-3 py-1.5 text-xs border border-slate-205 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-slate-750 dark:text-slate-250 cursor-pointer"
+            className="w-full md:w-36 px-4 h-11 text-xs border border-[#E5EEFF] dark:border-[#334155] rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-700 focus:outline-none cursor-pointer font-bold"
           >
             <option value="All">All Severities</option>
             <option value="Success">Success</option>
@@ -218,44 +219,44 @@ export const Notifications: React.FC = () => {
             return (
               <div
                 key={notif.id}
-                className={`border rounded-2xl p-4 flex gap-4 items-start transition-all hover:shadow-sm ${
+                className={`border rounded-2xl p-5 flex gap-4 items-start transition-all hover:shadow-sm ${
                   notif.read
-                    ? 'bg-white/40 dark:bg-slate-900/40 border-slate-100 dark:border-slate-805 opacity-75'
-                    : 'bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800 shadow-sm relative overflow-hidden'
+                    ? 'bg-[#F8F9FF]/40 dark:bg-[#1E293B]/40 border-[rgba(11,28,48,0.04)] opacity-75'
+                    : 'bg-white dark:bg-[#1E293B] border-[#E5EEFF] dark:border-[#334155] shadow-sm relative overflow-hidden'
                 }`}
               >
                 {!notif.read && (
-                  <span className="absolute top-0 left-0 w-1 h-full bg-primary dark:bg-blue-500" />
+                  <span className="absolute top-0 left-0 w-1 h-full bg-[#006A6A] dark:bg-[#14B8A6]" />
                 )}
 
-                <div className={`p-2 rounded-xl shrink-0 ${style.bg}`}>
+                <div className={`p-2.5 rounded-xl shrink-0 ${style.bg}`}>
                   <SeverityIcon className="h-5 w-5" />
                 </div>
 
                 <div className="flex-1 min-w-0 text-left">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC]">
                         {notif.title}
                       </h4>
-                      <span className="text-[9px] bg-slate-50 dark:bg-slate-800 text-slate-500 font-extrabold px-2 py-0.5 rounded border border-slate-200/40 uppercase">
+                      <span className="text-[10px] bg-[#F8F9FF] dark:bg-slate-800 text-[#6D7A79] font-bold px-2 py-0.5 rounded border border-slate-200/40 uppercase tracking-wider">
                         {cat}
                       </span>
                     </div>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold flex items-center gap-1.5">
-                      <Clock className="h-3 w-3" /> {notif.timestamp}
+                    <span className="text-[11px] text-slate-400 dark:text-[#6D7A79] font-semibold flex items-center gap-1 shrink-0">
+                      <Clock className="h-3.5 w-3.5" /> {notif.timestamp}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-normal">
+                  <p className="text-sm text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 leading-relaxed font-semibold">
                     {notif.message}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
                   {!notif.read && (
                     <button
                       onClick={() => handleMarkAsRead(notif.id)}
-                      className="p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-450 hover:text-primary dark:hover:text-blue-400 transition-colors cursor-pointer"
+                      className="p-2 rounded-xl hover:bg-[#F8F9FF] dark:hover:bg-slate-800 text-slate-400 hover:text-[#006A6A] dark:hover:text-[#14B8A6] transition-colors cursor-pointer"
                       title="Mark as read"
                     >
                       <CheckCheck className="h-4 w-4" />
@@ -263,7 +264,7 @@ export const Notifications: React.FC = () => {
                   )}
                   <button
                     onClick={() => handleDeleteNotif(notif.id)}
-                    className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+                    className="p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 text-slate-400 hover:text-[#EF4444] transition-colors cursor-pointer"
                     title="Delete log"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -273,31 +274,31 @@ export const Notifications: React.FC = () => {
             );
           })
         ) : (
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-16 text-center shadow-sm">
-            <Bell className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto animate-bounce mb-3" />
-            <h4 className="text-sm font-bold text-slate-750 dark:text-slate-200">System Log Empty</h4>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">There are no notifications matching the filtered query criteria.</p>
+          <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-[20px] p-16 text-center shadow-sm">
+            <Bell className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto animate-bounce mb-3.5" />
+            <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC]">System Log Empty</h4>
+            <p className="text-[13px] text-[#6D7A79] dark:text-[#6D7A79] mt-1 font-medium">There are no notifications matching the filtered query criteria.</p>
           </div>
         )}
       </div>
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex justify-between items-center bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 shadow-sm text-xs font-semibold">
+        <div className="flex justify-between items-center bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-xl p-4 shadow-sm text-xs font-bold">
           <button
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="px-3.5 py-1.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg cursor-pointer disabled:opacity-40"
+            className="px-3.5 py-2 border border-slate-200 dark:border-slate-800 hover:bg-[#F8F9FF] dark:hover:bg-slate-800 rounded-xl cursor-pointer disabled:opacity-40"
           >
             Previous
           </button>
-          <span className="text-slate-500 dark:text-slate-450">
+          <span className="text-[#6D7A79] dark:text-[#94A3B8] font-bold">
             Page {currentPage} of {totalPages}
           </span>
           <button
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="px-3.5 py-1.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg cursor-pointer disabled:opacity-40"
+            className="px-3.5 py-2 border border-slate-200 dark:border-slate-800 hover:bg-[#F8F9FF] dark:hover:bg-slate-800 rounded-xl cursor-pointer disabled:opacity-40"
           >
             Next
           </button>
@@ -306,3 +307,5 @@ export const Notifications: React.FC = () => {
     </div>
   );
 };
+
+

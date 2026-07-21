@@ -33,3 +33,9 @@ export const emitTelemetryUpdate = (data: any) => {
     io.emit('telemetryUpdate', data);
   }
 };
+
+export const emitPodUpdate = (data: any) => {
+  if (io) {
+    io.emit('podUpdate', data);
+  }
+};

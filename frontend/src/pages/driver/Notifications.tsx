@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Badge } from '../../components/ui/Badge';
 import { Bell, AlertTriangle, Truck, Navigation, Fuel, Info, Calendar } from 'lucide-react';
 
@@ -25,7 +25,7 @@ export const Notifications: React.FC = () => {
       time: '15 mins ago',
       icon: Truck,
       color: 'text-blue-600',
-      bg: 'bg-blue-50'
+      bg: 'bg-blue-50/60'
     },
     {
       id: 'N-02',
@@ -34,8 +34,8 @@ export const Notifications: React.FC = () => {
       type: 'System',
       time: '1 hr ago',
       icon: Navigation,
-      color: 'text-indigo-600',
-      bg: 'bg-indigo-50'
+      color: 'text-[#006A6A]',
+      bg: 'bg-[#006A6A]/10'
     },
     {
       id: 'N-03',
@@ -45,7 +45,7 @@ export const Notifications: React.FC = () => {
       time: '4 hrs ago',
       icon: AlertTriangle,
       color: 'text-amber-600',
-      bg: 'bg-amber-50'
+      bg: 'bg-amber-50/60'
     },
     {
       id: 'N-04',
@@ -55,7 +55,7 @@ export const Notifications: React.FC = () => {
       time: '1 day ago',
       icon: Fuel,
       color: 'text-rose-600',
-      bg: 'bg-rose-50'
+      bg: 'bg-rose-50/60'
     },
     {
       id: 'N-05',
@@ -65,7 +65,7 @@ export const Notifications: React.FC = () => {
       time: '2 days ago',
       icon: Calendar,
       color: 'text-emerald-600',
-      bg: 'bg-emerald-50'
+      bg: 'bg-emerald-50/60'
     },
     {
       id: 'N-06',
@@ -74,28 +74,30 @@ export const Notifications: React.FC = () => {
       type: 'Operations',
       time: '3 days ago',
       icon: Info,
-      color: 'text-slate-650',
-      bg: 'bg-slate-100'
+      color: 'text-[#6D7A79]',
+      bg: 'bg-slate-100/60'
     }
   ];
 
   const filteredList = notifications.filter(n => filter === 'All' || n.type === filter);
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto pb-12">
+    <div className="space-y-8 max-w-3xl mx-auto pb-12 text-left animate-fade-in">
       {/* Title */}
-      <div className="flex justify-between items-center border-b border-gray-100 pb-5">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-5">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">Dispatch & Safety Notifications</h2>
-          <p className="text-xs text-slate-400 mt-1">Review active consignment updates, route deviations, and fleet reminders.</p>
+          <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-slate-100 tracking-tight leading-none">Dispatch & Safety Notifications</h2>
+          <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">Review active consignment updates, route deviations, and fleet reminders.</p>
         </div>
-        <div className="flex gap-1 bg-slate-50 border border-slate-100 p-1 rounded-xl text-xs">
+        <div className="flex gap-1.5 bg-[#F8F9FF] dark:bg-[#0F172A] border border-[#E5EEFF] dark:border-[#334155] p-1 rounded-xl text-xs self-start sm:self-auto shadow-sm font-bold">
           {(['All', 'Operations', 'Alerts', 'System'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setFilter(tab)}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                filter === tab ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-750'
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                filter === tab 
+                  ? 'bg-white dark:bg-[#1E293B] text-[#006A6A] dark:text-white shadow-sm' 
+                  : 'text-[#6D7A79] hover:text-[#0B1C30] dark:hover:text-white'
               }`}
             >
               {tab}
@@ -107,7 +109,7 @@ export const Notifications: React.FC = () => {
       {/* Notifications list */}
       <div className="space-y-4">
         {filteredList.length === 0 ? (
-          <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm text-center text-slate-400 text-xs italic">
+          <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-8 border border-[#E5EEFF] dark:border-[#334155] shadow-sm text-center text-slate-400 text-xs italic font-semibold">
             No active notification logs under category "{filter}".
           </div>
         ) : (
@@ -116,21 +118,21 @@ export const Notifications: React.FC = () => {
             return (
               <div
                 key={notif.id}
-                className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow relative overflow-hidden"
+                className="bg-white dark:bg-[#1E293B] rounded-2xl p-5 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow relative overflow-hidden text-left"
               >
-                <div className={`p-3 rounded-2xl shrink-0 ${notif.bg} ${notif.color}`}>
+                <div className={`p-3.5 rounded-xl shrink-0 ${notif.bg} ${notif.color}`}>
                   <Icon className="h-5 w-5" />
                 </div>
-                <div className="space-y-1 pr-12">
+                <div className="space-y-1.5 pr-12">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="text-xs font-bold text-slate-800">{notif.title}</h4>
+                    <h4 className="text-sm font-bold text-[#0B1C30] dark:text-slate-100">{notif.title}</h4>
                     <Badge variant={notif.type === 'Operations' ? 'info' : notif.type === 'Alerts' ? 'warning' : 'neutral'}>
                       {notif.type}
                     </Badge>
                   </div>
-                  <p className="text-[11px] text-slate-450 leading-relaxed font-semibold">{notif.desc}</p>
+                  <p className="text-[13px] text-[#6D7A79] leading-relaxed font-semibold">{notif.desc}</p>
                 </div>
-                <span className="absolute top-5 right-5 text-[9px] text-slate-400 font-mono font-medium">{notif.time}</span>
+                <span className="absolute top-5 right-5 text-[10px] text-slate-400 font-mono font-bold uppercase">{notif.time}</span>
               </div>
             );
           })
@@ -139,3 +141,4 @@ export const Notifications: React.FC = () => {
     </div>
   );
 };
+

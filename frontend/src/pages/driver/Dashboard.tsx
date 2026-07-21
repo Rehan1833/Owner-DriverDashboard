@@ -313,9 +313,9 @@ export const Home: React.FC = () => {
   ];
 
   const performanceScoreData = [
-    { name: 'On Time Delivery', value: 85, color: 'var(--color-primary)' },
-    { name: 'Delayed Delivery', value: 10, color: 'var(--color-warning)' },
-    { name: 'Failed Delivery', value: 5, color: 'var(--color-danger)' },
+    { name: 'On Time Delivery', value: 85, color: '#006A6A' },
+    { name: 'Delayed Delivery', value: 10, color: '#F59E0B' },
+    { name: 'Failed Delivery', value: 5, color: '#EF4444' },
   ];
 
   const isOffDuty = currentDutyStatus === 'Off Duty' && !todayRecord?.checkOut;
@@ -323,50 +323,50 @@ export const Home: React.FC = () => {
 
   if (isDutyEnded) {
     return (
-      <div className="min-h-[85vh] flex flex-col items-center justify-center p-4">
+      <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 text-left animate-fade-in">
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-lg w-full border border-slate-100 dark:border-slate-800 shadow-2xl space-y-8 text-center"
+          className="bg-white dark:bg-[#1E293B] rounded-2xl p-8 max-w-lg w-full border border-[#E5EEFF] dark:border-[#334155] shadow-xl space-y-8 text-center"
         >
-          <div className="w-20 h-20 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-405 flex items-center justify-center mx-auto ring-8 ring-emerald-500/10">
+          <div className="w-20 h-20 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-[#10B981] flex items-center justify-center mx-auto ring-8 ring-emerald-500/10">
             <CheckCircle className="h-10 w-10 text-emerald-500" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 animate-fade-in">Check-Out Successful</h3>
-            <p className="text-xs text-slate-400">Shift log processed. Metrics synced to Owner Dashboard.</p>
+            <h3 className="text-xl font-bold text-[#0B1C30] dark:text-slate-100 animate-fade-in">Check-Out Successful</h3>
+            <p className="text-xs text-[#6D7A79]">Shift log processed. Metrics synced to Owner Dashboard.</p>
           </div>
 
           <div className="grid grid-cols-3 gap-4 text-left">
-            <div className="p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-gray-100 dark:border-slate-800/80 rounded-2xl">
+            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
               <span className="text-[10px] text-slate-400 uppercase font-bold block">Worked Time</span>
-              <span className="text-sm font-bold text-slate-800 dark:text-slate-200 block mt-1">{todayRecord.workingHours} hrs</span>
+              <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.workingHours} hrs</span>
             </div>
-            <div className="p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-gray-100 dark:border-slate-800/80 rounded-2xl">
+            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
               <span className="text-[10px] text-slate-400 uppercase font-bold block">Overtime</span>
-              <span className="text-sm font-bold text-slate-800 dark:text-slate-200 block mt-1">{todayRecord.overtime} hrs</span>
+              <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.overtime} hrs</span>
             </div>
-            <div className="p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-gray-100 dark:border-slate-800/80 rounded-2xl">
+            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
               <span className="text-[10px] text-slate-400 uppercase font-bold block">Break Duration</span>
-              <span className="text-sm font-bold text-slate-800 dark:text-slate-200 block mt-1">{todayRecord.breakDuration} mins</span>
+              <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.breakDuration} mins</span>
             </div>
-            <div className="p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-gray-100 dark:border-slate-800/80 rounded-2xl">
+            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
               <span className="text-[10px] text-slate-400 uppercase font-bold block">Distance covered</span>
-              <span className="text-sm font-bold text-slate-800 dark:text-slate-200 block mt-1">{todayRecord.distanceCovered} km</span>
+              <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.distanceCovered} km</span>
             </div>
-            <div className="p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-gray-100 dark:border-slate-800/80 rounded-2xl">
+            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
               <span className="text-[10px] text-slate-400 uppercase font-bold block">Fuel Consumed</span>
-              <span className="text-sm font-bold text-slate-800 dark:text-slate-200 block mt-1">{todayRecord.fuelUsed} L</span>
+              <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.fuelUsed} L</span>
             </div>
-            <div className="p-3.5 bg-slate-50 dark:bg-slate-950/40 border border-gray-100 dark:border-slate-800/80 rounded-2xl">
+            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
               <span className="text-[10px] text-slate-400 uppercase font-bold block">Safety Score</span>
-              <span className="text-sm font-bold text-emerald-605 dark:text-emerald-400 block mt-1">{todayRecord.performanceScore}%</span>
+              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 block mt-1">{todayRecord.performanceScore}%</span>
             </div>
           </div>
 
-          <div className="bg-slate-50 dark:bg-slate-950/40 p-4 rounded-2xl text-xs flex justify-between items-center text-left border border-gray-100 dark:border-slate-800">
+          <div className="bg-[#F8F9FF] dark:bg-[#0F172A]/40 p-4 rounded-xl text-xs flex justify-between items-center text-left border border-[#E5EEFF] dark:border-[#334155]">
             <div>
-              <p className="font-bold text-slate-705 dark:text-slate-200">Calculated Attendance Status</p>
+              <p className="font-bold text-slate-700 dark:text-[#F8FAFC]">Calculated Attendance Status</p>
               <p className="text-[10px] text-slate-400">Determined automatically based on check-in hour.</p>
             </div>
             <Badge variant={todayRecord.attendanceStatus === 'Present' ? 'success' : todayRecord.attendanceStatus === 'Late' ? 'warning' : 'danger'}>
@@ -383,40 +383,40 @@ export const Home: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in text-left">
       {/* Real-time Duty tracking status strip */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-5 shadow-sm">
         <div className="flex items-center gap-3">
           <div className={`p-2.5 rounded-xl shrink-0 ${
-            currentDutyStatus === 'On Duty' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400' :
-            currentDutyStatus === 'On Trip' ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400' :
-            currentDutyStatus === 'On Break' ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400' : 'bg-red-50 dark:bg-red-950/20 text-red-650 dark:text-red-400'
+            currentDutyStatus === 'On Duty' ? 'bg-[#DCFCE7] dark:bg-[#064E3B]/40 text-[#10B981] dark:text-[#34D399]' :
+            currentDutyStatus === 'On Trip' ? 'bg-[#EFF4FF] dark:bg-blue-950/20 text-[#006A6A] dark:text-[#7DF5F5]' :
+            currentDutyStatus === 'On Break' ? 'bg-[#FEF3C7] dark:bg-amber-950/20 text-[#F59E0B] dark:text-[#FBBF24]' : 'bg-[#FFDAD4] dark:bg-red-950/20 text-[#BA1A1A] dark:text-[#FCA5A5]'
           }`}>
             <Activity className="h-5 w-5 animate-pulse" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase block">Duty Status</span>
-            <span className="font-bold text-slate-800 dark:text-slate-100 text-sm">{currentDutyStatus}</span>
+            <span className="text-[11px] font-semibold text-[#6D7A79] dark:text-[#94A3B8] uppercase block">Duty Status</span>
+            <span className="font-bold text-[#0B1C30] dark:text-white text-sm">{currentDutyStatus}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-slate-50 text-slate-500 shrink-0">
+          <div className="p-2.5 rounded-xl bg-[#EFF4FF] dark:bg-[#111827] text-[#6D7A79] dark:text-[#94A3B8] shrink-0 border border-[#E5EEFF] dark:border-[#334155]">
             <Clock className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase block">Check-In Time</span>
-            <span className="font-bold text-slate-800 text-sm font-mono">{todayRecord?.checkIn || '--'}</span>
+            <span className="text-[11px] font-semibold text-[#6D7A79] dark:text-[#94A3B8] uppercase block">Check-In Time</span>
+            <span className="font-bold text-[#0B1C30] dark:text-white text-sm font-mono">{todayRecord?.checkIn || '--'}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-slate-50 text-slate-500 shrink-0">
+          <div className="p-2.5 rounded-xl bg-[#EFF4FF] dark:bg-[#111827] text-[#6D7A79] dark:text-[#94A3B8] shrink-0 border border-[#E5EEFF] dark:border-[#334155]">
             <Gauge className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase block">Break Duration</span>
-            <span className="font-bold text-slate-800 text-sm font-mono">{todayRecord?.breakDuration || 0} mins</span>
+            <span className="text-[11px] font-semibold text-[#6D7A79] dark:text-[#94A3B8] uppercase block">Break Duration</span>
+            <span className="font-bold text-[#0B1C30] dark:text-white text-sm font-mono">{todayRecord?.breakDuration || 0} mins</span>
           </div>
         </div>
 
@@ -424,22 +424,25 @@ export const Home: React.FC = () => {
           {currentDutyStatus === 'On Break' ? (
             <Button
               onClick={handleEndBreak}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl"
+              variant="primary"
+              className="text-xs py-2 px-4 rounded-xl"
             >
               Resume Duty
             </Button>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Button
                 onClick={() => setBreakModalOpen(true)}
-                className="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-4 py-2 rounded-xl border border-transparent"
+                variant="outline"
+                className="text-xs py-2 px-4 rounded-xl bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] text-[#545F73] dark:text-[#CBD5E1] hover:bg-[#F8F9FF] dark:hover:bg-[#111827]"
               >
                 Start Break
               </Button>
               <Button
                 onClick={handleEndDuty}
                 isLoading={isEndingDuty}
-                className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-xl border border-transparent"
+                variant="danger"
+                className="text-xs py-2 px-4 rounded-xl"
               >
                 End Duty
               </Button>
@@ -451,19 +454,19 @@ export const Home: React.FC = () => {
       {/* Restructured Banner with Welcome & Attendance Card side-by-side */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Welcome Card & Quick Actions (2/3 width) */}
-        <div className="lg:col-span-2 flex flex-col justify-between bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950 p-6 md:p-8 rounded-3xl text-white shadow-xl min-h-[220px]">
+        <div className="lg:col-span-2 flex flex-col justify-between bg-[#0B1C30] p-6 md:p-8 rounded-2xl text-white shadow-lg min-h-[220px]">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                 Operator Shift Active
               </span>
-              <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+              <span className="flex items-center gap-1.5 text-[10px] text-emerald-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Telemetry
               </span>
             </div>
-            <h2 className="text-2xl font-black tracking-tight font-sans">Welcome, {user?.fullName || 'Rajesh Kumar'}</h2>
-            <p className="text-slate-400 text-xs leading-relaxed max-w-2xl">
-              You are assigned to container vehicle <span className="text-slate-200 font-semibold">{driverVehicle?.vehicleNumber || 'MH-12-QW-9874'}</span>. 
+            <h2 className="text-[26px] font-extrabold tracking-tight leading-tight">Welcome, {user?.fullName || 'Rajesh Kumar'}</h2>
+            <p className="text-slate-400 text-[13px] leading-relaxed max-w-2xl font-medium">
+              You are assigned to container vehicle <span className="text-white font-bold">{driverVehicle?.vehicleNumber || 'MH-12-QW-9874'}</span>. 
               GPS tracking loop and automatic checkpoint verification logs are active.
             </p>
           </div>
@@ -472,19 +475,21 @@ export const Home: React.FC = () => {
             <Button
               onClick={handleStatusTransition}
               disabled={!activeTrip}
-              className="bg-blue-600 hover:bg-blue-700 text-xs font-bold py-2.5 px-4 rounded-xl flex items-center gap-1.5 cursor-pointer border border-transparent"
+              variant="primary"
+              className="text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-md shadow-teal-900/10"
             >
               <Play className="h-4 w-4" /> Start/Next Step
             </Button>
             <Button
               onClick={() => setStopModalOpen(true)}
               disabled={!activeTrip || activeTrip.status !== 'In Transit'}
-              className="bg-slate-800 hover:bg-slate-700 text-xs font-bold py-2.5 px-4 rounded-xl border border-slate-700 flex items-center gap-1.5 cursor-pointer"
+              variant="outline"
+              className="text-xs py-2.5 px-4 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#1E293B] text-[#545F73] dark:text-[#CBD5E1] hover:bg-[#F8F9FF] dark:hover:bg-[#111827] flex items-center gap-1.5"
             >
-              <AlertTriangle className="h-4 w-4" /> Log Delay Stop
+              <AlertTriangle className="h-4 w-4 text-amber-500" /> Log Delay Stop
             </Button>
             <a href="#pod-section">
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-xs font-bold py-2.5 px-4 rounded-xl flex items-center gap-1.5 cursor-pointer border border-transparent">
+              <Button variant="primary" className="text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-900/10">
                 <FileText className="h-4 w-4" /> Upload POD
               </Button>
             </a>
@@ -492,40 +497,40 @@ export const Home: React.FC = () => {
         </div>
 
         {/* Today's Attendance Card (1/3 width) */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm flex flex-col justify-between min-h-[220px]">
+        <div className="bg-white dark:bg-[#1E293B] p-6 rounded-2xl border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex flex-col justify-between min-h-[220px]">
           <div className="space-y-3.5 text-left">
-            <div className="flex justify-between items-center pb-2.5 border-b border-gray-50 dark:border-slate-800/80">
-              <span className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider block">Today's Attendance</span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450 text-[10px] font-extrabold flex items-center gap-1.5 border border-emerald-100/50 dark:border-emerald-900/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> Present
+            <div className="flex justify-between items-center pb-2.5 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
+              <span className="text-[13px] font-bold text-[#0B1C30] dark:text-white uppercase tracking-wider block">Today's Attendance</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#10B981] text-[10px] font-extrabold flex items-center gap-1 border border-[#10B981]/15">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping" /> Present
               </span>
             </div>
             
             <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs">
               <div>
-                <span className="text-[9px] text-slate-400 uppercase font-semibold block">Status</span>
-                <span className="font-extrabold text-slate-805 dark:text-slate-202 flex items-center gap-1 mt-0.5">
-                  🟢 Present
+                <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-semibold block">Status</span>
+                <span className="font-bold text-[#0B1C30] dark:text-[#F8FAFC] flex items-center gap-1 mt-0.5">
+                  Present
                 </span>
               </div>
               
               <div>
-                <span className="text-[9px] text-slate-400 uppercase font-semibold block">Check-In</span>
-                <span className="font-bold text-slate-750 dark:text-slate-300 block mt-0.5 font-mono">
+                <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-semibold block">Check-In</span>
+                <span className="font-bold text-[#545F73] dark:text-[#CBD5E1] block mt-0.5 font-mono">
                   {todayRecord?.checkInTime || todayRecord?.checkIn || '09:05 AM'}
                 </span>
               </div>
               
               <div className="col-span-2">
-                <span className="text-[9px] text-slate-400 uppercase font-semibold block">Working Hours</span>
-                <span className="font-black text-slate-805 dark:text-slate-202 block mt-0.5 font-mono text-sm tracking-tight text-blue-600 dark:text-blue-400">
+                <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-semibold block">Working Hours</span>
+                <span className="font-extrabold text-[#0B1C30] dark:text-[#F8FAFC] block mt-0.5 font-mono text-sm tracking-tight text-[#006A6A] dark:text-[#7DF5F5]">
                   {liveWorkingTime}
                 </span>
               </div>
 
               <div className="col-span-2">
-                <span className="text-[9px] text-slate-400 uppercase font-semibold block">Location</span>
-                <span className="font-bold text-slate-750 dark:text-slate-300 block mt-0.5 truncate max-w-[220px]" title={todayRecord?.address || todayRecord?.checkInWarehouse || 'Pune Warehouse'}>
+                <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-semibold block">Location</span>
+                <span className="font-bold text-[#545F73] dark:text-[#CBD5E1] block mt-0.5 whitespace-normal break-words leading-tight" title={todayRecord?.address || todayRecord?.checkInWarehouse || 'Pune Warehouse'}>
                   {todayRecord?.checkInWarehouse || todayRecord?.address || 'Pune Warehouse'}
                 </span>
               </div>
@@ -537,12 +542,13 @@ export const Home: React.FC = () => {
               <Button
                 onClick={handleEndDuty}
                 isLoading={isEndingDuty}
-                className="w-full bg-red-650 hover:bg-red-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl border border-transparent flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-red-500/10"
+                variant="danger"
+                className="w-full text-xs py-2.5 rounded-xl shadow-md shadow-red-900/10"
               >
-                <LogOut className="h-3.5 w-3.5" /> End Duty
+                <LogOut className="h-4 w-4 animate-pulse" /> End Duty
               </Button>
             ) : (
-              <div className="text-center py-2.5 text-xs font-bold text-slate-400 bg-slate-50 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-805/80 rounded-xl">
+              <div className="text-center py-2.5 text-xs font-bold text-slate-400 bg-[#F8F9FF] dark:bg-slate-800/20 border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 rounded-xl">
                 Shift Duty Completed
               </div>
             )}
@@ -553,23 +559,23 @@ export const Home: React.FC = () => {
       {/* Row 1: KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { name: "Today's Assignments", val: driverTrips.length, sub: "Cargo runs", trend: "0% deviation", color: "text-blue-600", bg: "bg-blue-50" },
-          { name: "Completed Runs", val: completedTrips.length, sub: "Deliveries closed", trend: "+12% this week", color: "text-emerald-600", bg: "bg-emerald-50" },
-          { name: "Active Run Status", val: activeTrip ? activeTrip.status : 'None', sub: activeTrip?.tripNumber || '--', trend: "Real-time updates", color: "text-amber-600", bg: "bg-amber-50" },
-          { name: "Distance Covered", val: `${340} km`, sub: "This week's log", trend: "Target: 500km", color: "text-indigo-600", bg: "bg-indigo-50" },
-          { name: "Fuel Remaining", val: `${driverVehicle?.fuelLevel || 78}%`, sub: "Diesel yard status", trend: "Good range", color: "text-orange-600", bg: "bg-orange-50" },
-          { name: "Duty Hours", val: "7.5 hrs", sub: "Shift time logging", trend: "Under safety limits", color: "text-sky-600", bg: "bg-sky-50" },
-          { name: "Deliveries Completed", val: completedTrips.length, sub: "Consignments handed", trend: "100% success", color: "text-violet-600", bg: "bg-violet-50" },
-          { name: "Pending Deliveries", val: driverTrips.filter(t => t.status !== 'Completed').length, sub: "Awaiting dispatch", trend: "Action required", color: "text-rose-600", bg: "bg-rose-50" },
+          { name: "Today's Assignments", val: driverTrips.length, sub: "Cargo runs", trend: "0% deviation", color: "text-[#006A6A] dark:text-[#7DF5F5]", bg: "bg-[#EFF4FF] dark:bg-slate-800" },
+          { name: "Completed Runs", val: completedTrips.length, sub: "Deliveries closed", trend: "+12% this week", color: "text-[#10B981] dark:text-[#34D399]", bg: "bg-[#DCFCE7] dark:bg-emerald-950/20" },
+          { name: "Active Run Status", val: activeTrip ? activeTrip.status : 'None', sub: activeTrip?.tripNumber || '--', trend: "Real-time updates", color: "text-[#F59E0B] dark:text-[#FBBF24]", bg: "bg-[#FEF3C7] dark:bg-amber-950/20" },
+          { name: "Distance Covered", val: `${340} km`, sub: "This week's log", trend: "Target: 500km", color: "text-[#006A6A] dark:text-[#7DF5F5]", bg: "bg-[#006A6A]/10 dark:bg-[#006A6A]/20" },
+          { name: "Fuel Remaining", val: `${driverVehicle?.fuelLevel || 78}%`, sub: "Diesel yard status", trend: "Good range", color: "text-[#F59E0B] dark:text-[#FBBF24]", bg: "bg-[#FEF3C7] dark:bg-amber-950/20" },
+          { name: "Duty Hours", val: "7.5 hrs", sub: "Shift time logging", trend: "Under safety limits", color: "text-[#0284C7] dark:text-[#38BDF8]", bg: "bg-[#E0F2FE] dark:bg-sky-950/20" },
+          { name: "Deliveries Completed", val: completedTrips.length, sub: "Consignments handed", trend: "100% success", color: "text-[#10B981] dark:text-[#34D399]", bg: "bg-[#DCFCE7] dark:bg-emerald-950/20" },
+          { name: "Pending Deliveries", val: driverTrips.filter(t => t.status !== 'Completed').length, sub: "Awaiting dispatch", trend: "Action required", color: "text-[#BA1A1A] dark:text-[#FCA5A5]", bg: "bg-[#FFDAD4] dark:bg-red-950/20" },
         ].map((card, idx) => (
-          <div key={idx} className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4 hover:shadow-md transition-all">
-            <div className={`p-3 rounded-xl shrink-0 ${card.bg} ${card.color}`}>
-              <Truck className="h-5 w-5" />
+          <div key={idx} className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className={`p-3.5 rounded-xl shrink-0 ${card.bg} ${card.color}`}>
+              <Truck className="h-6 w-6" />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-505 uppercase block">{card.name}</span>
-              <h4 className="text-base font-bold text-slate-808 dark:text-white mt-0.5 truncate max-w-[150px]">{card.val}</h4>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">{card.sub} • <span className="text-emerald-600 dark:text-emerald-400">{card.trend}</span></p>
+              <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#94A3B8] uppercase tracking-tight block">{card.name}</span>
+              <h4 className="text-lg font-bold text-[#0B1C30] dark:text-[#F8FAFC] mt-0.5 whitespace-normal break-words leading-tight">{card.val}</h4>
+              <p className="text-[11px] text-[#6D7A79] dark:text-[#94A3B8] mt-0.5 font-bold">{card.sub} • <span className="text-emerald-600 dark:text-emerald-400">{card.trend}</span></p>
             </div>
           </div>
         ))}
@@ -578,15 +584,15 @@ export const Home: React.FC = () => {
       {/* Row 2: GPS Vector Map (70%) + Telemetry Panel (30%) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Interactive GPS map */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-gray-100 dark:border-slate-800 shadow-sm lg:col-span-2 space-y-4">
-          <div className="flex justify-between items-center border-b border-gray-55 dark:border-slate-800 pb-3 text-left">
-            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <Compass className="h-5 w-5 text-blue-600 animate-spin-slow" /> Interactive Route Navigation
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm lg:col-span-2 space-y-4">
+          <div className="flex justify-between items-center border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-3 text-left">
+            <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 flex items-center gap-2">
+              <Compass className="h-5 w-5 text-[#006A6A] animate-spin-slow" /> Interactive Route Navigation
             </h4>
             <Badge variant="info">Speed: 64 km/h</Badge>
           </div>
 
-          <div className="h-100 bg-slate-950 rounded-2xl relative overflow-hidden border border-slate-800 flex flex-col justify-between p-4">
+          <div className="h-72 bg-[#0B1C30] rounded-xl relative overflow-hidden border border-slate-800 flex flex-col justify-between p-4 shadow-inner">
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:28px_28px] opacity-25" />
             
             {/* SVG Path Route Pune to Mumbai */}
@@ -594,85 +600,85 @@ export const Home: React.FC = () => {
               <path
                 d="M 50,300 L 150,250 L 250,150 L 350,120 L 450,50"
                 fill="none"
-                stroke="#334155"
+                stroke="rgba(255,255,255,0.08)"
                 strokeWidth="6"
                 strokeLinecap="round"
               />
               <path
                 d="M 50,300 L 150,250 L 250,150"
                 fill="none"
-                stroke="#2563EB"
+                stroke="#006A6A"
                 strokeWidth="4"
                 strokeLinecap="round"
               />
-              <circle cx="50" cy="300" r="5" fill="#64748B" />
-              <circle cx="150" cy="250" r="5" fill="#2563EB" />
+              <circle cx="50" cy="300" r="5" fill="#667085" />
+              <circle cx="150" cy="250" r="5" fill="#006A6A" />
               <circle cx="250" cy="150" r="5" fill="#EF4444" />
               <circle cx="350" cy="120" r="5" fill="#64748B" />
               <circle cx="450" cy="50" r="6" fill="#10B981" />
             </svg>
 
             {/* Labels floating */}
-            <div className="absolute bottom-16 left-8 text-[9px] text-slate-400 font-bold">Pune Whse A</div>
-            <div className="absolute top-16 right-16 text-[9px] text-emerald-400 font-bold flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5" /> Mumbai terminal
+            <div className="absolute bottom-16 left-8 text-[10px] text-slate-400 font-bold">Pune Whse A</div>
+            <div className="absolute top-16 right-16 text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+              <MapPin className="h-4 w-4" /> Mumbai terminal
             </div>
 
             {/* Live truck pointer */}
             <div className="absolute top-36 left-48 flex flex-col items-center">
-              <span className="bg-blue-600 text-white font-mono font-bold text-[8px] px-1.5 py-0.5 rounded border border-blue-400 shadow">
+              <span className="bg-slate-900 text-white font-mono font-bold text-[9px] px-1.5 py-0.5 rounded border border-slate-700 shadow">
                 {driverVehicle?.vehicleNumber || 'MH-12'}
               </span>
-              <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center border border-white shadow-lg animate-bounce">
-                <Navigation className="h-2.5 w-2.5 rotate-45" />
+              <div className="w-5 h-5 rounded-full bg-[#006A6A] text-white flex items-center justify-center border border-white shadow-lg animate-bounce mt-1">
+                <Navigation className="h-3 w-3 rotate-45" />
               </div>
             </div>
 
-            <div className="relative z-10 bg-slate-900/90 backdrop-blur-md rounded-xl p-3 text-white border border-slate-800 flex justify-between items-center text-left">
+            <div className="relative z-10 bg-slate-900/90 backdrop-blur-md rounded-xl p-3.5 text-white border border-slate-800 flex justify-between items-center text-left">
               <div className="text-xs">
                 <p className="text-[10px] text-slate-400">Destination Point</p>
-                <p className="font-bold truncate max-w-[200px]">{activeTrip?.dropLocation || 'Distribution Center'}</p>
+                <p className="font-bold whitespace-normal break-words leading-tight max-w-[220px]">{activeTrip?.dropLocation || 'Distribution Center'}</p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] text-slate-400">ETA Clock</p>
-                <p className="font-bold font-mono text-blue-400">{activeTrip?.eta || '16:45 PM'}</p>
+                <p className="font-bold font-mono text-[#14B8A6]">{activeTrip?.eta || '16:45 PM'}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Telemetry panel */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-gray-100 dark:border-slate-800 shadow-sm space-y-5 flex flex-col justify-between">
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm space-y-5 flex flex-col justify-between">
           <div>
-            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-4 pb-3 border-b border-gray-50 dark:border-slate-800 flex items-center gap-2 text-left">
-              <Activity className="h-5 w-5 text-blue-600" /> Active Trip Telemetry
+            <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 mb-4 pb-3 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 flex items-center gap-2 text-left uppercase tracking-wide">
+              <Activity className="h-5 w-5 text-[#006A6A]" /> Active Trip Telemetry
             </h4>
 
             <div className="space-y-4 text-left">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Consignment Code</span>
-                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{activeTrip?.tripNumber || 'None'}</span>
+                <span className="text-[#6D7A79] dark:text-[#94A3B8] font-semibold">Consignment Code</span>
+                <span className="font-mono font-bold text-slate-700 dark:text-[#CBD5E1]">{activeTrip?.tripNumber || 'None'}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Trip Stage Status</span>
+                <span className="text-[#6D7A79] dark:text-[#94A3B8] font-semibold">Trip Stage Status</span>
                 <Badge variant="warning">{activeTrip?.status || 'Idle'}</Badge>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Odometer Reading</span>
-                <span className="font-bold text-slate-700 dark:text-slate-300">{(driverVehicle?.odometer || 48200).toLocaleString()} km</span>
+                <span className="text-[#6D7A79] dark:text-[#94A3B8] font-semibold">Odometer Reading</span>
+                <span className="font-bold text-slate-700 dark:text-[#CBD5E1] font-mono">{(driverVehicle?.odometer || 48200).toLocaleString()} km</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Fuel Level</span>
-                <span className="font-bold text-slate-700 dark:text-slate-300">{driverVehicle?.fuelLevel || 78}%</span>
+                <span className="text-[#6D7A79] dark:text-[#94A3B8] font-semibold">Fuel Level</span>
+                <span className="font-bold text-slate-700 dark:text-[#CBD5E1] font-mono">{driverVehicle?.fuelLevel || 78}%</span>
               </div>
               <div className="space-y-1.5 pt-2">
-                <div className="flex justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                <div className="flex justify-between text-[11px] font-bold text-[#6D7A79] dark:text-[#94A3B8]">
                   <span>Trip Progress</span>
                   <span>{activeTrip ? `${Math.max(10, 100 - Math.floor(activeTrip.distanceRemaining / 4.8))}%` : '0%'}</span>
                 </div>
-                <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-blue-600 transition-all duration-300"
+                    className="h-full bg-[#006A6A] rounded-full transition-all duration-300"
                     style={{ width: `${activeTrip ? Math.max(10, 100 - Math.floor(activeTrip.distanceRemaining / 4.8)) : 0}%` }}
                   />
                 </div>
@@ -680,44 +686,46 @@ export const Home: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 space-y-2 text-left">
-            <h5 className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+          <div className="bg-[#F8F9FF] dark:bg-[#0F172A]/60 rounded-xl p-4 border border-[#E5EEFF]/80 dark:border-[#334155]/60 space-y-2 text-left shadow-sm">
+            <h5 className="text-[11px] font-bold text-[#0B1C30] dark:text-[#F8FAFC] flex items-center gap-1.5">
               <Award className="h-4 w-4 text-emerald-600" /> Safety Score Card
             </h5>
             <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 dark:text-slate-400">Weekly Driver Rating</span>
+              <span className="text-[#6D7A79] dark:text-[#94A3B8]">Weekly Driver Rating</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">98.4% (Class A)</span>
             </div>
           </div>
         </div>
-      </div>      {/* Row 3: Today's Dispatch Schedule summary */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-gray-100 dark:border-slate-800 shadow-sm space-y-4">
-        <div className="flex justify-between items-center pb-2 border-b border-gray-50 dark:border-slate-800">
-          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Today's Dispatch Schedule</h4>
-          <span className="text-[10px] bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-450 font-bold px-2 py-0.5 rounded-full">
+      </div>
+
+      {/* Row 3: Today's Dispatch Schedule summary */}
+      <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm space-y-4">
+        <div className="flex justify-between items-center pb-2 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
+          <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 uppercase tracking-wide">Today's Dispatch Schedule</h4>
+          <span className="text-[11px] bg-[#F8F9FF] dark:bg-slate-800 border border-[#E5EEFF] dark:border-[#334155] text-[#6D7A79] dark:text-[#94A3B8] font-bold px-3 py-1 rounded-full">
             {driverTrips.length} active assignments
           </span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {driverTrips.slice(0, 3).map((trip, idx) => (
-            <div key={idx} className="p-4 border border-gray-100 dark:border-slate-800 rounded-2xl space-y-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors text-left">
+            <div key={idx} className="p-4 border border-[#E5EEFF] dark:border-[#334155] rounded-xl space-y-3.5 hover:bg-[#F8F9FF]/50 dark:hover:bg-slate-800/40 transition-colors text-left shadow-sm">
               <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-slate-700 dark:text-slate-200">{trip.tripNumber}</span>
+                <span className="font-bold text-[#0B1C30] dark:text-[#F8FAFC]">{trip.tripNumber}</span>
                 <Badge variant={trip.status === 'Completed' ? 'success' : trip.status === 'In Transit' ? 'info' : 'warning'}>
                   {trip.status}
                 </Badge>
               </div>
-              <div className="text-xs space-y-1 text-slate-505 dark:text-slate-400">
-                <p className="font-semibold text-slate-700 dark:text-slate-300 block">{trip.pickupLocation} → {trip.dropLocation}</p>
-                <p className="text-[10px] text-slate-405 dark:text-slate-500 block">Material: {trip.material} ({trip.weight})</p>
+              <div className="text-xs space-y-1 text-[#6D7A79] dark:text-[#94A3B8]">
+                <p className="font-semibold text-[#545F73] dark:text-[#CBD5E1] block">{trip.pickupLocation} → {trip.dropLocation}</p>
+                <p className="text-[11px] text-[#6D7A79] dark:text-[#94A3B8] font-bold block mt-0.5">Material: {trip.material} ({trip.weight})</p>
               </div>
-              <div className="flex justify-between items-center pt-2.5 border-t border-gray-55 dark:border-slate-800 text-[11px]">
-                <span className="text-slate-400 dark:text-slate-500">ETA: <span className="font-semibold font-mono text-slate-600 dark:text-slate-350">{trip.eta}</span></span>
+              <div className="flex justify-between items-center pt-2.5 border-t border-[#E5EEFF] dark:border-[#334155] text-[11px] font-bold">
+                <span className="text-[#6D7A79] dark:text-[#94A3B8]">ETA: <span className="font-semibold font-mono text-[#545F73] dark:text-[#CBD5E1]">{trip.eta}</span></span>
                 <a
                   href={`tel:${trip.customerPhone}`}
-                  className="text-blue-600 dark:text-blue-400 font-bold hover:underline flex items-center gap-0.5"
+                  className="text-[#006A6A] dark:text-[#7DF5F5] font-bold hover:underline flex items-center gap-0.5"
                 >
-                  <Phone className="h-3 w-3" /> Call
+                  <Phone className="h-3 w-3" /> Call Client
                 </a>
               </div>
             </div>
@@ -726,11 +734,11 @@ export const Home: React.FC = () => {
       </div>
 
       {/* Row 6: Live Shift Activity Timeline */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-gray-100 dark:border-slate-800 shadow-sm space-y-6 text-left">
-        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Operator Shift Checkpoint Logs</h4>
+      <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm space-y-6 text-left">
+        <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 uppercase tracking-wide">Operator Shift Checkpoint Logs</h4>
         
         <div className="relative pl-6 space-y-6">
-          <div className="absolute left-[7px] top-1.5 bottom-1.5 w-[2px] bg-slate-100 dark:bg-slate-800" />
+          <div className="absolute left-[7px] top-1.5 bottom-1.5 w-[2px] bg-[#E5EEFF] dark:bg-[#334155]" />
 
           {[
             { title: "Trip Started", desc: `Departed from Pune Warehouse yard`, time: "08:12 AM", active: true },
@@ -740,14 +748,14 @@ export const Home: React.FC = () => {
             { title: "Consignee POD Verification Awaiting", desc: `Signature collection and image uploads pending`, time: "--:--", active: false },
           ].map((mile, index) => (
             <div key={index} className="relative flex justify-between items-start gap-4">
-              <span className={`absolute -left-[24px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 ${
-                mile.active ? 'bg-blue-600 ring-4 ring-blue-50 dark:ring-blue-950/40' : 'bg-slate-200 dark:bg-slate-800'
+              <span className={`absolute -left-[24px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#1E293B] ${
+                mile.active ? 'bg-[#006A6A] dark:bg-[#7DF5F5] ring-4 ring-[#006A6A]/10 dark:ring-[#7DF5F5]/10' : 'bg-[#EFF4FF] dark:bg-[#111827] border border-[#E5EEFF] dark:border-[#334155]'
               }`} />
-              <div className="space-y-0.5">
-                <h5 className="text-xs font-bold text-slate-805 dark:text-slate-200">{mile.title}</h5>
-                <p className="text-[11px] text-slate-405 dark:text-slate-500">{mile.desc}</p>
+              <div className="space-y-1 text-left">
+                <h5 className="text-xs font-bold text-[#0B1C30] dark:text-[#F8FAFC]">{mile.title}</h5>
+                <p className="text-[11px] text-[#6D7A79] dark:text-[#94A3B8] font-semibold">{mile.desc}</p>
               </div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono shrink-0">{mile.time}</span>
+              <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] font-mono shrink-0 font-bold">{mile.time}</span>
             </div>
           ))}
         </div>
@@ -756,44 +764,44 @@ export const Home: React.FC = () => {
       {/* Row 7: Analytics charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Chart 1: Area Chart */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm md:col-span-2 space-y-4 text-left">
-          <h5 className="text-xs font-bold text-slate-800 dark:text-slate-100">Weekly Odometer Runs (km)</h5>
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm md:col-span-2 space-y-4 text-left">
+          <h5 className="text-[13px] font-bold text-[#0B1C30] dark:text-slate-100 uppercase tracking-wide">Weekly Odometer Runs (km)</h5>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={weeklyDistData}>
+              <AreaChart data={weeklyDistData} margin={{ left: -25, top: 10 }}>
                 <defs>
                   <linearGradient id="areaColor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#006A6A" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#006A6A" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="day" tick={{ fontSize: 10, fill: "var(--color-text-muted)" }} stroke="var(--color-border)" />
-                <YAxis tick={{ fontSize: 10, fill: "var(--color-text-muted)" }} stroke="var(--color-border)" />
+                <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#667085" }} stroke="rgba(11,28,48,0.08)" />
+                <YAxis tick={{ fontSize: 10, fill: "#667085" }} stroke="rgba(11,28,48,0.08)" />
                 <Tooltip />
-                <Area type="monotone" dataKey="distance" stroke="var(--color-primary)" fillOpacity={1} fill="url(#areaColor)" strokeWidth={2} />
+                <Area type="monotone" dataKey="distance" stroke="#006A6A" fillOpacity={1} fill="url(#areaColor)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Chart 2: Bar Chart */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm space-y-4 text-left">
-          <h5 className="text-xs font-bold text-slate-800 dark:text-slate-100">Monthly Completed Trips</h5>
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm space-y-4 text-left">
+          <h5 className="text-[13px] font-bold text-[#0B1C30] dark:text-slate-100 uppercase tracking-wide">Monthly Completed Trips</h5>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyTripsData}>
-                <XAxis dataKey="month" tick={{ fontSize: 10, fill: "var(--color-text-muted)" }} stroke="var(--color-border)" />
-                <YAxis tick={{ fontSize: 10, fill: "var(--color-text-muted)" }} stroke="var(--color-border)" />
+              <BarChart data={monthlyTripsData} margin={{ left: -25, top: 10 }}>
+                <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#667085" }} stroke="rgba(11,28,48,0.08)" />
+                <YAxis tick={{ fontSize: 10, fill: "#667085" }} stroke="rgba(11,28,48,0.08)" />
                 <Tooltip />
-                <Bar dataKey="runs" fill="var(--color-fleet)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="runs" fill="#14B8A6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Chart 3: Pie Chart */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm space-y-4 text-left">
-          <h5 className="text-xs font-bold text-slate-800 dark:text-slate-100">Performance Delivery Score</h5>
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm space-y-4 text-left">
+          <h5 className="text-[13px] font-bold text-[#0B1C30] dark:text-slate-100 uppercase tracking-wide">Performance Delivery Score</h5>
           <div className="h-48 flex justify-center items-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -819,14 +827,14 @@ export const Home: React.FC = () => {
 
       {/* Delay log stop modal */}
       <Modal isOpen={stopModalOpen} onClose={() => setStopModalOpen(false)} title="Log Transit Delay Stop" size="md">
-        <div className="space-y-4">
-          <p className="text-xs text-slate-500 dark:text-slate-400">Select the operational block delay reason to log GPS status telemetry.</p>
+        <div className="space-y-4 text-left">
+          <p className="text-xs text-[#6D7A79]">Select the operational block delay reason to log GPS status telemetry.</p>
           <div className="space-y-1.5 text-left">
-            <label className="text-xs font-bold text-slate-505 dark:text-slate-405 uppercase">Reason for Stop</label>
+            <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Reason for Stop</label>
             <select
               value={selectedReason}
               onChange={e => setSelectedReason(e.target.value)}
-              className="w-full px-3 py-2.5 text-xs border border-gray-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-none"
+              className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
             >
               <option>Traffic Congestion</option>
               <option>Vehicle Servicing / Flat Tyre</option>
@@ -835,7 +843,7 @@ export const Home: React.FC = () => {
               <option>Extreme Weather Halts</option>
             </select>
           </div>
-          <div className="flex justify-end gap-2 pt-4 border-t border-gray-50 dark:border-slate-800">
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
             <Button variant="outline" onClick={() => setStopModalOpen(false)}>
               Cancel
             </Button>
@@ -857,14 +865,14 @@ export const Home: React.FC = () => {
 
       {/* Break Selection Modal */}
       <Modal isOpen={breakModalOpen} onClose={() => setBreakModalOpen(false)} title="Start Break Authorization" size="md">
-        <div className="space-y-4">
-          <p className="text-xs text-slate-505 dark:text-slate-400">Select the type of break to capture and log duty tracking telemetry.</p>
+        <div className="space-y-4 text-left">
+          <p className="text-xs text-[#6D7A79]">Select the type of break to capture and log duty tracking telemetry.</p>
           <div className="space-y-1.5 text-left">
-            <label className="text-xs font-bold text-slate-500 dark:text-slate-405 uppercase">Break Category</label>
+            <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Break Category</label>
             <select
               value={breakType}
               onChange={e => setBreakType(e.target.value)}
-              className="w-full px-3 py-2.5 text-xs border border-gray-205 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-none"
+              className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
             >
               <option value="Lunch Break">Lunch</option>
               <option value="Fuel Stop">Fuel Stop</option>
@@ -877,24 +885,23 @@ export const Home: React.FC = () => {
           </div>
 
           <div className="space-y-1.5 text-left">
-            <label className="text-xs font-bold text-slate-505 dark:text-slate-405 uppercase">Remarks / Notes</label>
+            <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Remarks / Notes</label>
             <textarea
               value={breakRemarks}
               onChange={e => setBreakRemarks(e.target.value)}
               placeholder="Provide context or comments for break log..."
               rows={2}
-              className="w-full px-3 py-2.5 text-xs border border-gray-205 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              className="w-full px-4 py-3 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium resize-none"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-gray-50 dark:border-slate-800">
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
             <Button variant="outline" onClick={() => setBreakModalOpen(false)}>
               Cancel
             </Button>
             <Button
               variant="primary"
               onClick={handleStartBreak}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
             >
               Authorize Break
             </Button>
@@ -904,3 +911,5 @@ export const Home: React.FC = () => {
     </div>
   );
 };
+
+

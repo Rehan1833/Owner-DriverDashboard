@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
@@ -82,7 +82,7 @@ export const Workers: React.FC = () => {
       email: newWorkerEmail,
       phone: newWorkerPhone || '+91 9000000000',
       status: 'Off Duty',
-      avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(newWorkerName)}`,
+      avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(newWorkerName)}&backgroundColor=006A6A`,
       branch: newWorkerBranch,
       performanceScore: 100
     };
@@ -133,37 +133,38 @@ export const Workers: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto pb-16">
+    <div className="space-y-6 max-w-[1600px] mx-auto pb-16 animate-fade-in text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 dark:border-slate-800 pb-5 gap-4 text-left">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-5 gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-850 dark:text-white tracking-tight flex items-center gap-2">
-            <Users className="h-6 w-6 text-primary dark:text-blue-500" />
+          <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-white tracking-tight flex items-center gap-2 leading-none">
+            <Users className="h-7 w-7 text-[#006A6A] dark:text-[#14B8A6]" />
             Personnel Directory
           </h2>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-semibold">
+          <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">
             Track employee status registers, branch classifications, performance ratings, and dispatch alert messages.
           </p>
         </div>
         <Button
           onClick={() => setAddModalOpen(true)}
-          className="w-full sm:w-auto text-xs font-bold py-2 rounded-xl bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-primary/20"
+          variant="primary"
+          className="w-full sm:w-auto text-xs py-2 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-teal-900/10"
         >
           <Plus className="h-4 w-4" /> Add Team Member
         </Button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-[20px] p-5 shadow-sm flex flex-col md:flex-row gap-4 items-center">
         {/* Search */}
         <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-2.5 h-4.5 w-4.5 text-slate-400" />
+          <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search staff by name or email..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-xs border border-slate-205 dark:border-slate-800 rounded-xl bg-slate-50/20 dark:bg-slate-950 text-slate-750 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary focus:border-transparent transition-all"
+            className="w-full pl-10 pr-4 h-11 text-xs border border-[#E5EEFF] dark:border-[#334155] rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] transition-all font-medium placeholder-slate-400"
           />
         </div>
 
@@ -173,7 +174,7 @@ export const Workers: React.FC = () => {
           <select
             value={filterRole}
             onChange={e => setFilterRole(e.target.value)}
-            className="w-full md:w-40 px-3 py-1.5 text-xs border border-slate-205 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-slate-750 dark:text-slate-250 cursor-pointer"
+            className="w-full md:w-44 px-4 h-11 text-xs border border-[#E5EEFF] dark:border-[#334155] rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-700 focus:outline-none cursor-pointer font-semibold"
           >
             <option value="All">All Roles</option>
             <option value="Driver">Drivers</option>
@@ -189,13 +190,13 @@ export const Workers: React.FC = () => {
           <select
             value={filterStatus}
             onChange={e => setFilterStatus(e.target.value)}
-            className="w-full md:w-40 px-3 py-1.5 text-xs border border-slate-205 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-slate-750 dark:text-slate-250 cursor-pointer"
+            className="w-full md:w-44 px-4 h-11 text-xs border border-[#E5EEFF] dark:border-[#334155] rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-700 focus:outline-none cursor-pointer font-semibold"
           >
             <option value="All">All Statuses</option>
-            <option value="Active">🟢 Active (On Duty)</option>
-            <option value="On Break">🟡 On Break</option>
-            <option value="Off Duty">⚪ Off Duty</option>
-            <option value="Absent">🔴 Absent</option>
+            <option value="Active">?? Active (On Duty)</option>
+            <option value="On Break">?? On Break</option>
+            <option value="Off Duty">? Off Duty</option>
+            <option value="Absent">?? Absent</option>
           </select>
         </div>
       </div>
@@ -206,7 +207,7 @@ export const Workers: React.FC = () => {
           filteredWorkers.map(worker => (
             <div
               key={worker.id}
-              className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md hover:border-gray-200 dark:hover:border-slate-700 transition-all duration-200 text-left flex flex-col justify-between"
+              className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1.5 transition-all duration-300 text-left flex flex-col justify-between"
             >
               {/* Profile Details */}
               <div className="space-y-4">
@@ -214,64 +215,64 @@ export const Workers: React.FC = () => {
                   <img
                     src={worker.avatar}
                     alt={worker.name}
-                    className="w-12 h-12 rounded-2xl border border-slate-50 dark:border-slate-800 bg-slate-50 shrink-0"
+                    className="w-12 h-12 rounded-xl border border-slate-50 dark:border-slate-800 bg-[#F8F9FF] shrink-0 shadow-sm"
                   />
                   <div className="min-w-0">
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-white truncate">{worker.name}</h4>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase mt-0.5">{worker.role}</p>
+                    <h4 className="text-[15px] font-semibold text-[#0B1C30] dark:text-white whitespace-normal break-words leading-tight">{worker.name}</h4>
+                    <p className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] font-bold uppercase mt-1 tracking-wider">{worker.role}</p>
                   </div>
-                  <span className={`ml-auto px-2 py-0.5 text-[9px] font-extrabold rounded-full ${
-                    worker.status === 'Active' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20' :
-                    worker.status === 'On Break' ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/20' :
-                    worker.status === 'Absent' ? 'bg-red-50 text-red-500 dark:bg-red-950/20' :
-                    'bg-slate-100 text-slate-550 dark:bg-slate-800'
+                  <span className={`ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold border tracking-wide uppercase ${
+                    worker.status === 'Active' ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/15' :
+                    worker.status === 'On Break' ? 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/15' :
+                    worker.status === 'Absent' ? 'bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/15' :
+                    'bg-slate-100 text-[#6D7A79] border-slate-200 dark:bg-slate-800 dark:text-[#94A3B8]'
                   }`}>
                     {worker.status}
                   </span>
                 </div>
 
-                <div className="space-y-2 border-t border-slate-50 dark:border-slate-850 pt-3 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                <div className="space-y-2.5 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pt-4 text-[13px] text-[#6D7A79] dark:text-[#94A3B8] font-medium">
                   <div className="flex items-center gap-2">
-                    <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span className="truncate">{worker.email}</span>
+                    <Mail className="h-4 w-4 text-slate-400 shrink-0" />
+                    <span className="whitespace-normal break-words leading-tight font-semibold">{worker.email}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span>{worker.phone}</span>
+                    <Phone className="h-4 w-4 text-slate-400 shrink-0" />
+                    <span className="font-semibold">{worker.phone}</span>
                   </div>
-                  <div className="flex justify-between items-center text-[10px] font-bold border-t border-dashed border-slate-100 dark:border-slate-800/80 pt-2.5 mt-2">
-                    <span className="text-slate-400 uppercase">Location Hub</span>
-                    <span className="text-slate-800 dark:text-slate-350">{worker.branch}</span>
+                  <div className="flex justify-between items-center text-[11px] font-bold border-t border-dashed border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800/80 pt-3 mt-3">
+                    <span className="text-slate-400 uppercase tracking-wider">Location Hub</span>
+                    <span className="text-[#0B1C30] dark:text-[#CBD5E1]">{worker.branch}</span>
                   </div>
-                  <div className="flex justify-between items-center text-[10px] font-bold">
-                    <span className="text-slate-400 uppercase">KPI Rating</span>
-                    <span className="text-primary dark:text-blue-450">{worker.performanceScore}% Score</span>
+                  <div className="flex justify-between items-center text-[11px] font-bold">
+                    <span className="text-slate-400 uppercase tracking-wider">KPI Rating</span>
+                    <span className="text-[#006A6A] dark:text-[#14B8A6]">{worker.performanceScore}% Score</span>
                   </div>
                 </div>
               </div>
 
               {/* Card Actions */}
-              <div className="grid grid-cols-3 gap-2 mt-5 pt-3 border-t border-slate-50 dark:border-slate-850">
+              <div className="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
                 <button
                   onClick={() => {
                     setSelectedWorker(worker);
                     setMessageModalOpen(true);
                   }}
-                  className="py-1.5 px-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/60 dark:hover:bg-slate-850 text-slate-550 dark:text-slate-300 font-semibold rounded-xl text-[10px] flex items-center justify-center gap-1 cursor-pointer transition-all border border-transparent"
+                  className="py-2 px-3 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] hover:bg-[#F8F9FF] dark:bg-[#0F172A] dark:hover:bg-slate-800 text-slate-700 dark:text-[#CBD5E1] font-semibold rounded-xl text-[11px] flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
                 >
-                  <Send className="h-3 w-3" /> Text Alert
+                  <Send className="h-3 w-3 text-[#006A6A]" /> Text Alert
                 </button>
                 <button
                   onClick={() => {
                     alert(`Details Editor for ${worker.name} requested!`);
                   }}
-                  className="py-1.5 px-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/60 dark:hover:bg-slate-850 text-slate-550 dark:text-slate-300 font-semibold rounded-xl text-[10px] flex items-center justify-center gap-1 cursor-pointer transition-all border border-transparent"
+                  className="py-2 px-3 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] hover:bg-[#F8F9FF] dark:bg-[#0F172A] dark:hover:bg-slate-800 text-slate-700 dark:text-[#CBD5E1] font-semibold rounded-xl text-[11px] flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
                 >
-                  <Edit2 className="h-3 w-3" /> Edit
+                  <Edit2 className="h-3 w-3 text-[#6D7A79]" /> Edit
                 </button>
                 <button
                   onClick={() => handleDeleteWorker(worker.id, worker.name)}
-                  className="py-1.5 px-2.5 bg-red-50/20 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-500 font-semibold rounded-xl text-[10px] flex items-center justify-center gap-1 cursor-pointer transition-all border border-transparent"
+                  className="py-2 px-3 bg-[#EF4444]/10 hover:bg-[#EF4444]/15 text-[#EF4444] font-semibold rounded-xl text-[11px] flex items-center justify-center gap-1 cursor-pointer transition-all border border-[#EF4444]/20 shadow-sm"
                 >
                   <Trash2 className="h-3 w-3" /> Remove
                 </button>
@@ -279,10 +280,10 @@ export const Workers: React.FC = () => {
             </div>
           ))
         ) : (
-          <div className="col-span-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-16 text-center shadow-sm">
-            <Users className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
-            <h4 className="text-sm font-bold text-slate-750 dark:text-slate-200">No personnel found</h4>
-            <p className="text-xs text-slate-400 dark:text-slate-550 mt-1">Try modifying your query filter tags or register a new staff member.</p>
+          <div className="col-span-full bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-[20px] p-16 text-center shadow-sm">
+            <Users className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto mb-3.5" />
+            <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC]">No personnel found</h4>
+            <p className="text-[13px] text-[#6D7A79] dark:text-[#6D7A79] mt-1 font-medium">Try modifying your query filter tags or register a new staff member.</p>
           </div>
         )}
       </div>
@@ -290,25 +291,25 @@ export const Workers: React.FC = () => {
       {/* MODAL 1: ADD TEAM MEMBER */}
       <Modal isOpen={addModalOpen} onClose={() => setAddModalOpen(false)} title="Register Team Member">
         <form onSubmit={handleAddWorker} className="space-y-4 text-left">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wide">Staff Full Name</label>
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Staff Full Name</label>
             <input
               type="text"
               required
               placeholder="e.g. Harpreet Singh"
               value={newWorkerName}
               onChange={e => setNewWorkerName(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-xs border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-slate-750 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary focus:border-transparent transition-all"
+              className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wide">Assigned Role</label>
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Assigned Role</label>
               <select
                 value={newWorkerRole}
                 onChange={e => setNewWorkerRole(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs border border-slate-205 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-slate-750 dark:text-slate-200 focus:outline-none cursor-pointer"
+                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
               >
                 <option>Driver</option>
                 <option>Senior Driver</option>
@@ -319,12 +320,12 @@ export const Workers: React.FC = () => {
               </select>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wide">Location HQ Hub</label>
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Location HQ Hub</label>
               <select
                 value={newWorkerBranch}
                 onChange={e => setNewWorkerBranch(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs border border-slate-205 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-slate-750 dark:text-slate-200 focus:outline-none cursor-pointer"
+                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
               >
                 <option>Pune HQ</option>
                 <option>Mumbai Hub</option>
@@ -334,35 +335,35 @@ export const Workers: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wide">Email Address</label>
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Email Address</label>
               <input
                 type="email"
                 required
                 placeholder="name@smartops.com"
                 value={newWorkerEmail}
                 onChange={e => setNewWorkerEmail(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-slate-750 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary focus:border-transparent transition-all"
+                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-455 dark:text-slate-500 uppercase tracking-wide">Mobile Number</label>
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Mobile Number</label>
               <input
                 type="text"
                 placeholder="+91 XXXXX XXXXX"
                 value={newWorkerPhone}
                 onChange={e => setNewWorkerPhone(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-slate-750 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary focus:border-transparent transition-all"
+                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
               />
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-slate-50 dark:border-slate-800 mt-4">
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 mt-4">
             <Button type="button" variant="outline" onClick={() => setAddModalOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" className="bg-primary hover:bg-primary/95 text-white">
+            <Button type="submit" variant="primary">
               Register Member
             </Button>
           </div>
@@ -372,24 +373,24 @@ export const Workers: React.FC = () => {
       {/* MODAL 2: DISPATCH SMS TEXT */}
       <Modal isOpen={messageModalOpen} onClose={() => setMessageModalOpen(false)} title={`Dispatch SMS Alert: ${selectedWorker?.name}`}>
         <form onSubmit={handleSendMessage} className="space-y-4 text-left">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase">SMS Text Notification Details</label>
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">SMS Text Notification Details</label>
             <textarea
               rows={3}
               required
               placeholder="e.g. Please proceed to warehouse gate 3 for physical inventory inspection..."
               value={messageText}
               onChange={e => setMessageText(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-xs border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 text-slate-750 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium resize-none"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-slate-50 dark:border-slate-800">
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
             <Button type="button" variant="outline" onClick={() => setMessageModalOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90 text-white flex items-center gap-1.5">
-              <Send className="h-3 w-3" /> Send SMS
+            <Button type="submit" variant="primary" className="flex items-center gap-1.5">
+              <Send className="h-4 w-4" /> Send SMS
             </Button>
           </div>
         </form>
@@ -397,3 +398,5 @@ export const Workers: React.FC = () => {
     </div>
   );
 };
+
+

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -44,31 +44,30 @@ const MetricCard: React.FC<{
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm flex justify-between items-start group transition-all duration-200"
+      className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex justify-between items-center group transition-all duration-300"
     >
       <div className="space-y-2">
-        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">{title}</span>
-        <h4 className="text-xl font-bold text-slate-800 dark:text-slate-100">{value}</h4>
-        <div className="flex items-center gap-1">
+        <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">{title}</span>
+        <h4 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-slate-100 leading-none">{value}</h4>
+        <div className="flex items-center gap-1 mt-1">
           {isPositive ? (
-            <ArrowUpRight className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+            <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
           ) : (
-            <ArrowDownRight className="h-3 w-3 text-red-500" />
+            <ArrowDownRight className="h-3.5 w-3.5 text-red-500" />
           )}
-          <span className={`text-[10px] font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>{change}</span>
-          <span className="text-[9px] text-slate-450 dark:text-slate-550 font-medium ml-1">Today</span>
+          <span className={`text-xs font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>{change}</span>
         </div>
       </div>
       <div className="flex flex-col items-end gap-3 shrink-0">
-        <div className={`p-2.5 rounded-xl ${bgColor} ${color} group-hover:scale-105 transition-transform duration-200`}>
-          <Icon className="h-4.5 w-4.5" />
+        <div className={`p-3.5 rounded-xl ${bgColor} ${color} group-hover:scale-105 transition-transform duration-200`}>
+          <Icon className="h-5 w-5" />
         </div>
-        <svg width={width} height={height} className="overflow-visible mt-1.5">
+        <svg width={width} height={height} className="overflow-visible mt-1.5 opacity-80">
           <polyline
             fill="none"
             stroke="currentColor"
             className={color}
-            strokeWidth="1.8"
+            strokeWidth="2"
             points={points}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -222,37 +221,38 @@ export const Attendance: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in text-left">
       {/* Title & Alerts Section */}
-      <div className="flex flex-col xl:flex-row justify-between xl:items-center gap-4 border-b border-gray-100 pb-5">
+      <div className="flex flex-col xl:flex-row justify-between xl:items-center gap-4 border-b border-[#E5EEFF] dark:border-[#334155] pb-5">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">Driver Duty & Telemetry Control</h2>
-          <p className="text-xs text-slate-400 mt-1">Real-time GPS dispatch check-ins, automated attendance logs, and rest regulations monitor.</p>
+          <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-white tracking-tight leading-none">Driver Duty & Telemetry Control</h2>
+          <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">Real-time GPS dispatch check-ins, automated attendance logs, and rest regulations monitor.</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={triggerPDFExport} className="text-xs font-semibold py-2 rounded-xl flex items-center gap-1.5">
+        <div className="flex gap-2.5 self-stretch sm:self-auto">
+          <Button variant="outline" size="sm" onClick={triggerPDFExport} className="text-xs font-semibold py-2 rounded-xl flex items-center gap-1.5 border border-[#E5EEFF] dark:border-[#334155] bg-white text-slate-700">
             <FileText className="h-4 w-4" /> Download PDF Reports
           </Button>
-          <Button variant="primary" size="sm" onClick={triggerCSVExport} className="bg-blue-600 hover:bg-blue-700 text-xs font-bold py-2 rounded-xl flex items-center gap-1.5 text-white">
+          <Button variant="primary" size="sm" onClick={triggerCSVExport} className="text-xs font-bold py-2 rounded-xl flex items-center gap-1.5 shadow-md shadow-teal-900/10">
             <SlidersHorizontal className="h-4 w-4" /> Operations Control
           </Button>
         </div>
       </div>
 
       {/* Real-time System Alarms Strip */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 text-white overflow-hidden shadow-lg relative flex items-center gap-3">
-        <div className="p-2 bg-red-500/20 border border-red-500/30 text-red-500 rounded-xl shrink-0 flex items-center justify-center animate-pulse">
-          <ShieldAlert className="h-4 w-4" />
-        </div>
-        <div className="flex-1 text-xs overflow-hidden h-5 relative">
-          <div className="absolute inset-0 flex flex-col">
-            {systemAlerts.map((alert, i) => (
-              <div key={i} className="flex justify-between items-center h-5 w-full">
-                <span className="font-semibold text-slate-200 truncate pr-4">{alert.msg}</span>
-                <span className="text-[10px] text-slate-500 shrink-0 font-mono">{alert.time}</span>
-              </div>
-            ))}
+      <div className="bg-[#0B1C30] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-4.5 text-white shadow-lg relative flex flex-col gap-2.5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl shrink-0 flex items-center justify-center animate-pulse">
+            <ShieldAlert className="h-4 w-4" />
           </div>
+          <span className="text-xs font-bold text-[#14B8A6] uppercase tracking-wider">Active System Warning Signals</span>
+        </div>
+        <div className="divide-y divide-slate-800/50 space-y-2.5 pt-1">
+          {systemAlerts.map((alert, i) => (
+            <div key={i} className="flex justify-between items-start pt-2.5 first:pt-0 gap-4 text-xs">
+              <span className="font-semibold text-slate-200 whitespace-normal break-words leading-relaxed">{alert.msg}</span>
+              <span className="text-[10px] text-[#6D7A79] shrink-0 font-mono mt-0.5">{alert.time}</span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -275,8 +275,8 @@ export const Attendance: React.FC = () => {
           isPositive={false}
           icon={UserX}
           sparklineData={[3, 2, 2, 3, 1, 2, absentDriversCount]}
-          color="text-slate-500"
-          bgColor="bg-slate-50 dark:bg-slate-950/20"
+          color="text-[#6D7A79]"
+          bgColor="bg-[#F8F9FF] dark:bg-[#0F172A]/20"
         />
         <MetricCard
           title="Late Drivers"
@@ -343,17 +343,17 @@ export const Attendance: React.FC = () => {
       {/* Telemetry section: Live Map + Live driver status */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Live Map vector tracking */}
-        <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm xl:col-span-2 space-y-4">
-          <div className="flex justify-between items-center border-b border-gray-55 pb-3">
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <Navigation className="h-4.5 w-4.5 text-blue-600 animate-spin-slow" /> Interactive Route Telemetry tracking map
+        <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm xl:col-span-2 space-y-4">
+          <div className="flex justify-between items-center border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-3">
+            <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 flex items-center gap-2">
+              <Navigation className="h-4 w-4 text-[#006A6A] dark:text-[#14B8A6] animate-spin-slow" /> Interactive Route Telemetry Tracking Map
             </h3>
-            <span className="flex items-center gap-1 text-[10px] text-emerald-500 font-bold">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" /> Live Tracking Loop
+            <span className="flex items-center gap-1.5 text-xs text-[#10B981] font-bold">
+              <span className="w-2 h-2 bg-[#10B981] rounded-full animate-ping" /> Live Tracking
             </span>
           </div>
 
-          <div className="h-100 bg-slate-950 rounded-2xl relative overflow-hidden border border-slate-800 flex flex-col justify-between p-4 shadow-inner">
+          <div className="h-72 bg-[#0B1C30] rounded-xl relative overflow-hidden border border-slate-800 flex flex-col justify-between p-4 shadow-inner">
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
             
             {/* SVG Path Route Pune to Mumbai */}
@@ -361,14 +361,14 @@ export const Attendance: React.FC = () => {
               <path
                 d="M 60,280 L 160,220 L 260,180 L 360,120 L 480,80 L 540,40"
                 fill="none"
-                stroke="var(--color-outline-variant)"
+                stroke="rgba(255,255,255,0.08)"
                 strokeWidth="6"
                 strokeLinecap="round"
               />
               <path
                 d="M 60,280 L 160,220 L 260,180"
                 fill="none"
-                stroke="var(--color-primary)"
+                stroke="#006A6A"
                 strokeWidth="4"
                 strokeLinecap="round"
               />
@@ -376,28 +376,28 @@ export const Attendance: React.FC = () => {
               <path
                 d="M 120,320 L 280,290 L 390,260 L 520,240"
                 fill="none"
-                stroke="var(--color-outline-variant)"
+                stroke="rgba(255,255,255,0.08)"
                 strokeWidth="5"
                 strokeLinecap="round"
               />
               <path
                 d="M 120,320 L 280,290"
                 fill="none"
-                stroke="var(--color-success)"
+                stroke="#10B981"
                 strokeWidth="3.5"
                 strokeLinecap="round"
               />
-              <circle cx="60" cy="280" r="5" fill="var(--color-text-muted)" />
-              <circle cx="260" cy="180" r="5" fill="var(--color-primary)" />
-              <circle cx="540" cy="40" r="6" fill="var(--color-success)" />
-              <circle cx="120" cy="320" r="5" fill="var(--color-text-muted)" />
-              <circle cx="520" cy="240" r="6" fill="var(--color-success)" />
+              <circle cx="60" cy="280" r="5" fill="#667085" />
+              <circle cx="260" cy="180" r="5" fill="#006A6A" />
+              <circle cx="540" cy="40" r="6" fill="#10B981" />
+              <circle cx="120" cy="320" r="5" fill="#667085" />
+              <circle cx="520" cy="240" r="6" fill="#10B981" />
             </svg>
 
-            <div className="absolute bottom-16 left-12 text-[9px] text-slate-500 font-bold">Pune Hub</div>
-            <div className="absolute top-12 right-20 text-[9px] text-emerald-400 font-bold">Mumbai DC</div>
-            <div className="absolute bottom-10 left-36 text-[9px] text-slate-500 font-bold">Bengaluru Yd</div>
-            <div className="absolute bottom-24 right-20 text-[9px] text-emerald-400 font-bold">Chennai Terminal</div>
+            <div className="absolute bottom-16 left-12 text-[10px] text-slate-400 font-bold">Pune Hub</div>
+            <div className="absolute top-12 right-20 text-[10px] text-emerald-400 font-bold">Mumbai DC</div>
+            <div className="absolute bottom-10 left-36 text-[10px] text-slate-400 font-bold">Bengaluru Yd</div>
+            <div className="absolute bottom-24 right-20 text-[10px] text-emerald-400 font-bold">Chennai Terminal</div>
 
             {/* Active Driver Pins */}
             {mapDrivers.map(drv => (
@@ -406,66 +406,66 @@ export const Attendance: React.FC = () => {
                 className="absolute flex flex-col items-center select-none"
                 style={{ top: drv.lat, left: drv.lng }}
               >
-                <div className="bg-slate-900/90 text-white font-mono font-bold text-[8px] px-1.5 py-0.5 rounded shadow border border-slate-700 whitespace-nowrap">
+                <div className="bg-slate-900/95 text-white font-mono font-bold text-[9px] px-1.5 py-0.5 rounded shadow border border-slate-700 whitespace-nowrap">
                   {drv.name} ({drv.vehicle.split('-')[0]})
                 </div>
                 <div
-                  className="w-5 h-5 rounded-full text-white flex items-center justify-center border border-white shadow-lg animate-bounce"
-                  style={{ backgroundColor: drv.color }}
+                  className="w-5 h-5 rounded-full text-white flex items-center justify-center border border-white shadow-lg animate-bounce mt-1"
+                  style={{ backgroundColor: drv.color === 'var(--color-success)' ? '#10B981' : drv.color === 'var(--color-primary)' ? '#006A6A' : '#F59E0B' }}
                 >
-                  <Navigation className="h-2.5 w-2.5 rotate-45" />
+                  <Navigation className="h-3 w-3 rotate-45" />
                 </div>
               </div>
             ))}
 
             {/* Float Info Map Overlay */}
-            <div className="relative z-10 bg-slate-900/90 backdrop-blur-md rounded-xl p-3 text-white border border-slate-800 flex justify-between items-center text-xs">
+            <div className="relative z-10 bg-slate-900/90 backdrop-blur-md rounded-xl p-3.5 text-white border border-slate-800 flex justify-between items-center text-xs shadow-lg">
               <div>
-                <p className="text-[10px] text-slate-505 uppercase font-semibold">Active Telemetry Tracker</p>
+                <p className="text-[10px] text-slate-400 uppercase font-semibold">Active Telemetry Tracker</p>
                 <p className="font-bold text-slate-200">MH-12-QW-9874 • Rajesh Kumar</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] text-slate-550 uppercase font-semibold">ETA to Destination</p>
-                <p className="font-bold font-mono text-blue-400">16:45 PM</p>
+                <p className="text-[10px] text-slate-400 uppercase font-semibold">ETA to Destination</p>
+                <p className="font-bold font-mono text-[#14B8A6]">16:45 PM</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Live Driver Status Board */}
-        <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-4 flex flex-col justify-between">
+        <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-4 flex flex-col justify-between">
           <div>
-            <h3 className="text-sm font-bold text-slate-800 pb-3 border-b border-gray-50 flex items-center gap-1.5">
-              <Activity className="h-4.5 w-4.5 text-blue-650" /> Live Driver Status Board
+            <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 pb-3 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 flex items-center gap-1.5">
+              <Activity className="h-4 w-4 text-[#006A6A] dark:text-[#14B8A6]" /> Live Driver Status Board
             </h3>
             
-            <div className="space-y-4.5 pt-4">
+            <div className="space-y-3 pt-4">
               {[
                 { name: 'Rajesh Kumar', vehicle: 'MH-12-QW-9874', loc: 'Pune Warehouse A', status: 'On Duty', variant: 'success', time: 'Check-In: 08:45 AM', color: 'bg-emerald-500' },
                 { name: 'Satnam Singh', vehicle: 'KA-03-MN-4512', loc: 'Bengaluru Gate 2', status: 'On Trip', variant: 'info', time: 'In Transit to Chennai', color: 'bg-blue-600' },
                 { name: 'Arjun Sharma', vehicle: 'HR-55-ZX-3344', loc: 'Highway Plaza Halt', status: 'On Break', variant: 'warning', time: 'Rest Break (30m)', color: 'bg-amber-500' },
                 { name: 'Amit Patel', vehicle: 'DL-01-AB-1234', loc: 'Offline', status: 'Off Duty', variant: 'neutral', time: 'Clocked Out', color: 'bg-slate-400' }
               ].map((driver, index) => (
-                <div key={index} className="flex justify-between items-center text-xs p-2.5 border border-gray-100 rounded-xl hover:bg-slate-50/50 transition-colors">
-                  <div className="space-y-1">
+                <div key={index} className="flex justify-between items-center text-xs p-3 border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 rounded-xl hover:bg-[#F8F9FF]/50 transition-colors shadow-sm">
+                  <div className="space-y-1 text-left">
                     <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${driver.color}`} />
-                      <p className="font-bold text-slate-800">{driver.name}</p>
+                      <span className={`w-2.5 h-2.5 rounded-full ${driver.color}`} />
+                      <p className="font-bold text-slate-800 dark:text-[#F8FAFC]">{driver.name}</p>
                     </div>
-                    <p className="text-[10px] text-slate-400 font-semibold">{driver.vehicle} • {driver.loc}</p>
+                    <p className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] font-semibold">{driver.vehicle} • {driver.loc}</p>
                   </div>
                   <div className="text-right space-y-1">
                     <Badge variant={driver.variant as any}>{driver.status}</Badge>
-                    <p className="text-[9px] text-slate-400 font-medium block">{driver.time}</p>
+                    <p className="text-[10px] text-[#6D7A79] dark:text-[#6D7A79] font-bold block">{driver.time}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bg-slate-55 p-4 border border-slate-100 rounded-2xl text-xs space-y-2">
-            <h5 className="font-bold text-slate-700 flex items-center gap-1.5"><Award className="h-4 w-4 text-emerald-600" /> Fleet Safety Rating</h5>
-            <p className="text-[10px] text-slate-500 leading-normal">
+          <div className="bg-[#F8F9FF] dark:bg-[#0F172A] p-4 border border-[#E5EEFF]/80 dark:border-[#334155]/60 rounded-xl text-xs space-y-2 shadow-sm text-left">
+            <h5 className="font-bold text-[#0B1C30] dark:text-[#F8FAFC] flex items-center gap-1.5"><Award className="h-4 w-4 text-emerald-600" /> Fleet Safety Rating</h5>
+            <p className="text-[11px] text-[#6D7A79] dark:text-[#94A3B8] leading-relaxed font-semibold">
               Average safety index rating is currently at <span className="text-emerald-600 font-bold">94.8%</span>. No speed infractions logged in the last 24 hours.
             </p>
           </div>
@@ -473,27 +473,27 @@ export const Attendance: React.FC = () => {
       </div>
 
       {/* Main Professional Attendance Table */}
-      <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-3 border-b border-gray-50">
-          <h3 className="text-sm font-bold text-slate-800">Operational Shift Attendance Ledger</h3>
+      <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm space-y-5">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 pb-3.5 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
+          <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC] uppercase tracking-wide">Operational Shift Attendance Ledger</h3>
           
           {/* Custom Filters Drawer Trigger */}
           <div className="flex flex-wrap gap-2.5 items-center">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
+              <Search className="absolute left-3 top-3 h-3.5 w-3.5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search drivers..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 border border-gray-205 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="pl-9 pr-3 h-10 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] dark:bg-[#0F172A] rounded-xl text-xs focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none font-semibold"
               />
             </div>
             
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
-              className="border border-gray-205 rounded-xl p-1.5 text-xs bg-white focus:outline-none"
+              className="h-10 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] dark:bg-[#0F172A] rounded-xl px-3 text-xs focus:outline-none font-bold cursor-pointer"
             >
               <option value="All">All Statuses</option>
               <option value="On Duty">On Duty</option>
@@ -505,7 +505,7 @@ export const Attendance: React.FC = () => {
             <select
               value={attendanceFilter}
               onChange={e => setAttendanceFilter(e.target.value)}
-              className="border border-gray-205 dark:border-slate-800 rounded-xl p-1.5 text-xs bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 focus:outline-none"
+              className="h-10 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] dark:bg-[#0F172A] rounded-xl px-3 text-xs focus:outline-none font-bold cursor-pointer"
             >
               <option value="All">Attendance Status</option>
               <option value="Present">Present</option>
@@ -516,7 +516,7 @@ export const Attendance: React.FC = () => {
             {dateFilter && (
               <button
                 onClick={() => setDateFilter('')}
-                className="text-[10px] text-blue-600 dark:text-blue-400 font-bold hover:underline"
+                className="text-[11px] text-[#006A6A] dark:text-[#14B8A6] font-bold hover:underline"
               >
                 Clear Date
               </button>
@@ -525,7 +525,7 @@ export const Attendance: React.FC = () => {
               type="date"
               value={dateFilter}
               onChange={e => setDateFilter(e.target.value)}
-              className="border border-gray-205 dark:border-slate-800 rounded-xl p-1 text-xs bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 focus:outline-none"
+              className="h-10 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] dark:bg-[#0F172A] rounded-xl px-3 text-xs focus:outline-none font-semibold cursor-pointer"
             />
           </div>
         </div>
@@ -541,11 +541,11 @@ export const Attendance: React.FC = () => {
                   <img
                     src={row.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(row.employeeName)}`}
                     alt="Driver Photo"
-                    className="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 shrink-0 object-cover"
+                    className="w-9 h-9 rounded-full bg-[#F8F9FF] dark:bg-slate-800 border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 shrink-0 object-cover"
                   />
                   <div>
-                    <span className="font-bold text-slate-805 dark:text-slate-200 text-xs block">{row.employeeName}</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block mt-0.5">ID: {row.driverId || 'DRV-9041'}</span>
+                    <span className="font-bold text-[#0B1C30] dark:text-[#F8FAFC] text-xs block">{row.employeeName}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-[#6D7A79] font-semibold block mt-0.5">ID: {row.driverId || 'DRV-9041'}</span>
                   </div>
                 </div>
               ),
@@ -554,7 +554,7 @@ export const Attendance: React.FC = () => {
             {
               header: 'Vehicle Code',
               accessor: (row: AttendanceRecord) => (
-                <span className="font-mono text-xs text-slate-700 dark:text-slate-300 font-semibold">
+                <span className="font-mono text-xs text-slate-700 dark:text-[#CBD5E1] font-semibold">
                   {row.driverId === 'DRV-9042' ? 'KA-03-MN-4512' : 'MH-12-QW-9874'}
                 </span>
               )
@@ -563,21 +563,21 @@ export const Attendance: React.FC = () => {
               header: 'Check-In',
               accessor: (row: AttendanceRecord) => (
                 <div>
-                  <span className="text-xs text-slate-805 dark:text-slate-202 font-semibold block">{row.checkIn}</span>
-                  <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium block mt-0.5">{row.checkInWarehouse || 'Warehouse A'}</span>
+                  <span className="text-xs text-[#0B1C30] dark:text-[#F8FAFC] font-semibold block">{row.checkIn}</span>
+                  <span className="text-[9px] text-slate-400 dark:text-[#6D7A79] font-medium block mt-0.5">{row.checkInWarehouse || 'Warehouse A'}</span>
                 </div>
               )
             },
             {
               header: 'Check-Out',
               accessor: (row: AttendanceRecord) => (
-                <span className="text-slate-600 dark:text-slate-350">{row.checkOut || '--'}</span>
+                <span className="text-[#545F73] dark:text-[#CBD5E1]">{row.checkOut || '--'}</span>
               )
             },
             {
               header: 'Active Hours',
               accessor: (row: AttendanceRecord) => (
-                <span className="text-slate-600 dark:text-slate-350">{row.workingHours ? `${row.workingHours} hrs` : '--'}</span>
+                <span className="text-[#545F73] dark:text-[#CBD5E1]">{row.workingHours ? `${row.workingHours} hrs` : '--'}</span>
               ),
               sortKey: 'workingHours'
             },
@@ -585,15 +585,15 @@ export const Attendance: React.FC = () => {
               header: 'Trips (Dist)',
               accessor: (row: AttendanceRecord) => (
                 <div>
-                  <span className="text-xs text-slate-805 dark:text-slate-202 font-semibold block">{row.tripsCompleted || 0} runs</span>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block mt-0.5">{row.distanceCovered || 0} km covered</span>
+                  <span className="text-xs text-[#0B1C30] dark:text-[#F8FAFC] font-semibold block">{row.tripsCompleted || 0} runs</span>
+                  <span className="text-[10px] text-slate-400 dark:text-[#6D7A79] font-semibold block mt-0.5">{row.distanceCovered || 0} km covered</span>
                 </div>
               )
             },
             {
               header: 'Break Time',
               accessor: (row: AttendanceRecord) => (
-                <span className="text-slate-600 dark:text-slate-350">{row.breakDuration ? `${row.breakDuration} mins` : '--'}</span>
+                <span className="text-[#545F73] dark:text-[#CBD5E1]">{row.breakDuration ? `${row.breakDuration} mins` : '--'}</span>
               )
             },
             {
@@ -611,7 +611,7 @@ export const Attendance: React.FC = () => {
             {
               header: 'Overtime',
               accessor: (row: AttendanceRecord) => (
-                <span className={`text-xs font-semibold ${row.overtime && row.overtime > 0 ? 'text-red-500 font-bold dark:text-red-400' : 'text-slate-505 dark:text-slate-450'}`}>
+                <span className={`text-xs font-semibold ${row.overtime && row.overtime > 0 ? 'text-red-500 font-bold dark:text-red-400' : 'text-[#6D7A79] dark:text-[#94A3B8]'}`}>
                   {row.overtime ? `${row.overtime} hrs` : '--'}
                 </span>
               )
@@ -634,7 +634,7 @@ export const Attendance: React.FC = () => {
                       setSelectedRecord(row);
                       setDrawerOpen(true);
                     }}
-                    className="p-1 px-2.5 text-[10px] font-bold border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 bg-white dark:bg-slate-900 rounded-xl cursor-pointer shadow-sm"
+                    className="p-1 px-2.5 text-[10px] font-bold border border-slate-200 dark:border-slate-800 text-[#545F73] dark:text-[#CBD5E1] hover:bg-[#F8F9FF] dark:hover:bg-slate-800 bg-white dark:bg-[#1E293B] rounded-xl cursor-pointer shadow-sm"
                   >
                     <Eye className="h-3 w-3 inline mr-1" /> Inspect Logs
                   </Button>
@@ -667,7 +667,7 @@ export const Attendance: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="fixed top-0 right-0 bottom-0 w-full max-w-2xl bg-white dark:bg-slate-900 border-l border-gray-100 dark:border-slate-800 shadow-2xl z-50 overflow-y-auto flex flex-col"
+              className="fixed top-0 right-0 bottom-0 w-full max-w-2xl bg-white dark:bg-[#1E293B] border-l border-gray-100 dark:border-slate-800 shadow-2xl z-50 overflow-y-auto flex flex-col"
             >
               {/* Header profile block */}
               <div className="p-6 border-b border-gray-100 dark:border-slate-800 bg-gradient-to-r from-slate-900 to-blue-950 text-white flex justify-between items-start shrink-0 relative">
@@ -699,19 +699,19 @@ export const Attendance: React.FC = () => {
               <div className="flex-1 p-6 space-y-6">
                 {/* 1. Performance Indicator Dials */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                  <div className="p-4 bg-[#F8F9FF] dark:bg-[#0F172A]/60 rounded-2xl border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800/80 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Productivity Index</span>
-                      <h4 className="text-lg font-bold text-slate-805 dark:text-slate-100 mt-1">{selectedRecord.performanceScore || 100}%</h4>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-[#6D7A79] uppercase">Productivity Index</span>
+                      <h4 className="text-lg font-bold text-[#0B1C30] dark:text-slate-100 mt-1">{selectedRecord.performanceScore || 100}%</h4>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                       <Award className="h-5 w-5" />
                     </div>
                   </div>
-                  <div className="p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                  <div className="p-4 bg-[#F8F9FF] dark:bg-[#0F172A]/60 rounded-2xl border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800/80 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Final Duty Status</span>
-                      <h4 className="text-lg font-bold text-slate-805 dark:text-slate-100 mt-1">{selectedRecord.attendanceStatus || 'Present'}</h4>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-[#6D7A79] uppercase">Final Duty Status</span>
+                      <h4 className="text-lg font-bold text-[#0B1C30] dark:text-slate-100 mt-1">{selectedRecord.attendanceStatus || 'Present'}</h4>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                       <Calendar className="h-5 w-5" />
@@ -720,7 +720,7 @@ export const Attendance: React.FC = () => {
                 </div>
 
                 {/* 2. Today's Activity Vertical Timeline */}
-                <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4">
+                <div className="bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4">
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider pb-2 border-b border-gray-50 dark:border-slate-800 flex items-center gap-1.5">
                     <Clock className="h-4 w-4 text-blue-500" /> Today's Telemetry Shift Timeline
                   </h4>
@@ -733,10 +733,10 @@ export const Attendance: React.FC = () => {
                         <div key={idx} className="relative flex justify-between items-start gap-4 text-xs">
                           <span className="absolute -left-[24px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-blue-600 ring-4 ring-blue-50 dark:ring-blue-950/40" />
                           <div className="space-y-0.5">
-                            <p className="font-bold text-slate-805 dark:text-slate-200">{event.event}</p>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500">{event.description || 'Verified via telemetry logs.'}</p>
+                            <p className="font-bold text-[#0B1C30] dark:text-[#F8FAFC]">{event.event}</p>
+                            <p className="text-[10px] text-slate-400 dark:text-[#6D7A79]">{event.description || 'Verified via telemetry logs.'}</p>
                           </div>
-                          <span className="font-mono text-[9px] text-slate-400 dark:text-slate-500 shrink-0">{event.time}</span>
+                          <span className="font-mono text-[9px] text-slate-400 dark:text-[#6D7A79] shrink-0">{event.time}</span>
                         </div>
                       ))
                     ) : (
@@ -744,34 +744,34 @@ export const Attendance: React.FC = () => {
                         <div className="relative flex justify-between items-start gap-4 text-xs">
                           <span className="absolute -left-[24px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-blue-600 ring-4 ring-blue-50 dark:ring-blue-950/40" />
                           <div className="space-y-0.5">
-                            <p className="font-bold text-slate-805 dark:text-slate-200">Start Duty</p>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500">Clocked in at Warehouse A (Pune).</p>
+                            <p className="font-bold text-[#0B1C30] dark:text-[#F8FAFC]">Start Duty</p>
+                            <p className="text-[10px] text-slate-400 dark:text-[#6D7A79]">Clocked in at Warehouse A (Pune).</p>
                           </div>
-                          <span className="font-mono text-[9px] text-slate-405 dark:text-slate-500 shrink-0">{selectedRecord.checkIn}</span>
+                          <span className="font-mono text-[9px] text-slate-400 dark:text-[#6D7A79] shrink-0">{selectedRecord.checkIn}</span>
                         </div>
                         <div className="relative flex justify-between items-start gap-4 text-xs">
                           <span className="absolute -left-[24px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-blue-600 ring-4 ring-blue-50 dark:ring-blue-950/40" />
                           <div className="space-y-0.5">
-                            <p className="font-bold text-slate-805 dark:text-slate-200">Trip Assigned</p>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500">TRP-2026-8801 linked successfully.</p>
+                            <p className="font-bold text-[#0B1C30] dark:text-[#F8FAFC]">Trip Assigned</p>
+                            <p className="text-[10px] text-slate-400 dark:text-[#6D7A79]">TRP-2026-8801 linked successfully.</p>
                           </div>
-                          <span className="font-mono text-[9px] text-slate-455 dark:text-slate-500 shrink-0">09:00 AM</span>
+                          <span className="font-mono text-[9px] text-[#64748B] dark:text-[#6D7A79] shrink-0">09:00 AM</span>
                         </div>
                         <div className="relative flex justify-between items-start gap-4 text-xs">
                           <span className="absolute -left-[24px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-blue-600 ring-4 ring-blue-50 dark:ring-blue-950/40" />
                           <div className="space-y-0.5">
-                            <p className="font-bold text-slate-805 dark:text-slate-200">Lunch Break</p>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500">Halted at highway food court plaza.</p>
+                            <p className="font-bold text-[#0B1C30] dark:text-[#F8FAFC]">Lunch Break</p>
+                            <p className="text-[10px] text-slate-400 dark:text-[#6D7A79]">Halted at highway food court plaza.</p>
                           </div>
-                          <span className="font-mono text-[9px] text-slate-455 dark:text-slate-500 shrink-0">12:30 PM</span>
+                          <span className="font-mono text-[9px] text-[#64748B] dark:text-[#6D7A79] shrink-0">12:30 PM</span>
                         </div>
                         <div className="relative flex justify-between items-start gap-4 text-xs">
                           <span className="absolute -left-[24px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-blue-600 ring-4 ring-blue-50 dark:ring-blue-950/40" />
                           <div className="space-y-0.5">
-                            <p className="font-bold text-slate-805 dark:text-slate-200">End Duty</p>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500">Shift terminated at Mumbai terminal DC.</p>
+                            <p className="font-bold text-[#0B1C30] dark:text-[#F8FAFC]">End Duty</p>
+                            <p className="text-[10px] text-slate-400 dark:text-[#6D7A79]">Shift terminated at Mumbai terminal DC.</p>
                           </div>
-                          <span className="font-mono text-[9px] text-slate-455 dark:text-slate-500 shrink-0">{selectedRecord.checkOut || '--'}</span>
+                          <span className="font-mono text-[9px] text-[#64748B] dark:text-[#6D7A79] shrink-0">{selectedRecord.checkOut || '--'}</span>
                         </div>
                       </>
                     )}
@@ -779,30 +779,30 @@ export const Attendance: React.FC = () => {
                 </div>
 
                 {/* 3. Salary & Payroll Integration Summary */}
-                <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 space-y-4">
+                <div className="bg-[#F8F9FF] dark:bg-[#0F172A]/60 border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 rounded-3xl p-5 space-y-4">
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider pb-2 border-b border-gray-150 dark:border-slate-800/80 flex items-center gap-1.5">
-                    <DollarSign className="h-4.5 w-4.5 text-emerald-600" /> Integrated Salary Pay Calculation
+                    <DollarSign className="h-4 w-4 text-emerald-600" /> Integrated Salary Pay Calculation
                   </h4>
 
                   <div className="space-y-2.5 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-slate-500 dark:text-slate-400">Shift Base Payment rate</span>
-                      <span className="font-bold text-slate-700 dark:text-slate-300">INR 1,200.00</span>
+                      <span className="text-[#6D7A79] dark:text-[#94A3B8]">Shift Base Payment rate</span>
+                      <span className="font-bold text-slate-700 dark:text-[#CBD5E1]">INR 1,200.00</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 dark:text-slate-400">Overtime hours logged ({selectedRecord.overtime || 0} hrs)</span>
-                      <span className="font-bold text-slate-700 dark:text-slate-300">INR {Math.floor((selectedRecord.overtime || 0) * 400).toLocaleString()}.00</span>
+                      <span className="text-[#6D7A79] dark:text-[#94A3B8]">Overtime hours logged ({selectedRecord.overtime || 0} hrs)</span>
+                      <span className="font-bold text-slate-700 dark:text-[#CBD5E1]">INR {Math.floor((selectedRecord.overtime || 0) * 400).toLocaleString()}.00</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 dark:text-slate-400">Trip dispatch incentives</span>
-                      <span className="font-bold text-slate-700 dark:text-slate-300">INR {Math.floor((selectedRecord.tripsCompleted || 0) * 500).toLocaleString()}.00</span>
+                      <span className="text-[#6D7A79] dark:text-[#94A3B8]">Trip dispatch incentives</span>
+                      <span className="font-bold text-slate-700 dark:text-[#CBD5E1]">INR {Math.floor((selectedRecord.tripsCompleted || 0) * 500).toLocaleString()}.00</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 dark:text-slate-400">Fuel saving performance bonuses</span>
-                      <span className="font-bold text-emerald-605 dark:text-emerald-400">+ INR {Math.floor((selectedRecord.performanceScore || 100) * 5).toLocaleString()}.00</span>
+                      <span className="text-[#6D7A79] dark:text-[#94A3B8]">Fuel saving performance bonuses</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">+ INR {Math.floor((selectedRecord.performanceScore || 100) * 5).toLocaleString()}.00</span>
                     </div>
-                    <div className="flex justify-between pt-2 border-t border-gray-250 dark:border-slate-800 text-sm font-bold">
-                      <span className="text-slate-805 dark:text-slate-200 font-extrabold">Final Shift Cash-Out Pay</span>
+                    <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-slate-800 text-sm font-bold">
+                      <span className="text-[#0B1C30] dark:text-[#F8FAFC] font-extrabold">Final Shift Cash-Out Pay</span>
                       <span className="text-blue-600 dark:text-blue-400 font-extrabold">
                         INR {Math.floor(1200 + (selectedRecord.overtime || 0) * 400 + (selectedRecord.tripsCompleted || 0) * 500 + (selectedRecord.performanceScore || 100) * 5).toLocaleString()}.00
                       </span>
@@ -847,7 +847,7 @@ export const Attendance: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Chart 1: Attendance Trend Area Chart */}
-          <div className="border border-gray-100 rounded-2xl p-4 bg-slate-50/50 space-y-2">
+          <div className="border border-gray-100 rounded-2xl p-4 bg-[#F8F9FF]/50 space-y-2">
             <h4 className="text-xs font-bold text-slate-700">Weekly Shift Attendance Trend</h4>
             <div className="h-60 pt-2">
               <ResponsiveContainer width="100%" height="100%">
@@ -871,7 +871,7 @@ export const Attendance: React.FC = () => {
           </div>
 
           {/* Chart 2: Weekly Working Hours Line Chart */}
-          <div className="border border-gray-100 dark:border-slate-800 rounded-2xl p-4 bg-slate-50/50 dark:bg-slate-900/40 space-y-2">
+          <div className="border border-gray-100 dark:border-slate-800 rounded-2xl p-4 bg-[#F8F9FF]/50 dark:bg-[#1E293B]/40 space-y-2">
             <h4 className="text-xs font-bold text-slate-700 dark:text-slate-100">Average Daily Shift Duty Hours</h4>
             <div className="h-60 pt-2">
               <ResponsiveContainer width="100%" height="100%">
@@ -887,7 +887,7 @@ export const Attendance: React.FC = () => {
           </div>
 
           {/* Chart 3: Donut chart for late check-in reports */}
-          <div className="border border-gray-100 rounded-2xl p-4 bg-slate-50/50 space-y-2">
+          <div className="border border-gray-100 rounded-2xl p-4 bg-[#F8F9FF]/50 space-y-2">
             <h4 className="text-xs font-bold text-slate-700">Check-In Arrival Compliance Distribution</h4>
             <div className="h-60 flex justify-center items-center">
               <ResponsiveContainer width="100%" height="100%">
@@ -913,7 +913,7 @@ export const Attendance: React.FC = () => {
           </div>
 
           {/* Chart 4: Trip Completion Success rate */}
-          <div className="border border-gray-100 rounded-2xl p-4 bg-slate-50/50 space-y-2">
+          <div className="border border-gray-100 rounded-2xl p-4 bg-[#F8F9FF]/50 space-y-2">
             <h4 className="text-xs font-bold text-slate-700">Delivery Route SLA Targets</h4>
             <div className="h-60 flex justify-center items-center">
               <ResponsiveContainer width="100%" height="100%">
@@ -942,3 +942,6 @@ export const Attendance: React.FC = () => {
     </div>
   );
 };
+
+
+
