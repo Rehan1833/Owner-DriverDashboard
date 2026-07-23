@@ -98,10 +98,10 @@
   --color-tertiary-container: #00687A;
 
   /* ── Text ── */
-  --color-text-primary: #F8FAFC;
-  --color-text-secondary: #CBD5E1;
-  --color-text-muted: #94A3B8;
-  --color-text-disabled: #475569;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #FFFFFF;
+  --color-text-muted: #FFFFFF;
+  --color-text-disabled: #64748B;
 
   /* ── Outline & Borders ── */
   --color-outline: #94A3B8;

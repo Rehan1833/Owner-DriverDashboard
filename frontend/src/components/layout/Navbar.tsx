@@ -1,6 +1,6 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, Bell, ChevronDown, Calendar, Clock, Globe, Shield, Volume2, VolumeX, CheckSquare } from 'lucide-react';
+import { Search, Bell, ChevronDown, Calendar, Clock, Globe, Shield, Volume2, VolumeX, CheckSquare, Sun, Moon } from 'lucide-react';
 import { useOperations } from '../../store/OperationsContext';
 import { useTheme } from '../../store/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -171,13 +171,13 @@ export const Navbar: React.FC = () => {
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
-          className="h-10 px-3.5 rounded-xl hover:bg-[#F8F9FF] dark:hover:bg-[#1E293B] text-[#545F73] dark:text-[#CBD5E1] hover:text-[#0B1C30] dark:hover:text-white transition-all border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#111827] flex items-center justify-center cursor-pointer shadow-sm"
+          className="w-10 h-10 rounded-xl hover:bg-[#F8F9FF] dark:hover:bg-[#1E293B] text-[#545F73] dark:text-[#CBD5E1] hover:text-[#0B1C30] dark:hover:text-white transition-all border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#111827] flex items-center justify-center cursor-pointer shadow-sm"
           title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
         >
           {theme === 'light' ? (
-            <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#545F73]">â˜€ï¸ Light</span>
+            <Sun className="h-4 w-4" />
           ) : (
-            <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#CBD5E1]">ðŸŒ™ Dark</span>
+            <Moon className="h-4 w-4" />
           )}
         </button>
 

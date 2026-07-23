@@ -27,8 +27,13 @@ main .glass-panel:hover,
 }
 
 /* Dark mode cards */
+.dark main .bg-white.rounded-3xl,
+.dark main .bg-white.rounded-2xl,
+.dark main .glass-panel,
+.dark .glass-panel,
 .dark main .dark\:bg-slate-900.rounded-3xl,
 .dark main .dark\:bg-slate-900.rounded-2xl,
+.dark main .dark\:bg-\[\#1E293B\].rounded-2xl,
 .dark main .dark\:bg-\[1E293B\].rounded-2xl {
   background: rgba(30, 41, 59, 0.78) !important;
   backdrop-filter: blur(16px) saturate(180%) !important;
@@ -69,8 +74,7 @@ button.bg-teal-600:hover {
 
 /* ── Secondary Button ── */
 .btn-secondary,
-button.bg-secondary,
-button.border-slate-700 {
+button.bg-secondary {
   background: #FFFFFF !important;
   border: 1px solid var(--color-border) !important;
   color: #545F73 !important;
@@ -81,8 +85,7 @@ button.border-slate-700 {
 }
 
 .btn-secondary:hover,
-button.bg-secondary:hover,
-button.border-slate-700:hover {
+button.bg-secondary:hover {
   transform: translateY(-2px) !important;
   background-color: #F8F9FF !important;
   box-shadow: 0 4px 12px 0 rgba(11, 28, 48, 0.05) !important;
@@ -230,3 +233,42 @@ input[type="checkbox"] {
 .dark *:focus-visible {
   outline-color: #7DF5F5;
 }
+
+/* ── Fallback Text Readability in Dark Mode ── */
+.dark .text-slate-300,
+.dark .text-slate-400,
+.dark .text-slate-500,
+.dark .text-slate-600,
+.dark .text-slate-700,
+.dark .text-slate-800,
+.dark .text-slate-900,
+.dark .dark\:text-slate-300,
+.dark .dark\:text-slate-400,
+.dark .dark\:text-slate-500,
+.dark .dark\:text-slate-600,
+.dark .dark\:text-slate-700,
+.dark .dark\:text-slate-800,
+.dark .dark\:text-slate-900,
+.dark .text-\[\#CBD5E1\],
+.dark .text-\[\#cbd5e1\],
+.dark .text-\[\#94A3B8\],
+.dark .text-\[\#94a3b8\],
+.dark .text-\[\#6D7A79\],
+.dark .text-\[\#6d7a79\],
+.dark .text-\[\#545F73\],
+.dark .text-\[\#545f73\],
+.dark .text-\[\#0B1C30\],
+.dark .text-\[\#0b1c30\],
+.dark .dark\:text-\[\#CBD5E1\],
+.dark .dark\:text-\[\#cbd5e1\],
+.dark .dark\:text-\[\#94A3B8\],
+.dark .dark\:text-\[\#94a3b8\],
+.dark .dark\:text-\[\#6D7A79\],
+.dark .dark\:text-\[\#6d7a79\],
+.dark .dark\:text-\[\#545F73\],
+.dark .dark\:text-\[\#545f73\],
+.dark .dark\:text-\[\#0B1C30\],
+.dark .dark\:text-\[\#0b1c30\] {
+  color: #FFFFFF !important;
+}
+

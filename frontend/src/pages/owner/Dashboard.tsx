@@ -1,4 +1,5 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
@@ -82,9 +83,13 @@ const KPICard: React.FC<{
   sparklineData: number[];
   color: string;
   description: string;
-}> = ({ id, title, value, change, isPositive, icon: Icon, sparklineData, color, description }) => {
+  onClick?: () => void;
+}> = ({ id, title, value, change, isPositive, icon: Icon, sparklineData, color, description, onClick }) => {
   return (
-    <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] p-6 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between items-stretch gap-4 group cursor-pointer text-left">
+    <div 
+      onClick={onClick}
+      className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] p-6 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between items-stretch gap-4 group cursor-pointer text-left"
+    >
       <div className="flex justify-between items-start">
         <div className="space-y-1 min-w-0">
           <span className="text-[15px] font-semibold text-[#6D7A79] dark:text-[#94A3B8] tracking-tight block whitespace-normal break-words leading-tight">{title}</span>
@@ -115,6 +120,7 @@ const KPICard: React.FC<{
 };
 
 export const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const {
     user,
     vehicles,
@@ -128,6 +134,43 @@ export const Dashboard: React.FC = () => {
     triggerNotification,
     addActivity
   } = useOperations();
+
+  const handleCardClick = (id: string) => {
+    switch (id) {
+      case 'rev':
+        navigate('/owner/analytics');
+        break;
+      case 'fleet':
+        navigate('/owner/fleet');
+        break;
+      case 'stock':
+        navigate('/owner/inventory');
+        break;
+      case 'att':
+        navigate('/owner/attendance');
+        break;
+      case 'total':
+        navigate('/owner/workers');
+        break;
+      case 'del':
+        navigate('/owner/pod');
+        break;
+      case 'ship':
+        navigate('/owner/fleet');
+        break;
+      case 'alerts':
+        navigate('/owner/notifications');
+        break;
+      case 'salary':
+        navigate('/owner/payroll');
+        break;
+      case 'inc':
+        navigate('/owner/operations');
+        break;
+      default:
+        break;
+    }
+  };
 
   // Selected multi-metric chart trigger
   const [activeChartTab, setActiveChartTab] = useState<'Inventory' | 'Revenue' | 'Attendance' | 'Fleet' | 'Stock'>('Revenue');
@@ -329,13 +372,14 @@ export const Dashboard: React.FC = () => {
         <KPICard
           id="rev"
           title="Gross Revenue"
-          value="â‚¹1.28L"
+          value="₹1.28L"
           description="Total simulated revenue"
           change="+12.4%"
           isPositive={true}
           icon={DollarSign}
           sparklineData={[11000, 13400, 12000, 15000, 16800, 18500, 21000]}
           color="#10B981"
+          onClick={() => handleCardClick('rev')}
         />
         <KPICard
           id="fleet"
@@ -347,6 +391,7 @@ export const Dashboard: React.FC = () => {
           icon={Truck}
           sparklineData={[2, 3, 3, 2, 4, 3, activeVehiclesCount]}
           color="#006A6A"
+          onClick={() => handleCardClick('fleet')}
         />
         <KPICard
           id="stock"
@@ -358,6 +403,7 @@ export const Dashboard: React.FC = () => {
           icon={Package}
           sparklineData={[6, 5, 5, 4, 3, 3, lowStockCount]}
           color="#F59E0B"
+          onClick={() => handleCardClick('stock')}
         />
         <KPICard
           id="att"
@@ -369,6 +415,7 @@ export const Dashboard: React.FC = () => {
           icon={Users}
           sparklineData={[12, 14, 15, 13, 15, 14, presentCount]}
           color="#14B8A6"
+          onClick={() => handleCardClick('att')}
         />
         <KPICard
           id="total"
@@ -380,6 +427,7 @@ export const Dashboard: React.FC = () => {
           icon={Users}
           sparklineData={[18, 18, 18, 18, 18, 18, 18]}
           color="#8B5CF6"
+          onClick={() => handleCardClick('total')}
         />
         <KPICard
           id="del"
@@ -391,6 +439,7 @@ export const Dashboard: React.FC = () => {
           icon={CheckCircle}
           sparklineData={[110, 115, 120, 128, 132, 138, 142]}
           color="#10B981"
+          onClick={() => handleCardClick('del')}
         />
         <KPICard
           id="ship"
@@ -402,6 +451,7 @@ export const Dashboard: React.FC = () => {
           icon={ShoppingCart}
           sparklineData={[3, 2, 4, 2, 3, 2, pendingTripsCount]}
           color="#3b82f6"
+          onClick={() => handleCardClick('ship')}
         />
         <KPICard
           id="alerts"
@@ -413,6 +463,7 @@ export const Dashboard: React.FC = () => {
           icon={Bell}
           sparklineData={[12, 10, 8, 9, 6, 5, notifications.filter(n => !n.read).length]}
           color="#EF4444"
+          onClick={() => handleCardClick('alerts')}
         />
         <KPICard
           id="salary"
@@ -424,6 +475,7 @@ export const Dashboard: React.FC = () => {
           icon={Wallet}
           sparklineData={[3, 4, 5, 6, 6, 6, processedPayrollCount]}
           color="#EC4899"
+          onClick={() => handleCardClick('salary')}
         />
         <KPICard
           id="inc"
@@ -435,6 +487,7 @@ export const Dashboard: React.FC = () => {
           icon={CheckCircle}
           sparklineData={[1, 1, 1, 1, 1, 1, 1]}
           color="#10B981"
+          onClick={() => handleCardClick('inc')}
         />
       </div>
 
