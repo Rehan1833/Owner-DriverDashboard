@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Clock, Calendar, Wifi, CheckCircle, AlertOctagon, LogOut, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { useOperations } from '../../store/OperationsContext';

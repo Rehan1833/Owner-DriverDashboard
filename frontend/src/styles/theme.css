@@ -3,17 +3,15 @@
    Premium card design, form styling, button effects, status pills
    ================================================================ */
 
-/* ── Card Design — frosted glass, rounded-2xl, soft elevation ── */
+/* ── Card Design — pure white light mode, sleek dark mode ── */
 main .bg-white.rounded-3xl,
 main .bg-white.rounded-2xl,
 main .glass-panel,
 .glass-panel {
-  background: rgba(255, 255, 255, 0.78) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  background: #FFFFFF !important;
   border: 1px solid var(--color-border) !important;
-  border-radius: 18px !important;
-  box-shadow: 0 1px 3px 0 rgba(11, 28, 48, 0.03), 0 4px 12px -4px rgba(11, 28, 48, 0.04) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 2px 8px -2px rgba(0, 0, 0, 0.04) !important;
   transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1), border-color 280ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
@@ -21,20 +19,22 @@ main .bg-white.rounded-3xl:hover,
 main .bg-white.rounded-2xl:hover,
 main .glass-panel:hover,
 .glass-panel:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 8px 24px -4px rgba(0, 106, 106, 0.08), 0 4px 12px -4px rgba(11, 28, 48, 0.04) !important;
-  border-color: rgba(0, 106, 106, 0.18) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px -4px rgba(0, 106, 106, 0.08), 0 4px 12px -4px rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 106, 106, 0.25) !important;
 }
 
 /* Dark mode cards */
+.dark main .bg-white.rounded-3xl,
+.dark main .bg-white.rounded-2xl,
 .dark main .dark\:bg-slate-900.rounded-3xl,
 .dark main .dark\:bg-slate-900.rounded-2xl,
-.dark main .dark\:bg-\[1E293B\].rounded-2xl {
-  background: rgba(30, 41, 59, 0.78) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+.dark main .dark\:bg-\[1E293B\].rounded-2xl,
+.dark main .dark\:bg-[#1E293B].rounded-2xl,
+.dark .glass-panel {
+  background: #1E293B !important;
   border: 1px solid #334155 !important;
-  border-radius: 18px !important;
+  border-radius: 16px !important;
   box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3) !important;
 }
 

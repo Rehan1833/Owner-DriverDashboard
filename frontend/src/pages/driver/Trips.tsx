@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -138,21 +138,21 @@ export const Trips: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in text-left">
+    <div className="space-y-6 animate-fade-in text-left">
       {/* Title */}
       <div>
-        <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-slate-100 tracking-tight leading-none">My Trips & Consignments</h2>
-        <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">Track shift schedules, load manifests, routes, and update active milestone progress.</p>
+        <h2 className="text-[26px] font-extrabold text-[#111827] dark:text-[#F8FAFC] tracking-tight leading-none">My Trips & Consignments</h2>
+        <p className="text-[13px] text-[#4B5563] dark:text-[#94A3B8] mt-1.5 font-medium">Track shift schedules, load manifests, routes, and update active milestone progress.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Active Trip detail card */}
         {activeTrip ? (
-          <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-5 lg:col-span-2 text-left">
-            <div className="flex items-center justify-between border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-3">
+          <div className="bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-5 lg:col-span-2 text-left">
+            <div className="flex items-center justify-between border-b border-[#E5E7EB] dark:border-[#334155] pb-3">
               <div>
-                <span className="text-[11px] font-semibold text-[#6D7A79] uppercase tracking-wider block">Active Consignment</span>
-                <span className="text-sm font-mono font-bold text-[#0B1C30] dark:text-[#F8FAFC]">{activeTrip.tripNumber}</span>
+                <span className="text-[11px] font-extrabold text-[#6B7280] dark:text-[#94A3B8] uppercase tracking-wider block">Active Consignment</span>
+                <span className="text-sm font-mono font-bold text-[#111827] dark:text-[#F8FAFC]">{activeTrip.tripNumber}</span>
               </div>
               <Badge variant={activeTrip.status === 'In Transit' ? 'info' : 'warning'}>
                 {activeTrip.status}
@@ -164,70 +164,70 @@ export const Trips: React.FC = () => {
               <div className="flex gap-2.5 text-xs text-left">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#006A6A] mt-1 shrink-0 animate-pulse" />
                 <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Pickup Location</span>
-                  <span className="font-bold text-slate-700 dark:text-[#CBD5E1] block mt-0.5">{activeTrip.pickupLocation}</span>
+                  <span className="text-[10px] text-[#6B7280] dark:text-slate-400 uppercase font-extrabold block">Pickup Location</span>
+                  <span className="font-bold text-[#111827] dark:text-[#CBD5E1] block mt-0.5">{activeTrip.pickupLocation}</span>
                 </div>
               </div>
 
               <div className="flex gap-2.5 text-xs text-left">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] mt-1 shrink-0 animate-pulse" />
                 <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Destination Point</span>
-                  <span className="font-bold text-slate-700 dark:text-[#CBD5E1] block mt-0.5">{activeTrip.dropLocation}</span>
+                  <span className="text-[10px] text-[#6B7280] dark:text-slate-400 uppercase font-extrabold block">Destination Point</span>
+                  <span className="font-bold text-[#111827] dark:text-[#CBD5E1] block mt-0.5">{activeTrip.dropLocation}</span>
                 </div>
               </div>
             </div>
 
             {/* details */}
-            <div className="grid grid-cols-3 gap-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pt-4 text-xs">
+            <div className="grid grid-cols-3 gap-4 border-t border-[#E5E7EB] dark:border-[#334155] pt-4 text-xs">
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Consignor</span>
-                <span className="font-bold text-slate-700 dark:text-[#CBD5E1] block mt-0.5">{activeTrip.customerName}</span>
+                <span className="text-[#6B7280] dark:text-slate-400 block text-[10px] uppercase font-extrabold">Consignor</span>
+                <span className="font-bold text-[#111827] dark:text-[#CBD5E1] block mt-0.5">{activeTrip.customerName}</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Material Specs</span>
-                <span className="font-bold text-slate-700 dark:text-[#CBD5E1] block mt-0.5">{activeTrip.material} ({activeTrip.weight})</span>
+                <span className="text-[#6B7280] dark:text-slate-400 block text-[10px] uppercase font-extrabold">Material Specs</span>
+                <span className="font-bold text-[#111827] dark:text-[#CBD5E1] block mt-0.5">{activeTrip.material} ({activeTrip.weight})</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-bold">Remaining Dist</span>
-                <span className="font-bold text-slate-700 dark:text-[#CBD5E1] block mt-0.5 font-mono">{activeTrip.distanceRemaining} km left</span>
+                <span className="text-[#6B7280] dark:text-slate-400 block text-[10px] uppercase font-extrabold">Remaining Dist</span>
+                <span className="font-bold text-[#111827] dark:text-[#CBD5E1] block mt-0.5 font-mono">{activeTrip.distanceRemaining} km left</span>
               </div>
             </div>
 
             {/* Customer Call / Info */}
-            <div className="bg-[#F8F9FF] dark:bg-[#0F172A]/60 rounded-xl p-4 border border-[#E5EEFF]/80 dark:border-[#334155]/60 flex items-center justify-between shadow-sm">
+            <div className="bg-[#F9FAFB] dark:bg-[#0F172A]/60 rounded-xl p-4 border border-[#E5E7EB] dark:border-[#334155] flex items-center justify-between shadow-sm">
               <div className="text-xs text-left">
-                <p className="font-bold text-slate-700 dark:text-[#F8FAFC]">{activeTrip.customerName}</p>
-                <p className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] mt-0.5 font-semibold">Consignee Helpline: {activeTrip.customerPhone}</p>
+                <p className="font-bold text-[#111827] dark:text-[#F8FAFC]">{activeTrip.customerName}</p>
+                <p className="text-[11px] text-[#4B5563] dark:text-[#94A3B8] mt-0.5 font-semibold">Consignee Helpline: {activeTrip.customerPhone}</p>
               </div>
               <a
                 href={`tel:${activeTrip.customerPhone}`}
-                className="p-2.5 bg-white dark:bg-[#1E293B] rounded-xl border border-[#E5EEFF] dark:border-[#334155] text-[#006A6A] dark:text-[#14B8A6] hover:bg-[#F8F9FF] dark:hover:bg-slate-800 flex items-center justify-center shrink-0 cursor-pointer shadow-sm transition-all"
+                className="p-2.5 bg-white dark:bg-[#1E293B] rounded-xl border border-[#E5E7EB] dark:border-[#334155] text-[#006A6A] dark:text-[#7DF5F5] hover:bg-[#F9FAFB] dark:hover:bg-slate-800 flex items-center justify-center shrink-0 cursor-pointer shadow-sm transition-all"
               >
                 <Phone className="h-4 w-4" />
               </a>
             </div>
           </div>
         ) : (
-          <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-8 text-center text-slate-400 lg:col-span-2 flex flex-col items-center justify-center shadow-sm">
-            <CheckCircle className="h-10 w-10 text-emerald-505 mb-2" />
+          <div className="bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] rounded-2xl p-8 text-center text-[#6B7280] dark:text-slate-400 lg:col-span-2 flex flex-col items-center justify-center shadow-sm">
+            <CheckCircle className="h-10 w-10 text-emerald-500 mb-2" />
             <p className="text-xs font-bold">No active trip assignments today!</p>
           </div>
         )}
 
         {/* Stepper Card */}
         {activeTrip && (
-          <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm space-y-6 flex flex-col justify-between text-left">
+          <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-6 flex flex-col justify-between text-left">
             <div className="space-y-4">
-              <h4 className="text-[13px] font-bold text-[#0B1C30] dark:text-slate-100 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-2 uppercase tracking-wide">Trip Milestone Progress</h4>
+              <h4 className="text-[13px] font-extrabold text-[#111827] dark:text-slate-100 border-b border-[#E5E7EB] dark:border-[#334155] pb-2 uppercase tracking-wide">Trip Milestone Progress</h4>
               
               <div className="flex flex-col gap-4 relative pl-5">
-                <div className="absolute left-[7px] top-1.5 bottom-1.5 w-[2px] bg-slate-100 dark:bg-slate-800" />
+                <div className="absolute left-[7px] top-1.5 bottom-1.5 w-[2px] bg-[#E5E7EB] dark:bg-slate-800" />
                 {activeMilestones.map((milestone, idx) => {
                   const activeIdx = getActiveStepIndex();
                   const isPast = idx < activeIdx;
                   const isCurrent = idx === activeIdx;
- 
+
                   return (
                     <div key={idx} className="flex gap-3 text-xs leading-normal">
                       <div
@@ -239,7 +239,7 @@ export const Trips: React.FC = () => {
                             : 'bg-white dark:bg-[#0F172A] border-slate-300 dark:border-slate-800'
                         }`}
                       />
-                      <span className={`font-semibold ${isPast ? 'text-slate-400 dark:text-[#6D7A79]' : isCurrent ? 'text-slate-800 dark:text-slate-100 font-bold' : 'text-slate-400 dark:text-[#6D7A79]'}`}>
+                      <span className={`font-semibold ${isPast ? 'text-[#6B7280] dark:text-[#94A3B8]' : isCurrent ? 'text-[#111827] dark:text-slate-100 font-bold' : 'text-[#6B7280] dark:text-[#94A3B8]'}`}>
                         {milestone.label}
                       </span>
                     </div>
@@ -248,12 +248,12 @@ export const Trips: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pt-4">
+            <div className="grid grid-cols-2 gap-3 border-t border-[#E5E7EB] dark:border-[#334155] pt-4">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setStopModalOpen(true)}
-                className="text-xs py-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white text-[#EF4444] hover:bg-red-50/50"
+                className="text-xs py-2.5 rounded-xl border border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#1E293B] text-[#EF4444] hover:bg-red-50/50 font-bold"
               >
                 <AlertTriangle className="h-4 w-4 mr-1 text-[#EF4444]" /> Incident Halt
               </Button>
@@ -261,7 +261,7 @@ export const Trips: React.FC = () => {
                 variant="primary"
                 size="sm"
                 onClick={() => setPodModalOpen(true)}
-                className="text-xs py-2.5 rounded-xl"
+                className="text-xs py-2.5 rounded-xl font-bold"
               >
                 <PenTool className="h-4 w-4 mr-1" /> Close POD
               </Button>
@@ -271,8 +271,8 @@ export const Trips: React.FC = () => {
       </div>
 
       {/* Trips list table */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm text-left">
-        <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 mb-5 uppercase tracking-wide">Consignment History Ledger</h3>
+      <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm text-left">
+        <h3 className="text-[15px] font-extrabold text-[#111827] dark:text-slate-100 mb-5 uppercase tracking-wide">Consignment History Ledger</h3>
         <Table
           data={driverTrips}
           columns={[

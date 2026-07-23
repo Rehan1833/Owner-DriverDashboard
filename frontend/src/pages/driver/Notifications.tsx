@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Badge } from '../../components/ui/Badge';
 import { Bell, AlertTriangle, Truck, Navigation, Fuel, Info, Calendar } from 'lucide-react';
 
@@ -82,22 +82,22 @@ export const Notifications: React.FC = () => {
   const filteredList = notifications.filter(n => filter === 'All' || n.type === filter);
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto pb-12 text-left animate-fade-in">
+    <div className="space-y-6 max-w-3xl mx-auto pb-12 text-left animate-fade-in">
       {/* Title */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-5">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-[#E5E7EB] dark:border-[#334155] pb-5">
         <div>
-          <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-slate-100 tracking-tight leading-none">Dispatch & Safety Notifications</h2>
-          <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">Review active consignment updates, route deviations, and fleet reminders.</p>
+          <h2 className="text-[26px] font-extrabold text-[#111827] dark:text-[#F8FAFC] tracking-tight leading-none">Dispatch & Safety Notifications</h2>
+          <p className="text-[13px] text-[#4B5563] dark:text-[#94A3B8] mt-1.5 font-medium">Review active consignment updates, route deviations, and fleet reminders.</p>
         </div>
-        <div className="flex gap-1.5 bg-[#F8F9FF] dark:bg-[#0F172A] border border-[#E5EEFF] dark:border-[#334155] p-1 rounded-xl text-xs self-start sm:self-auto shadow-sm font-bold">
+        <div className="flex gap-1.5 bg-[#F9FAFB] dark:bg-[#0F172A] border border-[#E5E7EB] dark:border-[#334155] p-1 rounded-xl text-xs self-start sm:self-auto shadow-sm font-bold">
           {(['All', 'Operations', 'Alerts', 'System'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setFilter(tab)}
               className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                 filter === tab 
-                  ? 'bg-white dark:bg-[#1E293B] text-[#006A6A] dark:text-white shadow-sm' 
-                  : 'text-[#6D7A79] hover:text-[#0B1C30] dark:hover:text-white'
+                  ? 'bg-white dark:bg-[#1E293B] text-[#006A6A] dark:text-white shadow-sm font-bold' 
+                  : 'text-[#6B7280] hover:text-[#111827] dark:hover:text-white'
               }`}
             >
               {tab}
@@ -109,7 +109,7 @@ export const Notifications: React.FC = () => {
       {/* Notifications list */}
       <div className="space-y-4">
         {filteredList.length === 0 ? (
-          <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-8 border border-[#E5EEFF] dark:border-[#334155] shadow-sm text-center text-slate-400 text-xs italic font-semibold">
+          <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-8 border border-[#E5E7EB] dark:border-[#334155] shadow-sm text-center text-[#6B7280] dark:text-slate-400 text-xs italic font-semibold">
             No active notification logs under category "{filter}".
           </div>
         ) : (
@@ -118,21 +118,21 @@ export const Notifications: React.FC = () => {
             return (
               <div
                 key={notif.id}
-                className="bg-white dark:bg-[#1E293B] rounded-2xl p-5 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow relative overflow-hidden text-left"
+                className="bg-white dark:bg-[#1E293B] rounded-2xl p-5 border border-[#E5E7EB] dark:border-[#334155] shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow relative overflow-hidden text-left"
               >
                 <div className={`p-3.5 rounded-xl shrink-0 ${notif.bg} ${notif.color}`}>
                   <Icon className="h-5 w-5" />
                 </div>
                 <div className="space-y-1.5 pr-12">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="text-sm font-bold text-[#0B1C30] dark:text-slate-100">{notif.title}</h4>
+                    <h4 className="text-sm font-bold text-[#111827] dark:text-[#F8FAFC]">{notif.title}</h4>
                     <Badge variant={notif.type === 'Operations' ? 'info' : notif.type === 'Alerts' ? 'warning' : 'neutral'}>
                       {notif.type}
                     </Badge>
                   </div>
-                  <p className="text-[13px] text-[#6D7A79] leading-relaxed font-semibold">{notif.desc}</p>
+                  <p className="text-[13px] text-[#4B5563] dark:text-[#94A3B8] leading-relaxed font-semibold">{notif.desc}</p>
                 </div>
-                <span className="absolute top-5 right-5 text-[10px] text-slate-400 font-mono font-bold uppercase">{notif.time}</span>
+                <span className="absolute top-5 right-5 text-[10px] text-[#6B7280] dark:text-slate-400 font-mono font-bold uppercase">{notif.time}</span>
               </div>
             );
           })
