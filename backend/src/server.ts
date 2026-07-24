@@ -27,40 +27,7 @@ initSocket(server);
 // Database Seeding Logic
 const seedMockDatabase = async () => {
   try {
-    const userCount = await User.countDocuments();
-    if (userCount === 0) {
-      console.log('Database empty. Seeding initial owner and driver credentials...');
-      
-      const salt = await bcrypt.genSalt(10);
-      const ownerHash = await bcrypt.hash('password123', salt);
-      const driverHash = await bcrypt.hash('password123', salt);
-
-      const defaultOwner = new User({
-        fullName: 'Harsh Vardhan',
-        email: 'harsh.v@smartops.com',
-        mobileNumber: '9876543210',
-        role: 'Owner',
-        passwordHash: ownerHash,
-        companyName: 'SmartOps Manufacturing Ltd.'
-      });
-
-      const defaultDriver = new User({
-        fullName: 'Rajesh Kumar',
-        email: 'rajesh.k@smartops.com',
-        mobileNumber: '9123456789',
-        role: 'Driver',
-        passwordHash: driverHash,
-        driverId: 'DRV-9041',
-        vehicleNumber: 'MH-12-QW-9874',
-        licenseNumber: 'DL-MH12-9988'
-      });
-
-      await defaultOwner.save();
-      await defaultDriver.save();
-      console.log('Database empty. Preserved initial owner and driver credentials.');
-
-      console.log('Database seeding successfully completed.');
-    }
+    // No mock default users seeded; new users will register & authenticate via Gmail/Google.
   } catch (err: any) {
     console.error('Database seeding failed:', err.message);
   }

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { soundPlayer } from '../../utils/audio';
@@ -21,9 +21,9 @@ export const Profile: React.FC = () => {
   const { user, triggerNotification, addActivity } = useOperations();
   
   // Profile state
-  const [fullName, setFullName] = useState(user?.fullName || 'Harsh Vardhan');
-  const [email, setEmail] = useState(user?.email || 'harsh.vardhan@smartops.com');
-  const [mobileNumber, setMobileNumber] = useState(user?.mobileNumber || '9876543210');
+  const [fullName, setFullName] = useState(user?.fullName || 'Enterprise Owner');
+  const [email, setEmail] = useState(user?.email || 'owner@smartops.com');
+  const [mobileNumber, setMobileNumber] = useState(user?.mobileNumber || '');
   const [companyName, setCompanyName] = useState(user?.companyName || 'SmartOps Logistics Ltd.');
   
   // API credentials keys state

@@ -189,6 +189,7 @@ export const googleAuth = async (req: Request, res: Response) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        isEmailVerified: user.isEmailVerified,
         companyName: user.companyName,
         driverId: user.driverId,
         vehicleNumber: user.vehicleNumber
@@ -262,6 +263,7 @@ export const register = async (req: Request, res: Response) => {
         fullName: newUser.fullName,
         email: newUser.email,
         role: newUser.role,
+        isEmailVerified: newUser.isEmailVerified,
         companyName: newUser.companyName,
         driverId: newUser.driverId,
         vehicleNumber: newUser.vehicleNumber
@@ -330,6 +332,7 @@ export const login = async (req: Request, res: Response) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        isEmailVerified: user.isEmailVerified,
         companyName: user.companyName,
         driverId: user.driverId,
         vehicleNumber: user.vehicleNumber

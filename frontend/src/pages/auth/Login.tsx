@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useOperations } from '../../store/OperationsContext';
 import { UserRole } from '../../types';
@@ -10,8 +10,8 @@ export const Login: React.FC = () => {
   const { login, user } = useOperations();
   const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState<UserRole>('Owner');
-  const [email, setEmail] = useState('harsh.v@smartops.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -28,11 +28,6 @@ export const Login: React.FC = () => {
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
-    if (role === 'Owner') {
-      setEmail('harsh.v@smartops.com');
-    } else {
-      setEmail('rajesh.k@smartops.com');
-    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -40,7 +35,7 @@ export const Login: React.FC = () => {
     setErrorMsg('');
     setLoading(true);
     try {
-      await login(email, selectedRole);
+      await login(email, selectedRole, password);
       setLoading(false);
       if (selectedRole === 'Driver') {
         navigate('/driver');

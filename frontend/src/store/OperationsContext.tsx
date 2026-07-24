@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole, Vehicle, Trip, Task, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord } from '../types';
 import { mockTasks, mockNotifications, mockActivities } from '../api/mockData';
 import { api } from '../api/client';
@@ -14,7 +14,7 @@ interface OperationsContextType {
   attendance: AttendanceRecord[];
   notifications: SystemNotification[];
   activities: ActivityItem[];
-  login: (email: string, role: UserRole) => Promise<void>;
+  login: (email: string, role: UserRole, password?: string) => Promise<void>;
   register: (payload: any) => Promise<void>;
   logout: () => void;
   // Inventory CRUD
@@ -184,8 +184,8 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
   }, [user]);
 
-  const login = async (email: string, role: UserRole) => {
-    const res = await api.auth.login(email, role);
+  const login = async (email: string, role: UserRole, password?: string) => {
+    const res = await api.auth.login(email, role, password);
     setUser(res.user);
     localStorage.setItem('smartops_user', JSON.stringify(res.user));
     triggerNotification('System Alert', 'Session Initialized', `Welcome back ${res.user.fullName}! JWT validated.`, 'Info');

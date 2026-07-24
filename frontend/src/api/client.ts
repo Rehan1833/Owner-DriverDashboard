@@ -44,25 +44,27 @@ class LocalStorageFallback {
 export const api = {
   // 1. AUTH API
   auth: {
-    login: async (email: string, role: string): Promise<{ token: string; user: User }> => {
+    login: async (email: string, role: string, password?: string): Promise<{ token: string; user: User }> => {
       try {
-        const res = await axiosInstance.post('/auth/login', { email, password: 'password123' });
+        const res = await axiosInstance.post('/auth/login', { email, password: password || '' });
         localStorage.setItem('smartops_jwt', res.data.token);
         return res.data;
-      } catch (err) {
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
         console.warn('Backend Auth Offline. Simulating local token verification.');
-        // Fallback simulated authentication
         const mockUser: User = {
           id: role === 'Owner' ? 'u-owner' : 'u-driver',
-          fullName: role === 'Owner' ? 'Harsh Vardhan' : 'Rajesh Kumar',
+          fullName: email.split('@')[0],
           email,
-          mobileNumber: role === 'Owner' ? '9876543210' : '9123456789',
+          mobileNumber: '9999999999',
           role: role as any,
           companyName: role === 'Owner' ? 'SmartOps Manufacturing Ltd.' : undefined,
-          driverId: role === 'Driver' ? 'DRV-9041' : undefined,
+          driverId: role === 'Driver' ? `DRV-${Date.now().toString().slice(-4)}` : undefined,
           vehicleNumber: role === 'Driver' ? 'MH-12-QW-9874' : undefined,
           licenseNumber: role === 'Driver' ? 'DL-MH12-9988' : undefined,
-          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${role === 'Owner' ? 'Harsh' : 'Rajesh'}&backgroundColor=2563EB`
+          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}&backgroundColor=2563EB`
         };
         localStorage.setItem('smartops_jwt', 'mock_jwt_token_payload');
         return { token: 'mock_jwt_token_payload', user: mockUser };
@@ -73,7 +75,10 @@ export const api = {
         const res = await axiosInstance.post('/auth/register', payload);
         localStorage.setItem('smartops_jwt', res.data.token);
         return res.data;
-      } catch (err) {
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
         console.warn('Backend Auth Offline. Registering user in local session.');
         const mockUser: User = {
           id: `u-${Date.now()}`,
