@@ -10,6 +10,10 @@ export interface IUser extends Document {
   googleId?: string;
   provider?: 'local' | 'google';
   isEmailVerified?: boolean;
+  isPhoneVerified?: boolean;
+  otpCode?: string;
+  otpExpiresAt?: Date;
+  verifiedAt?: Date;
   // Owner Fields
   companyName?: string;
   // Driver Fields
@@ -28,6 +32,10 @@ const UserSchema = new Schema<IUser>({
   googleId: { type: String, unique: true, sparse: true },
   provider: { type: String, enum: ['local', 'google'], default: 'local' },
   isEmailVerified: { type: Boolean, default: false },
+  isPhoneVerified: { type: Boolean, default: false },
+  otpCode: { type: String },
+  otpExpiresAt: { type: Date },
+  verifiedAt: { type: Date },
   companyName: { type: String },
   driverId: { type: String, unique: true, sparse: true },
   vehicleNumber: { type: String },

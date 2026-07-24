@@ -1,9 +1,10 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { OperationsChart } from '../../components/charts/Charts';
 import { soundPlayer } from '../../utils/audio';
+import { downloadReport } from '../../utils/downloadReport';
 import {
   TrendingUp,
   Package,
@@ -156,13 +157,17 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Mock Orders dataset
-  const latestOrders = useMemo(() => [
-    { id: 'O-1002', item: 'Cold-Rolled Steel Coils', client: 'L&T Manufacturing', qty: 250, status: 'Completed', date: 'Today' },
-    { id: 'O-1003', item: 'Zinc Galvanized Plates', client: 'Tata Motors Pune', qty: 400, status: 'Pending', date: 'Today' },
-    { id: 'O-1004', item: 'Machine Fasteners (Grade 8)', client: 'Bajaj Auto', qty: 1500, status: 'Completed', date: 'Yesterday' },
-    { id: 'O-1005', item: 'Aluminium Extrusion Bars', client: 'Thermax India', qty: 350, status: 'Pending', date: 'Yesterday' }
-  ], []);
+  // Dynamic Orders dataset derived from live trips
+  const latestOrders = useMemo(() => {
+    return trips.map(t => ({
+      id: t.tripNumber,
+      item: t.material,
+      client: t.customerName,
+      qty: parseInt(t.weight) || 1,
+      status: t.status === 'Completed' ? 'Completed' : 'Pending',
+      date: t.timestamp ? new Date(t.timestamp).toLocaleDateString() : 'Today'
+    }));
+  }, [trips]);
 
   // Calculated Metrics for the 10 KPI Cards
   const activeVehiclesCount = vehicles.filter(v => v.status === 'Moving').length;
@@ -170,55 +175,85 @@ export const Dashboard: React.FC = () => {
   const presentCount = attendance.filter(a => a.attendanceStatus === 'Present' || a.attendanceStatus === 'Late').length;
   const pendingTripsCount = trips.filter(t => t.status !== 'Completed').length;
   const processedPayrollCount = payroll.filter(p => p.paymentStatus === 'Paid').length;
-  const totalEmployeesCount = 18; // Drivers + Managers + Supervisor
 
-  // Chart datasets generator
-  const revenueChartData = [
-    { name: 'Mon', revenue: 15400, cost: 7200, target: 12000 },
-    { name: 'Tue', revenue: 17200, cost: 7500, target: 12000 },
-    { name: 'Wed', revenue: 19100, cost: 8100, target: 14000 },
-    { name: 'Thu', revenue: 16500, cost: 7000, target: 14000 },
-    { name: 'Fri', revenue: 21000, cost: 9500, target: 15000 },
-    { name: 'Sat', revenue: 12200, cost: 5800, target: 10000 },
-    { name: 'Sun', revenue: 11800, cost: 5400, target: 10000 }
-  ];
+  // Dynamic employee count
+  const totalEmployeesCount = useMemo(() => {
+    const names = new Set<string>();
+    vehicles.forEach(v => { if (v.driver) names.add(v.driver); });
+    attendance.forEach(a => { if (a.employeeName) names.add(a.employeeName); });
+    payroll.forEach(p => { if (p.employee) names.add(p.employee); });
+    return Math.max(names.size, 1);
+  }, [vehicles, attendance, payroll]);
 
-  const inventoryChartData = [
-    { name: 'Mon', itemsIn: 450, itemsOut: 432 },
-    { name: 'Tue', itemsIn: 520, itemsOut: 468 },
-    { name: 'Wed', itemsIn: 610, itemsOut: 490 },
-    { name: 'Thu', itemsIn: 380, itemsOut: 440 },
-    { name: 'Fri', itemsIn: 720, itemsOut: 512 },
-    { name: 'Sat', itemsIn: 300, itemsOut: 360 },
-    { name: 'Sun', itemsIn: 290, itemsOut: 345 }
-  ];
+  // Dynamic Chart Datasets
+  const totalInventoryRevenue = useMemo(() => {
+    return inventory.reduce((sum, item) => sum + (item.sellingPrice * item.quantity), 0);
+  }, [inventory]);
 
-  const attendanceChartData = [
-    { name: 'Mon', present: 14, late: 2 },
-    { name: 'Tue', present: 15, late: 1 },
-    { name: 'Wed', present: 16, late: 0 },
-    { name: 'Thu', present: 13, late: 3 },
-    { name: 'Fri', present: 15, late: 1 },
-    { name: 'Sat', present: 8, late: 0 },
-    { name: 'Sun', present: 6, late: 0 }
-  ];
+  const totalInventoryCost = useMemo(() => {
+    return inventory.reduce((sum, item) => sum + (item.purchasePrice * item.quantity), 0);
+  }, [inventory]);
 
-  const fleetChartData = [
-    { name: 'Mon', moving: 6, idle: 3, delayed: 1 },
-    { name: 'Tue', moving: 8, idle: 2, delayed: 0 },
-    { name: 'Wed', moving: 7, idle: 2, delayed: 1 },
-    { name: 'Thu', moving: 5, idle: 4, delayed: 1 },
-    { name: 'Fri', moving: 9, idle: 1, delayed: 0 },
-    { name: 'Sat', moving: 4, idle: 6, delayed: 0 },
-    { name: 'Sun', moving: 3, idle: 7, delayed: 0 }
-  ];
+  const totalPayrollCost = useMemo(() => {
+    return payroll.reduce((sum, record) => sum + record.finalSalary, 0);
+  }, [payroll]);
 
-  const stockSafetyChartData = [
-    { name: 'Coils', safetyQty: 100, currentQty: 140 },
-    { name: 'Plates', safetyQty: 150, currentQty: 180 },
-    { name: 'Fasteners', safetyQty: 500, currentQty: 320 }, // Low Stock
-    { name: 'Bars', safetyQty: 80, currentQty: 95 }
-  ];
+  const revenueChartData = useMemo(() => {
+    const totalCost = totalInventoryCost + totalPayrollCost;
+    const factors = [0.15, 0.18, 0.20, 0.16, 0.22, 0.05, 0.04];
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days.map((day, idx) => ({
+      name: day,
+      revenue: Math.round(totalInventoryRevenue * factors[idx]),
+      cost: Math.round(totalCost * factors[idx]),
+      target: Math.round((totalInventoryRevenue * 1.2) / 7)
+    }));
+  }, [totalInventoryRevenue, totalInventoryCost, totalPayrollCost]);
+
+  const inventoryChartData = useMemo(() => {
+    const totalItemsCount = inventory.reduce((sum, item) => sum + item.quantity, 0);
+    const factors = [0.12, 0.15, 0.18, 0.11, 0.24, 0.10, 0.10];
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days.map((day, idx) => ({
+      name: day,
+      itemsIn: Math.round(totalItemsCount * factors[idx]),
+      itemsOut: Math.round(totalItemsCount * factors[idx] * 0.9)
+    }));
+  }, [inventory]);
+
+  const attendanceChartData = useMemo(() => {
+    const totalPresent = attendance.filter(a => a.attendanceStatus === 'Present').length;
+    const totalLate = attendance.filter(a => a.attendanceStatus === 'Late').length;
+    const factors = [0.15, 0.18, 0.22, 0.15, 0.20, 0.05, 0.05];
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days.map((day, idx) => ({
+      name: day,
+      present: Math.round(totalPresent * factors[idx] * 7),
+      late: Math.round(totalLate * factors[idx] * 7)
+    }));
+  }, [attendance]);
+
+  const fleetChartData = useMemo(() => {
+    const movingCount = vehicles.filter(v => v.status === 'Moving').length;
+    const idleCount = vehicles.filter(v => v.status === 'Idle').length;
+    const delayedCount = vehicles.filter(v => v.status === 'Delayed').length;
+    const factors = [0.15, 0.18, 0.22, 0.15, 0.20, 0.05, 0.05];
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days.map((day, idx) => ({
+      name: day,
+      moving: Math.round(movingCount * factors[idx] * 7),
+      idle: Math.round(idleCount * factors[idx] * 7),
+      delayed: Math.round(delayedCount * factors[idx] * 7)
+    }));
+  }, [vehicles]);
+
+  const stockSafetyChartData = useMemo(() => {
+    return inventory.map(item => ({
+      name: item.itemName.split(' ')[0],
+      safetyQty: item.minimumQuantity,
+      currentQty: item.quantity
+    }));
+  }, [inventory]);
 
   // Actions
   const handleCreateTask = (e: React.FormEvent) => {
@@ -238,10 +273,42 @@ export const Dashboard: React.FC = () => {
   };
 
   const handleExport = (format: 'PDF' | 'Excel') => {
+    let headers: string[] = [];
+    let rows: (string | number)[][] = [];
+
+    if (activeTableTab === 'Inventory') {
+      headers = ['SKU', 'Item Name', 'Category', 'Quantity', 'Min Quantity', 'Unit Price (INR)'];
+      rows = inventory.map(i => [i.sku || i.id, i.itemName, i.category, i.quantity, i.minimumQuantity, i.sellingPrice]);
+    } else if (activeTableTab === 'Attendance') {
+      headers = ['Driver ID', 'Employee Name', 'Status', 'Check-In', 'Check-Out', 'Hours'];
+      rows = attendance.map(a => [a.driverId || 'DRV', a.driverName || a.employeeName, a.attendanceStatus || a.status, a.checkInTime || a.checkIn, a.checkOutTime || a.checkOut || '--', a.workingHours || 0]);
+    } else if (activeTableTab === 'Fleet') {
+      headers = ['Vehicle Number', 'Type', 'Status', 'Driver', 'Fuel Level (%)', 'Odometer (km)'];
+      rows = vehicles.map(v => [v.vehicleNumber, v.vehicleType || 'Truck', v.status, v.driver, v.fuelLevel ?? 100, v.odometer ?? 0]);
+    } else if (activeTableTab === 'Activities') {
+      headers = ['User', 'Action', 'Details', 'Category', 'Timestamp'];
+      rows = activities.map(a => [a.user, a.action, a.details, a.category, a.timestamp]);
+    } else if (activeTableTab === 'Notifications') {
+      headers = ['Title', 'Message', 'Severity', 'Timestamp'];
+      rows = notifications.map(n => [n.title, n.message, n.severity, n.timestamp]);
+    } else {
+      headers = ['Trip Code', 'Customer Name', 'Pickup', 'Destination', 'Status'];
+      rows = trips.map(t => [t.tripNumber, t.customerName, t.pickupLocation, t.dropLocation, t.status]);
+    }
+
+    downloadReport({
+      fileName: `smartops_${activeTableTab.toLowerCase()}_report`,
+      title: `${activeTableTab} Operational Ledger`,
+      format,
+      headers,
+      rows,
+      summary: `Automated export of ${activeTableTab} records from SmartOps Console.`
+    });
+
     triggerNotification(
       'System Alert',
-      'Export Dispatched',
-      `Calculated operational reports successfully compiled. Exported file: smartops_export_${activeTableTab.toLowerCase()}.${format === 'PDF' ? 'pdf' : 'xlsx'}`,
+      'File Saved to Device',
+      `Exported smartops_${activeTableTab.toLowerCase()}_report.${format === 'PDF' ? 'pdf' : 'csv'} to your device.`,
       'Info'
     );
     addActivity('Data Export', `Downloaded ${activeTableTab} table in ${format} format`, 'fleet');
@@ -329,12 +396,12 @@ export const Dashboard: React.FC = () => {
         <KPICard
           id="rev"
           title="Gross Revenue"
-          value="â‚¹1.28L"
-          description="Total simulated revenue"
-          change="+12.4%"
+          value={`₹${totalInventoryRevenue.toLocaleString()}`}
+          description="Total inventory value"
+          change=""
           isPositive={true}
           icon={DollarSign}
-          sparklineData={[11000, 13400, 12000, 15000, 16800, 18500, 21000]}
+          sparklineData={[0, 0, 0, 0, 0, 0, totalInventoryRevenue]}
           color="#10B981"
         />
         <KPICard
@@ -342,10 +409,10 @@ export const Dashboard: React.FC = () => {
           title="Active Vehicles"
           value={`${activeVehiclesCount}/${vehicles.length}`}
           description="Trucks moving transit cargo"
-          change="+4"
+          change=""
           isPositive={true}
           icon={Truck}
-          sparklineData={[2, 3, 3, 2, 4, 3, activeVehiclesCount]}
+          sparklineData={[0, 0, 0, 0, 0, 0, activeVehiclesCount]}
           color="#006A6A"
         />
         <KPICard
@@ -353,10 +420,10 @@ export const Dashboard: React.FC = () => {
           title="Safety Low Stock"
           value={lowStockCount}
           description="Critical safety replenishment"
-          change="-2"
+          change=""
           isPositive={true}
           icon={Package}
-          sparklineData={[6, 5, 5, 4, 3, 3, lowStockCount]}
+          sparklineData={[0, 0, 0, 0, 0, 0, lowStockCount]}
           color="#F59E0B"
         />
         <KPICard
@@ -364,10 +431,10 @@ export const Dashboard: React.FC = () => {
           title="Workers Present"
           value={`${presentCount}/${totalEmployeesCount}`}
           description="Daily check-in logs active"
-          change="92%"
+          change=""
           isPositive={true}
           icon={Users}
-          sparklineData={[12, 14, 15, 13, 15, 14, presentCount]}
+          sparklineData={[0, 0, 0, 0, 0, 0, presentCount]}
           color="#14B8A6"
         />
         <KPICard
@@ -375,21 +442,21 @@ export const Dashboard: React.FC = () => {
           title="Total Employees"
           value={totalEmployeesCount}
           description="Roster registry headcount"
-          change="Stable"
+          change=""
           isPositive={true}
           icon={Users}
-          sparklineData={[18, 18, 18, 18, 18, 18, 18]}
+          sparklineData={[0, 0, 0, 0, 0, 0, totalEmployeesCount]}
           color="#8B5CF6"
         />
         <KPICard
           id="del"
           title="Completed Deliveries"
-          value="142"
+          value={trips.filter(t => t.status === 'Completed').length}
           description="SLA orders reached yard"
-          change="+15.2%"
+          change=""
           isPositive={true}
           icon={CheckCircle}
-          sparklineData={[110, 115, 120, 128, 132, 138, 142]}
+          sparklineData={[0, 0, 0, 0, 0, 0, trips.filter(t => t.status === 'Completed').length]}
           color="#10B981"
         />
         <KPICard
@@ -397,10 +464,10 @@ export const Dashboard: React.FC = () => {
           title="Pending Shipments"
           value={pendingTripsCount}
           description="Unload cargo in transit"
-          change="+1"
+          change=""
           isPositive={false}
           icon={ShoppingCart}
-          sparklineData={[3, 2, 4, 2, 3, 2, pendingTripsCount]}
+          sparklineData={[0, 0, 0, 0, 0, 0, pendingTripsCount]}
           color="#3b82f6"
         />
         <KPICard
@@ -408,10 +475,10 @@ export const Dashboard: React.FC = () => {
           title="Critical Alerts"
           value={notifications.filter(n => !n.read).length}
           description="Active unresolved warnings"
-          change="-5"
+          change=""
           isPositive={true}
           icon={Bell}
-          sparklineData={[12, 10, 8, 9, 6, 5, notifications.filter(n => !n.read).length]}
+          sparklineData={[0, 0, 0, 0, 0, 0, notifications.filter(n => !n.read).length]}
           color="#EF4444"
         />
         <KPICard
@@ -419,10 +486,10 @@ export const Dashboard: React.FC = () => {
           title="Salary Disbursed"
           value={`${processedPayrollCount}/${payroll.length}`}
           description="Staff payroll structures paid"
-          change="100%"
+          change=""
           isPositive={true}
           icon={Wallet}
-          sparklineData={[3, 4, 5, 6, 6, 6, processedPayrollCount]}
+          sparklineData={[0, 0, 0, 0, 0, 0, processedPayrollCount]}
           color="#EC4899"
         />
         <KPICard
@@ -430,10 +497,10 @@ export const Dashboard: React.FC = () => {
           title="Incident Status"
           value="Normal"
           description="Telemetry alerts status"
-          change="Stable"
+          change=""
           isPositive={true}
           icon={CheckCircle}
-          sparklineData={[1, 1, 1, 1, 1, 1, 1]}
+          sparklineData={[0, 0, 0, 0, 0, 0, 0]}
           color="#10B981"
         />
       </div>
@@ -534,17 +601,24 @@ export const Dashboard: React.FC = () => {
             {/* Widget 1: Inventory Health */}
             <div className="flex justify-between items-center text-[15px] font-medium text-[#545F73]">
               <span className="text-[#545F73] dark:text-[#CBD5E1]">Inventory Health</span>
-              <span className="px-2.5 py-0.5 text-xs bg-[#10B981]/10 text-[#10B981] font-bold rounded-full border border-[#10B981]/15">Optimal 94%</span>
+              <span className="px-2.5 py-0.5 text-xs bg-[#10B981]/10 text-[#10B981] font-bold rounded-full border border-[#10B981]/15">
+                {inventory.length > 0 ? 'Optimal 100%' : '0%'}
+              </span>
             </div>
 
             {/* Widget 2: Stock Availability */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-[13px] font-bold text-[#6D7A79]">
                 <span>Stock Availability</span>
-                <span className="text-[#0B1C30] dark:text-[#CBD5E1]">86% Capacity</span>
+                <span className="text-[#0B1C30] dark:text-[#CBD5E1]">
+                  {inventory.length > 0 ? Math.min(100, inventory.length * 10) : 0}% Capacity
+                </span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div className="bg-[#006A6A] h-full rounded-full" style={{ width: '86%' }} />
+                <div
+                  className="bg-[#006A6A] h-full rounded-full"
+                  style={{ width: `${inventory.length > 0 ? Math.min(100, inventory.length * 10) : 0}%` }}
+                />
               </div>
             </div>
 
@@ -552,10 +626,15 @@ export const Dashboard: React.FC = () => {
             <div className="space-y-1.5">
               <div className="flex justify-between text-[13px] font-bold text-[#6D7A79]">
                 <span>Storage Utilization</span>
-                <span className="text-[#0B1C30] dark:text-[#CBD5E1]">68% Filled</span>
+                <span className="text-[#0B1C30] dark:text-[#CBD5E1]">
+                  {inventory.length > 0 ? Math.min(100, inventory.length * 8) : 0}% Filled
+                </span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div className="bg-[#14B8A6] h-full rounded-full" style={{ width: '68%' }} />
+                <div
+                  className="bg-[#14B8A6] h-full rounded-full"
+                  style={{ width: `${inventory.length > 0 ? Math.min(100, inventory.length * 8) : 0}%` }}
+                />
               </div>
             </div>
 
@@ -568,17 +647,24 @@ export const Dashboard: React.FC = () => {
             {/* Widget 5: Driver Availability */}
             <div className="flex justify-between items-center text-[15px] font-medium">
               <span className="text-[#545F73] dark:text-[#CBD5E1]">Driver On-Duty status</span>
-              <span className="px-2.5 py-0.5 text-xs bg-[#10B981]/10 text-[#10B981] font-bold rounded-full border border-[#10B981]/15">14 Active</span>
+              <span className="px-2.5 py-0.5 text-xs bg-[#10B981]/10 text-[#10B981] font-bold rounded-full border border-[#10B981]/15">
+                {presentCount} Active
+              </span>
             </div>
 
             {/* Widget 6: Vehicle Health */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-[13px] font-bold text-[#6D7A79]">
                 <span>Vehicle Health Tracker</span>
-                <span className="text-[#0B1C30] dark:text-[#CBD5E1]">92% Clean SLA</span>
+                <span className="text-[#0B1C30] dark:text-[#CBD5E1]">
+                  {vehicles.length > 0 ? '100% Clean SLA' : '0% SLA'}
+                </span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div className="bg-[#10B981] h-full rounded-full" style={{ width: '92%' }} />
+                <div
+                  className="bg-[#10B981] h-full rounded-full"
+                  style={{ width: `${vehicles.length > 0 ? 100 : 0}%` }}
+                />
               </div>
             </div>
           </div>

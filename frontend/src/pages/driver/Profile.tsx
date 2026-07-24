@@ -71,7 +71,7 @@ export const Profile: React.FC = () => {
             <p className="text-xs text-[#4B5563] dark:text-[#94A3B8] font-bold uppercase tracking-wide">Driver ID: DRV-9041</p>
             <div className="flex items-center justify-center gap-1.5 pt-2 text-[10px] text-[#006A6A] dark:text-[#7DF5F5] font-extrabold bg-[#006A6A]/10 px-3 py-1 rounded-full border border-[#006A6A]/15">
               <Award className="h-3.5 w-3.5" />
-              <span>Safety Score: 98.4%</span>
+              <span>Safety Score: 100%</span>
             </div>
           </div>
         </div>

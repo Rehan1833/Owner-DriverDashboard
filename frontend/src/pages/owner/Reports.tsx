@@ -1,11 +1,12 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { FileText, FileSpreadsheet, Download, RefreshCw, Calendar } from 'lucide-react';
+import { downloadReport } from '../../utils/downloadReport';
 
 export const Reports: React.FC = () => {
-  const { triggerNotification } = useOperations();
+  const { triggerNotification, inventory, vehicles, payroll, attendance } = useOperations();
   const [generating, setGenerating] = useState<string | null>(null);
 
   const reportOptions = [
@@ -21,15 +22,48 @@ export const Reports: React.FC = () => {
     if (!report) return;
 
     setGenerating(`${id}-${format}`);
+
     setTimeout(() => {
+      let headers: string[] = [];
+      let rows: (string | number)[][] = [];
+
+      if (id === 'rep1') {
+        headers = ['SKU Code', 'Item Name', 'Category', 'Quantity', 'Min Quantity', 'Unit Price (INR)', 'Total Value (INR)'];
+        rows = inventory.map(i => [i.sku || i.id, i.itemName, i.category, i.quantity, i.minimumQuantity, i.sellingPrice, i.quantity * i.sellingPrice]);
+      } else if (id === 'rep2') {
+        headers = ['Vehicle Number', 'Vehicle Type', 'Status', 'Driver', 'Fuel Level (%)', 'Odometer (km)', 'Current Location'];
+        rows = vehicles.map(v => [v.vehicleNumber, v.vehicleType || 'Truck', v.status, v.driver, v.fuelLevel ?? 100, v.odometer ?? 0, v.currentLocation]);
+      } else if (id === 'rep3') {
+        headers = ['SKU Code', 'Item Name', 'Category', 'Quantity', 'Min Quantity', 'Stock Status'];
+        const lowStock = inventory.filter(i => i.quantity <= i.minimumQuantity);
+        rows = lowStock.length > 0
+          ? lowStock.map(i => [i.sku || i.id, i.itemName, i.category, i.quantity, i.minimumQuantity, 'CRITICAL REPLENISHMENT'])
+          : inventory.map(i => [i.sku || i.id, i.itemName, i.category, i.quantity, i.minimumQuantity, 'HEALTHY']);
+      } else if (id === 'rep4') {
+        headers = ['Employee Name', 'Base Salary (INR)', 'Overtime Pay (INR)', 'Bonus (INR)', 'Deductions (INR)', 'Final Disbursed (INR)', 'Status'];
+        rows = payroll.map(p => [p.employeeName || p.employee, p.basicSalary, p.overtime, p.bonus, p.deduction, p.finalSalary, p.paymentStatus || p.status || 'Paid']);
+      } else if (id === 'rep5') {
+        headers = ['Driver ID', 'Name', 'Role', 'Status', 'Check-In Time', 'Check-Out Time', 'Working Hours', 'Branch'];
+        rows = attendance.map(a => [a.driverId || 'DRV', a.driverName || a.employeeName, a.role || 'Staff', a.attendanceStatus || a.status, a.checkInTime || a.checkIn, a.checkOutTime || a.checkOut || '--', a.workingHours || 0, a.checkInWarehouse || 'Pune HQ']);
+      }
+
+      downloadReport({
+        fileName: report.name,
+        title: report.name,
+        format,
+        headers,
+        rows,
+        summary: report.description
+      });
+
       setGenerating(null);
       triggerNotification(
         'System Alert',
-        'Download Finished',
-        `Completed download of ${report.name} in ${format} format.`,
+        'File Saved to Device',
+        `Downloaded ${report.name} (${format}) to your local storage folder.`,
         'Info'
       );
-    }, 1800);
+    }, 600);
   };
 
   return (

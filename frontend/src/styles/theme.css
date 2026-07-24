@@ -29,8 +29,6 @@ main .glass-panel:hover,
 .dark main .bg-white.rounded-2xl,
 .dark main .dark\:bg-slate-900.rounded-3xl,
 .dark main .dark\:bg-slate-900.rounded-2xl,
-.dark main .dark\:bg-\[1E293B\].rounded-2xl,
-.dark main .dark\:bg-[#1E293B].rounded-2xl,
 .dark .glass-panel {
   background: #1E293B !important;
   border: 1px solid #334155 !important;

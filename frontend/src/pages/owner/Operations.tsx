@@ -1,16 +1,18 @@
-﻿import React from 'react';
+import React from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { OperationsChart } from '../../components/charts/Charts';
 import { Badge } from '../../components/ui/Badge';
 import { Settings, UserCheck, Wrench, Shield } from 'lucide-react';
 
 export const Operations: React.FC = () => {
-  const { attendance } = useOperations();
+  const { attendance, inventory } = useOperations();
+
+  const totalInventoryUnits = inventory.reduce((sum, i) => sum + i.quantity, 0);
 
   const productionLineData = [
-    { name: 'Shift A', line1: 180, line2: 150, line3: 90 },
-    { name: 'Shift B', line1: 220, line2: 190, line3: 110 },
-    { name: 'Shift C', line1: 140, line2: 120, line3: 40 },
+    { name: 'Shift A', line1: Math.round(totalInventoryUnits * 0.4), line2: Math.round(totalInventoryUnits * 0.3), line3: 0 },
+    { name: 'Shift B', line1: Math.round(totalInventoryUnits * 0.2), line2: Math.round(totalInventoryUnits * 0.1), line3: 0 },
+    { name: 'Shift C', line1: 0, line2: 0, line3: 0 },
   ];
 
   return (
@@ -24,12 +26,16 @@ export const Operations: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex items-start gap-4">
           <div className="p-3.5 rounded-xl bg-[#006A6A]/10 text-[#006A6A]">
-            <Settings className="h-6 w-6 animate-spin" />
+            <Settings className="h-6 w-6" />
           </div>
           <div className="space-y-2">
             <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">Assembly Line 1</span>
-            <h4 className="text-lg font-bold text-[#0B1C30] dark:text-white leading-tight">Active (440 units)</h4>
-            <Badge variant="success">Normal Load</Badge>
+            <h4 className="text-lg font-bold text-[#0B1C30] dark:text-white leading-tight">
+              {totalInventoryUnits > 0 ? `Active (${totalInventoryUnits} units)` : 'Idle (0 units)'}
+            </h4>
+            <Badge variant={totalInventoryUnits > 0 ? 'success' : 'neutral'}>
+              {totalInventoryUnits > 0 ? 'Normal Load' : 'Standby'}
+            </Badge>
           </div>
         </div>
 
@@ -39,19 +45,19 @@ export const Operations: React.FC = () => {
           </div>
           <div className="space-y-2">
             <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">Assembly Line 2</span>
-            <h4 className="text-lg font-bold text-[#0B1C30] dark:text-white leading-tight">Active (390 units)</h4>
-            <Badge variant="success">Normal Load</Badge>
+            <h4 className="text-lg font-bold text-[#0B1C30] dark:text-white leading-tight">Idle (0 units)</h4>
+            <Badge variant="neutral">Standby</Badge>
           </div>
         </div>
 
         <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex items-start gap-4">
-          <div className="p-3.5 rounded-xl bg-[#EF4444]/10 text-[#EF4444]">
+          <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500">
             <Shield className="h-6 w-6" />
           </div>
           <div className="space-y-2">
             <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">Assembly Line 3</span>
-            <h4 className="text-lg font-bold text-[#EF4444] dark:text-red-450 leading-tight">Halted (MCU Depleted)</h4>
-            <Badge variant="danger">Critical Alert</Badge>
+            <h4 className="text-lg font-bold text-slate-600 dark:text-slate-400 leading-tight">Offline (0 units)</h4>
+            <Badge variant="neutral">Inactive</Badge>
           </div>
         </div>
       </div>
