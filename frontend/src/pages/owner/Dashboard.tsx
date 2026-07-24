@@ -366,9 +366,9 @@ export const Dashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-[#0B1C30] via-[#0D2A4A] to-[#0A1828] p-8 md:p-10 rounded-[24px] text-white shadow-lg border border-[#E5EEFF]/80 dark:border-[#334155]/60 text-left animate-fade-in">
         <div className="space-y-2">
           <span className="text-[13px] font-bold text-[#14B8A6] tracking-widest uppercase">Admin Executive Console</span>
-          <h2 className="text-[42px] font-extrabold tracking-tight leading-none text-white">Hello, {user?.fullName || 'Harsh Vardhan'}</h2>
+          <h2 className="text-[42px] font-extrabold tracking-tight leading-none text-white">Welcome back, {user?.fullName || 'Owner'}</h2>
           <p className="text-slate-400 text-[15px] leading-relaxed max-w-2xl font-medium pt-1">
-            Logistics dashboards and telemetry channels are synchronized. Branch operations in Pune, Mumbai and Bangalore are actively reporting.
+            Role: <span className="text-[#14B8A6] font-bold">{user?.role || 'Owner'}</span> · Email: <span className="text-white font-semibold">{user?.email || 'user@company.com'}</span>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 shrink-0">

@@ -24,7 +24,7 @@ export const Profile: React.FC = () => {
   const [fullName, setFullName] = useState(user?.fullName || 'Enterprise Owner');
   const [email, setEmail] = useState(user?.email || 'owner@smartops.com');
   const [mobileNumber, setMobileNumber] = useState(user?.mobileNumber || '');
-  const [companyName, setCompanyName] = useState(user?.companyName || 'SmartOps Logistics Ltd.');
+  const [companyName, setCompanyName] = useState(user?.companyName || (user?.fullName ? `${user.fullName}'s Enterprise` : 'Enterprise Portal'));
   
   // API credentials keys state
   const [apiKey, setApiKey] = useState('so_live_pk_51NzW2gSFmP3dE...');

@@ -6,6 +6,8 @@ export interface User {
   email: string;
   mobileNumber: string;
   role: UserRole;
+  isEmailVerified?: boolean;
+  isPhoneVerified?: boolean;
   companyName?: string;
   driverId?: string;
   vehicleNumber?: string;

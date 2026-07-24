@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { useOperations } from '../../store/OperationsContext';
 import { useTheme } from '../../store/ThemeContext';
@@ -47,7 +47,7 @@ interface OwnerSettingsState {
 }
 
 const DEFAULT_SETTINGS: OwnerSettingsState = {
-  companyName: 'SmartOps Logistics & Manufacturing Ltd.',
+  companyName: 'Enterprise Portal',
   gstNumber: '27AAAAA1111A1Z1',
   address: 'Corporate Park, Sector V, Phase 2, Pune, MH, India',
   branchDetails: 'Pune Yard (HQ), Mumbai Transit Hub, Bangalore Warehouse',
@@ -90,6 +90,12 @@ export const Settings: React.FC = () => {
   const [logoPreview, setLogoPreview] = useState<string>(
     'https://api.dicebear.com/7.x/identicon/svg?seed=SmartOps'
   );
+
+  useEffect(() => {
+    if (user?.companyName) {
+      setSettings(prev => ({ ...prev, companyName: user.companyName! }));
+    }
+  }, [user?.companyName]);
 
   useEffect(() => {
     localStorage.setItem('smartops_owner_settings', JSON.stringify(settings));

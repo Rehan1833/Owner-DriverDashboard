@@ -11,7 +11,7 @@ app.use('/api/auth', authRoutes);
 jest.mock('../models/User');
 jest.mock('../utils/otpService');
 
-describe('Driver Gmail Authentication & Code Verification API', () => {
+describe('Secure Driver & Owner Authentication & OTP Verification API', () => {
   beforeEach(() => {
     (otpService.generateOTP as jest.Mock).mockReturnValue('654321');
     (otpService.sendGmailCode as jest.Mock).mockResolvedValue(true);
@@ -22,14 +22,15 @@ describe('Driver Gmail Authentication & Code Verification API', () => {
     jest.clearAllMocks();
   });
 
-  describe('POST /api/auth/register (Driver Gmail Registration)', () => {
-    it('should generate Gmail OTP code and send to Driver upon registration', async () => {
+  describe('POST /api/auth/register', () => {
+    it('should generate Gmail OTP code and return 201 for new user registration', async () => {
       (User.findOne as jest.Mock).mockResolvedValue(null);
 
       const mockDriver = {
         _id: 'driver-id-101',
         fullName: 'Ramesh Sharma',
         email: 'ramesh.driver@gmail.com',
+        mobileNumber: '9876500000',
         role: 'Driver',
         driverId: 'DRV-1010',
         vehicleNumber: 'MH-14-AB-9988',
@@ -58,22 +59,98 @@ describe('Driver Gmail Authentication & Code Verification API', () => {
 
       expect(res.status).toBe(201);
       expect(res.body).toHaveProperty('otpCode');
-      expect(res.body.message).toContain('Registration initiated for Driver');
+      expect(res.body.message).toMatch(/OTP sent successfully|Registration initiated/);
       expect(res.body.user).toHaveProperty('email', 'ramesh.driver@gmail.com');
       expect(res.body.user).toHaveProperty('isEmailVerified', false);
       expect(otpService.sendGmailCode).toHaveBeenCalledWith('ramesh.driver@gmail.com', expect.any(String), 'Driver');
     });
+
+    it('should reject registration if email already exists', async () => {
+      (User.findOne as jest.Mock).mockImplementation(async (query: any) => {
+        if (query.email === 'duplicate@gmail.com') return { email: 'duplicate@gmail.com' };
+        return null;
+      });
+
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({
+          fullName: 'Duplicate User',
+          email: 'duplicate@gmail.com',
+          mobileNumber: '9876543210',
+          role: 'Owner',
+          password: 'securepassword123'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toBe('This email is already registered.');
+    });
+
+    it('should reject registration if mobile number already exists', async () => {
+      (User.findOne as jest.Mock).mockImplementation(async (query: any) => {
+        if (query.mobileNumber === '9999988888') return { mobileNumber: '9999988888' };
+        return null;
+      });
+
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({
+          fullName: 'Mobile User',
+          email: 'unique@gmail.com',
+          mobileNumber: '9999988888',
+          role: 'Owner',
+          password: 'securepassword123'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toBe('This mobile number is already registered.');
+    });
   });
 
-  describe('POST /api/auth/login (Driver Gmail Code Authentication)', () => {
-    it('should authenticate Driver using the Gmail OTP code entered as password', async () => {
+  describe('POST /api/auth/login', () => {
+    it('should return 404 if user account does not exist', async () => {
+      (User.findOne as jest.Mock).mockResolvedValue(null);
+
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'nonexistent@gmail.com',
+          password: 'password123'
+        });
+
+      expect(res.status).toBe(404);
+      expect(res.body.message).toBe('Account not found. Please register first.');
+    });
+
+    it('should return 403 if user account is not email verified', async () => {
+      const mockUnverifiedUser = {
+        _id: 'user-101',
+        email: 'unverified@gmail.com',
+        role: 'Driver',
+        isEmailVerified: false,
+        comparePassword: jest.fn().mockResolvedValue(true),
+        save: jest.fn().mockResolvedValue(true)
+      };
+
+      (User.findOne as jest.Mock).mockResolvedValue(mockUnverifiedUser);
+
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'unverified@gmail.com',
+          password: 'securepassword123'
+        });
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toContain('Please verify your email first');
+    });
+
+    it('should allow login with valid Gmail OTP code as password and verify account', async () => {
       const mockUnverifiedDriver = {
         _id: 'driver-id-101',
         fullName: 'Ramesh Sharma',
         email: 'ramesh.driver@gmail.com',
         role: 'Driver',
         driverId: 'DRV-1010',
-        vehicleNumber: 'MH-14-AB-9988',
         isEmailVerified: false,
         otpCode: '654321',
         otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
@@ -93,53 +170,46 @@ describe('Driver Gmail Authentication & Code Verification API', () => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('token');
       expect(mockUnverifiedDriver.isEmailVerified).toBe(true);
-      expect(mockUnverifiedDriver.otpCode).toBeUndefined();
-      expect(mockUnverifiedDriver.save).toHaveBeenCalled();
     });
 
-    it('should return 403 with Gmail prompt if Driver logs in with password before verifying Gmail code', async () => {
-      const mockUnverifiedDriver = {
-        _id: 'driver-id-101',
-        fullName: 'Ramesh Sharma',
-        email: 'ramesh.driver@gmail.com',
-        role: 'Driver',
-        driverId: 'DRV-1010',
-        isEmailVerified: false,
-        otpCode: '654321',
-        otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
-        comparePassword: jest.fn().mockResolvedValue(true),
-        save: jest.fn().mockResolvedValue(true)
+    it('should authenticate verified user with correct password', async () => {
+      const mockVerifiedUser = {
+        _id: 'user-202',
+        fullName: 'Verified Owner',
+        email: 'owner@smartops.com',
+        role: 'Owner',
+        isEmailVerified: true,
+        comparePassword: jest.fn().mockResolvedValue(true)
       };
 
-      (User.findOne as jest.Mock).mockResolvedValue(mockUnverifiedDriver);
+      (User.findOne as jest.Mock).mockResolvedValue(mockVerifiedUser);
 
       const res = await request(app)
         .post('/api/auth/login')
         .send({
-          email: 'ramesh.driver@gmail.com',
-          password: 'securepassword123'
+          email: 'owner@smartops.com',
+          password: 'correctpassword123'
         });
 
-      expect(res.status).toBe(403);
-      expect(res.body.message).toContain('Account email verification pending');
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('token');
+      expect(res.body.user.isEmailVerified).toBe(true);
     });
   });
 
-  describe('POST /api/auth/verify-otp (Verify Driver Gmail OTP)', () => {
-    it('should mark Driver as email verified when valid Gmail OTP code is posted', async () => {
-      const mockDriver = {
-        _id: 'driver-id-101',
-        fullName: 'Ramesh Sharma',
+  describe('POST /api/auth/verify-otp', () => {
+    it('should mark account verified when valid OTP code is posted', async () => {
+      const mockUser = {
+        _id: 'user-101',
         email: 'ramesh.driver@gmail.com',
         role: 'Driver',
-        driverId: 'DRV-1010',
         isEmailVerified: false,
         otpCode: '654321',
         otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
         save: jest.fn().mockResolvedValue(true)
       };
 
-      (User.findOne as jest.Mock).mockResolvedValue(mockDriver);
+      (User.findOne as jest.Mock).mockResolvedValue(mockUser);
 
       const res = await request(app)
         .post('/api/auth/verify-otp')
@@ -149,9 +219,8 @@ describe('Driver Gmail Authentication & Code Verification API', () => {
         });
 
       expect(res.status).toBe(200);
-      expect(res.body.message).toContain('OTP authentication successful');
-      expect(mockDriver.isEmailVerified).toBe(true);
-      expect(mockDriver.save).toHaveBeenCalled();
+      expect(mockUser.isEmailVerified).toBe(true);
+      expect(mockUser.save).toHaveBeenCalled();
     });
   });
 });

@@ -134,156 +134,167 @@ export const Login: React.FC = () => {
       width: '100vw',
       background: DS.bg,
       display: 'flex',
-      alignItems: 'stretch',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '40px 24px',
+      position: 'relative',
+      overflow: 'hidden',
+      boxSizing: 'border-box',
       fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
       WebkitFontSmoothing: 'antialiased',
     }}>
 
-      {/* ══════════════════════════════════════════════
-          LEFT PANEL  55%
-      ══════════════════════════════════════════════ */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4 }}
-        className="login-left-panel"
-        style={{
-          width: '55%',
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          padding: '60px 72px',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Dot-grid — same opacity/density as dashboard bg ──────────────── */}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          backgroundImage: `radial-gradient(circle, ${DS.border} 1.2px, transparent 1.2px)`,
-          backgroundSize: '24px 24px',
-          opacity: 0.7,
-        }} />
-
-        {/* Very subtle top-left glow — matches dashboard soft-blue ambiance */}
-        <div style={{
-          position: 'absolute', top: -100, left: -60, pointerEvents: 'none',
-          width: 380, height: 380, borderRadius: '50%',
-          background: `radial-gradient(circle, rgba(0,106,106,0.07) 0%, transparent 70%)`,
-        }} />
-        <div style={{
-          position: 'absolute', bottom: -60, right: 40, pointerEvents: 'none',
-          width: 260, height: 260, borderRadius: '50%',
-          background: `radial-gradient(circle, rgba(0,163,163,0.05) 0%, transparent 70%)`,
-        }} />
-
-        {/* ── Content ──────────────────────────────────────────────────── */}
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 480 }}>
-
-          {/* Logo — matches dashboard sidebar logo exactly */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 52 }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: 10,
-              background: DS.primaryGrad,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 2px 8px 0 ${DS.primaryShadow}`,
-            }}>
-              <ShieldCheck size={18} color="#fff" strokeWidth={2.2} />
-            </div>
-            <div>
-              <div style={{
-                fontSize: 20, fontWeight: 900, color: DS.textPrimary,
-                lineHeight: 1, letterSpacing: '-0.4px',
-              }}>
-                Smart<span style={{ color: DS.primary }}>Ops</span>
-              </div>
-              <div style={{
-                fontSize: 10, fontWeight: 600, color: DS.textMuted,
-                letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2,
-              }}>
-                Manufacturing ERP Suite
-              </div>
-            </div>
-          </div>
-
-          {/* Headline — h1 from design system: 40px / 800 / -0.03em */}
-          <h1 style={{
-            fontSize: 38,
-            fontWeight: 800,
-            lineHeight: 1.15,
-            letterSpacing: '-0.03em',
-            color: DS.textPrimary,
-            margin: 0,
-          }}>
-            Run your manufacturing business on one{' '}
-            <span style={{ color: DS.primary }}>intelligent</span> platform.
-          </h1>
-
-          {/* Tagline — uses secondary text weight */}
-          <div style={{
-            marginTop: 20,
-            display: 'flex', alignItems: 'baseline', gap: 10,
-            fontSize: 17, fontWeight: 700, letterSpacing: '-0.2px',
-          }}>
-            <span style={{ color: DS.textPrimary }}>Manage.</span>
-            <span style={{ color: DS.textMuted }}>Monitor.</span>
-            <span style={{
-              background: DS.primaryGrad,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}>Maximize.</span>
-          </div>
-
-          {/* 3 feature bullets */}
-          <ul style={{
-            listStyle: 'none', margin: '32px 0 0', padding: 0,
-            display: 'flex', flexDirection: 'column', gap: 12,
-          }}>
-            {FEATURES.map(({ Icon, label }) => (
-              <li key={label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {/* Icon chip — matches dashboard stat card icon chips */}
-                <div style={{
-                  width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                  background: 'rgba(0,106,106,0.08)',
-                  border: `1px solid rgba(0,106,106,0.12)`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Icon size={13} color={DS.primary} strokeWidth={2.2} />
-                </div>
-                <span style={{ fontSize: 14, fontWeight: 500, color: DS.textSecondary }}>
-                  {label}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </motion.div>
-
-      {/* Right-panel separator — matches dashboard sidebar border */}
+      {/* Dot-grid — background ambient texture ──────────────── */}
       <div style={{
-        width: 1,
-        background: DS.border,
-        flexShrink: 0,
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        backgroundImage: `radial-gradient(circle, ${DS.border} 1.2px, transparent 1.2px)`,
+        backgroundSize: '24px 24px',
+        opacity: 0.7,
+      }} />
+
+      {/* Very subtle ambient glows ──────────────────────────── */}
+      <div style={{
+        position: 'absolute', top: -100, left: -60, pointerEvents: 'none',
+        width: 450, height: 450, borderRadius: '50%',
+        background: `radial-gradient(circle, rgba(0,106,106,0.07) 0%, transparent 70%)`,
+      }} />
+      <div style={{
+        position: 'absolute', bottom: -60, right: -40, pointerEvents: 'none',
+        width: 380, height: 380, borderRadius: '50%',
+        background: `radial-gradient(circle, rgba(0,163,163,0.06) 0%, transparent 70%)`,
       }} />
 
       {/* ══════════════════════════════════════════════
-          RIGHT PANEL  45%
+          PRO-UI CENTERED SPLIT CONTAINER (1100px MAX)
       ══════════════════════════════════════════════ */}
       <div style={{
-        flex: 1,
+        maxWidth: 1100,
+        width: '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '40px 32px',
-        background: DS.bg,
+        gap: 56,
+        position: 'relative',
+        zIndex: 1,
       }}>
+
+        {/* LEFT PANEL — BRANDING & VALUE PROP ──────── */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.06 }}
-          style={{ width: '100%', maxWidth: 440 }}
+          initial={{ opacity: 0, x: -16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+          className="login-left-panel"
+          style={{
+            flex: '1 1 500px',
+            maxWidth: 500,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
         >
+          {/* Content ─────────────────────────────────── */}
+          <div style={{ width: '100%' }}>
+
+            {/* Logo — matches dashboard sidebar logo exactly */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 44 }}>
+              <div style={{
+                width: 38, height: 38, borderRadius: 10,
+                background: DS.primaryGrad,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: `0 2px 8px 0 ${DS.primaryShadow}`,
+              }}>
+                <ShieldCheck size={18} color="#fff" strokeWidth={2.2} />
+              </div>
+              <div>
+                <div style={{
+                  fontSize: 20, fontWeight: 900, color: DS.textPrimary,
+                  lineHeight: 1, letterSpacing: '-0.4px',
+                }}>
+                  Smart<span style={{ color: DS.primary }}>Ops</span>
+                </div>
+                <div style={{
+                  fontSize: 10, fontWeight: 600, color: DS.textMuted,
+                  letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2,
+                }}>
+                  Manufacturing ERP Suite
+                </div>
+              </div>
+            </div>
+
+            {/* Headline — h1 from design system */}
+            <h1 style={{
+              fontSize: 36,
+              fontWeight: 800,
+              lineHeight: 1.16,
+              letterSpacing: '-0.03em',
+              color: DS.textPrimary,
+              margin: 0,
+            }}>
+              Run your manufacturing business on one{' '}
+              <span style={{ color: DS.primary }}>intelligent</span> platform.
+            </h1>
+
+            {/* Tagline */}
+            <div style={{
+              marginTop: 18,
+              display: 'flex', alignItems: 'baseline', gap: 10,
+              fontSize: 16, fontWeight: 700, letterSpacing: '-0.2px',
+            }}>
+              <span style={{ color: DS.textPrimary }}>Manage.</span>
+              <span style={{ color: DS.textMuted }}>Monitor.</span>
+              <span style={{
+                background: DS.primaryGrad,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}>Maximize.</span>
+            </div>
+
+            {/* 3 feature bullets */}
+            <ul style={{
+              listStyle: 'none', margin: '28px 0 0', padding: 0,
+              display: 'flex', flexDirection: 'column', gap: 12,
+            }}>
+              {FEATURES.map(({ Icon, label }) => (
+                <li key={label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                    background: 'rgba(0,106,106,0.08)',
+                    border: `1px solid rgba(0,106,106,0.12)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Icon size={13} color={DS.primary} strokeWidth={2.2} />
+                  </div>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: DS.textSecondary }}>
+                    {label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </motion.div>
+
+        {/* Right-panel separator line ───────────────── */}
+        <div className="login-divider" style={{
+          width: 1,
+          height: 410,
+          background: DS.border,
+          flexShrink: 0,
+          opacity: 0.8,
+        }} />
+
+        {/* RIGHT PANEL — LOGIN CARD ──────────────────── */}
+        <div style={{
+          flex: '1 1 450px',
+          maxWidth: 450,
+          display: 'flex',
+          justifyContent: 'center',
+        }}>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.06 }}
+            style={{ width: '100%', maxWidth: 440 }}
+          >
 
           {/* Mobile-only logo */}
           <div className="login-mobile-logo" style={{
@@ -557,6 +568,7 @@ export const Login: React.FC = () => {
 
         </motion.div>
       </div>
+    </div>
 
       {/* ── Global animation + responsive ─────────────────────────────────── */}
       <style>{`
@@ -564,8 +576,9 @@ export const Login: React.FC = () => {
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
         }
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
           .login-left-panel  { display: none !important; }
+          .login-divider     { display: none !important; }
           .login-mobile-logo { display: flex !important; }
         }
       `}</style>

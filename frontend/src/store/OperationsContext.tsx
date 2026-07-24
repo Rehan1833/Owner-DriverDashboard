@@ -15,7 +15,9 @@ interface OperationsContextType {
   notifications: SystemNotification[];
   activities: ActivityItem[];
   login: (email: string, role: UserRole, password?: string) => Promise<void>;
-  register: (payload: any) => Promise<void>;
+  register: (payload: any) => Promise<{ success?: boolean; message: string; otpCode?: string; token?: string; user?: User }>;
+  verifyOTP: (email: string, otpCode: string) => Promise<{ message: string; token?: string; user?: User }>;
+  resendOTP: (email: string) => Promise<{ message: string; otpCode?: string }>;
   logout: () => void;
   // Inventory CRUD
   createInventory: (item: Omit<InventoryItem, 'id'>) => Promise<void>;
@@ -193,9 +195,22 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const register = async (payload: any) => {
     const res = await api.auth.register(payload);
-    setUser(res.user);
-    localStorage.setItem('smartops_user', JSON.stringify(res.user));
-    triggerNotification('System Alert', 'Account Registered', `Welcome to SmartOps, ${res.user.fullName}!`, 'Info');
+    triggerNotification('System Alert', 'OTP Dispatched', res.message || `Verification OTP code sent to ${payload.email}.`, 'Info');
+    return res;
+  };
+
+  const verifyOTP = async (email: string, otpCode: string) => {
+    const res = await api.auth.verifyOTP(email, otpCode);
+    if (res.user && res.user.isEmailVerified) {
+      triggerNotification('System Alert', 'Account Verified', `Email ${email} verified successfully. Please log in.`, 'Info');
+    }
+    return res;
+  };
+
+  const resendOTP = async (email: string) => {
+    const res = await api.auth.resendOTP(email);
+    triggerNotification('System Alert', 'OTP Resent', `Fresh 6-digit OTP code sent to ${email}.`, 'Info');
+    return res;
   };
 
   const logout = () => {
@@ -442,6 +457,8 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         activities,
         login,
         register,
+        verifyOTP,
+        resendOTP,
         logout,
         createInventory,
         updateInventory,

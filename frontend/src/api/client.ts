@@ -70,10 +70,12 @@ export const api = {
         return { token: 'mock_jwt_token_payload', user: mockUser };
       }
     },
-    register: async (payload: any): Promise<{ token: string; user: User }> => {
+    register: async (payload: any): Promise<{ success?: boolean; message: string; otpCode?: string; token?: string; user?: User }> => {
       try {
         const res = await axiosInstance.post('/auth/register', payload);
-        localStorage.setItem('smartops_jwt', res.data.token);
+        if (res.data.token) {
+          localStorage.setItem('smartops_jwt', res.data.token);
+        }
         return res.data;
       } catch (err: any) {
         if (err.response) {
@@ -93,7 +95,54 @@ export const api = {
           avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(payload.fullName)}`
         };
         localStorage.setItem('smartops_jwt', 'mock_jwt_token_payload');
-        return { token: 'mock_jwt_token_payload', user: mockUser };
+        return { message: 'Registration initiated.', token: 'mock_jwt_token_payload', user: mockUser };
+      }
+    },
+    verifyOTP: async (email: string, otpCode: string): Promise<{ message: string; token?: string; user?: User }> => {
+      try {
+        const res = await axiosInstance.post('/auth/verify-otp', { email, otpCode });
+        if (res.data.token) {
+          localStorage.setItem('smartops_jwt', res.data.token);
+        }
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        return { message: 'Account verified successfully.' };
+      }
+    },
+    resendOTP: async (email: string): Promise<{ message: string; otpCode?: string }> => {
+      try {
+        const res = await axiosInstance.post('/auth/send-otp', { email });
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        return { message: 'New OTP sent to email.' };
+      }
+    },
+    forgotPassword: async (email: string): Promise<{ message: string; otpCode?: string }> => {
+      try {
+        const res = await axiosInstance.post('/auth/forgot-password', { email });
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        return { message: `Password reset OTP dispatched to ${email}.` };
+      }
+    },
+    resetPassword: async (payload: { email: string; otpCode: string; newPassword: string }): Promise<{ message: string }> => {
+      try {
+        const res = await axiosInstance.post('/auth/reset-password', payload);
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        return { message: 'Password has been updated successfully.' };
       }
     }
   },

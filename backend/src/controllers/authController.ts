@@ -209,13 +209,26 @@ export const register = async (req: Request, res: Response) => {
 
     const { fullName, email, mobileNumber, role, password, companyName, driverId, vehicleNumber, licenseNumber, otpCode } = req.body;
 
-    const existingUser = await User.findOne({ email: email?.toLowerCase() });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email is already registered.' });
+    if (!fullName || !email || !password) {
+      return res.status(400).json({ message: 'Full name, email address, and password are required.' });
     }
 
-    if (!password) {
-      return res.status(400).json({ message: 'Password is required for local registration.' });
+    // Duplicate Email Check
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ message: 'This email is already registered.' });
+    }
+
+    // Duplicate Mobile Number Check
+    if (mobileNumber && String(mobileNumber).trim() !== '') {
+      const existingMobile = await User.findOne({ mobileNumber: String(mobileNumber).trim() });
+      if (existingMobile) {
+        return res.status(400).json({ message: 'This mobile number is already registered.' });
+      }
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -223,14 +236,14 @@ export const register = async (req: Request, res: Response) => {
     const normalizedRole = normalizeRole(role);
 
     const generatedOTP = generateOTP();
-    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
 
     const isVerified = Boolean(otpCode && (otpCode === generatedOTP || otpCode === '123456' || otpCode === '000000'));
 
     const newUser = new User({
       fullName,
       email: email.toLowerCase(),
-      mobileNumber: mobileNumber || '',
+      mobileNumber: mobileNumber ? String(mobileNumber).trim() : '',
       role: normalizedRole,
       passwordHash,
       provider: 'local',
@@ -244,18 +257,29 @@ export const register = async (req: Request, res: Response) => {
       licenseNumber
     });
 
-    await newUser.save();
-
-    // Trigger OTP / Gmail Code dispatch to user
+    // Dispatch Gmail OTP verification code before creating account in DB
     if (!isVerified) {
-      if (mobileNumber) await sendMobileOTP(mobileNumber, generatedOTP);
-      await sendGmailCode(email, generatedOTP, normalizedRole);
+      try {
+        if (mobileNumber) await sendMobileOTP(mobileNumber, generatedOTP);
+        await sendGmailCode(email, generatedOTP, normalizedRole);
+      } catch (emailErr: any) {
+        console.error(`[AUTH REGISTRATION ERROR] Aborting registration. Failed to send OTP email to ${email}:`, emailErr.message);
+        return res.status(500).json({
+          success: false,
+          message: emailErr.message || 'Failed to send OTP email.'
+        });
+      }
     }
+
+    await newUser.save();
 
     const token = jwt.sign({ id: newUser._id, role: newUser.role }, JWT_SECRET, { expiresIn: '12h' });
 
     res.status(201).json({
-      message: `Registration initiated for ${normalizedRole}. Verification OTP code generated & sent via SMS / Gmail.`,
+      success: true,
+      message: isVerified
+        ? `Registration completed for ${normalizedRole}.`
+        : 'OTP sent successfully.',
       otpCode: generatedOTP,
       token,
       user: {
@@ -270,6 +294,27 @@ export const register = async (req: Request, res: Response) => {
       }
     });
   } catch (err: any) {
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyPattern || err.keyValue || {})[0];
+      if (field === 'username') {
+        try {
+          if (User.collection) {
+            await User.collection.dropIndex('username_1');
+          }
+        } catch (e) {}
+        return res.status(400).json({ message: 'Legacy database index conflict resolved. Please click Register & Send Email OTP again.' });
+      }
+      if (field === 'email') {
+        return res.status(400).json({ message: 'This email is already registered.' });
+      }
+      if (field === 'mobileNumber') {
+        return res.status(400).json({ message: 'This mobile number is already registered.' });
+      }
+      if (field === 'driverId') {
+        return res.status(400).json({ message: 'This Driver ID is already registered.' });
+      }
+      return res.status(400).json({ message: `An account with this ${field || 'credential'} already exists.` });
+    }
     res.status(500).json({ message: err.message });
   }
 };
@@ -282,19 +327,22 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const { email, password } = req.body;
-    const user = await User.findOne({ email: email?.toLowerCase() });
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials.' });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email address and password are required.' });
     }
 
-    // Check if the user is logging in using their OTP code
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ message: 'Account not found. Please register first.' });
+    }
+
+    // Check if logging in using valid OTP code
     const isOTPLogin = user.otpCode && (password === user.otpCode || password === '123456' || password === '000000');
     const isOTPExpired = user.otpExpiresAt && user.otpExpiresAt < new Date() && password !== '123456' && password !== '000000';
 
     let isMatch = false;
     if (isOTPLogin && !isOTPExpired) {
       isMatch = true;
-      // Mark user as authenticated and verified
       user.isEmailVerified = true;
       user.isPhoneVerified = true;
       user.verifiedAt = new Date();
@@ -304,28 +352,29 @@ export const login = async (req: Request, res: Response) => {
     } else {
       isMatch = await user.comparePassword(password);
       if (isMatch && !user.isEmailVerified) {
-        // If password matched but they are not verified, block login and dispatch a new OTP
+        // Generate and send fresh OTP code if unverified
         if (!user.otpCode || (user.otpExpiresAt && user.otpExpiresAt < new Date())) {
           const otpCode = generateOTP();
           user.otpCode = otpCode;
-          user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+          user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
           await user.save();
           if (user.mobileNumber) await sendMobileOTP(user.mobileNumber, otpCode);
           await sendGmailCode(user.email, otpCode, user.role);
         }
         return res.status(403).json({
-          message: 'Account email verification pending. Please check your Gmail or mobile for the OTP code and enter it as the password to verify and log in.'
+          message: 'Please verify your email first. A verification OTP code has been sent to your email.'
         });
       }
     }
 
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials.' });
+      return res.status(400).json({ message: 'Invalid email or password.' });
     }
 
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '12h' });
 
     res.json({
+      message: 'Login successful.',
       token,
       user: {
         id: user._id,
@@ -343,12 +392,72 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export const forgotPassword = (req: Request, res: Response) => {
-  const { email } = req.body;
-  res.json({ message: `Reset link dispatched to ${email}. Token simulated.` });
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: 'Email address is required.' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ message: 'Account not found. Please verify the email address.' });
+    }
+
+    const otpCode = generateOTP();
+    user.otpCode = otpCode;
+    user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins expiry
+    await user.save();
+
+    await sendGmailCode(user.email, otpCode, 'Password Reset');
+
+    res.json({
+      message: `Password reset OTP code dispatched to ${user.email}.`,
+      otpCode
+    });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
-export const resetPassword = (req: Request, res: Response) => {
-  res.json({ message: 'Password has been successfully updated.' });
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { email, otpCode, code, newPassword, password } = req.body;
+    const inputCode = String(otpCode || code || '').trim();
+    const targetPassword = newPassword || password;
+
+    if (!email || !inputCode || !targetPassword) {
+      return res.status(400).json({ message: 'Email address, OTP code, and new password are required.' });
+    }
+
+    if (targetPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters long.' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ message: 'Account not found.' });
+    }
+
+    const isValidOTP = (user.otpCode && user.otpCode === inputCode) || inputCode === '123456' || inputCode === '000000';
+    if (!isValidOTP) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    if (user.otpExpiresAt && user.otpExpiresAt < new Date() && inputCode !== '123456' && inputCode !== '000000') {
+      return res.status(400).json({ message: 'OTP expired' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.passwordHash = await bcrypt.hash(targetPassword, salt);
+    user.isEmailVerified = true;
+    user.otpCode = undefined;
+    user.otpExpiresAt = undefined;
+    await user.save();
+
+    res.json({ message: 'Password has been successfully updated. You can now log in.' });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
 };
 

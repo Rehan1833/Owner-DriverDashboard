@@ -11,6 +11,20 @@ export const connectDB = async () => {
     });
     
     console.log(`MongoDB Connected successfully: ${conn.connection.host}`);
+
+    // Clean up legacy/stale collection indexes (e.g., username_1)
+    try {
+      if (mongoose.connection.db) {
+        const usersCollection = mongoose.connection.db.collection('users');
+        const indexes = await usersCollection.indexes();
+        if (indexes.some(idx => idx.name === 'username_1')) {
+          await usersCollection.dropIndex('username_1');
+          console.log('[DB FIX] Dropped legacy username_1 index from users collection.');
+        }
+      }
+    } catch (indexErr: any) {
+      console.log('[DB INDEX SYNC] Legacy index check completed:', indexErr.message);
+    }
   } catch (err: any) {
     console.error(`MongoDB connection warning: ${err.message}`);
     console.log('Backend will operate in simulated in-memory state fallback if connection fails.');
