@@ -157,9 +157,18 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  // Safe array references to prevent blank page crashes
+  const safeTrips = trips || [];
+  const safeVehicles = vehicles || [];
+  const safeInventory = inventory || [];
+  const safeAttendance = attendance || [];
+  const safePayroll = payroll || [];
+  const safeActivities = activities || [];
+  const safeNotifications = notifications || [];
+
   // Dynamic Orders dataset derived from live trips
   const latestOrders = useMemo(() => {
-    return trips.map(t => ({
+    return safeTrips.map(t => ({
       id: t.tripNumber,
       item: t.material,
       client: t.customerName,
@@ -167,36 +176,36 @@ export const Dashboard: React.FC = () => {
       status: t.status === 'Completed' ? 'Completed' : 'Pending',
       date: t.timestamp ? new Date(t.timestamp).toLocaleDateString() : 'Today'
     }));
-  }, [trips]);
+  }, [safeTrips]);
 
   // Calculated Metrics for the 10 KPI Cards
-  const activeVehiclesCount = vehicles.filter(v => v.status === 'Moving').length;
-  const lowStockCount = inventory.filter(i => i.quantity <= i.minimumQuantity).length;
-  const presentCount = attendance.filter(a => a.attendanceStatus === 'Present' || a.attendanceStatus === 'Late').length;
-  const pendingTripsCount = trips.filter(t => t.status !== 'Completed').length;
-  const processedPayrollCount = payroll.filter(p => p.paymentStatus === 'Paid').length;
+  const activeVehiclesCount = safeVehicles.filter(v => v?.status === 'Moving').length;
+  const lowStockCount = safeInventory.filter(i => (i?.quantity ?? 0) <= (i?.minimumQuantity ?? 0)).length;
+  const presentCount = safeAttendance.filter(a => a?.attendanceStatus === 'Present' || a?.attendanceStatus === 'Late').length;
+  const pendingTripsCount = safeTrips.filter(t => t?.status !== 'Completed').length;
+  const processedPayrollCount = safePayroll.filter(p => p?.paymentStatus === 'Paid').length;
 
   // Dynamic employee count
   const totalEmployeesCount = useMemo(() => {
     const names = new Set<string>();
-    vehicles.forEach(v => { if (v.driver) names.add(v.driver); });
-    attendance.forEach(a => { if (a.employeeName) names.add(a.employeeName); });
-    payroll.forEach(p => { if (p.employee) names.add(p.employee); });
+    safeVehicles.forEach(v => { if (v?.driver) names.add(v.driver); });
+    safeAttendance.forEach(a => { if (a?.employeeName) names.add(a.employeeName); });
+    safePayroll.forEach(p => { if (p?.employee) names.add(p.employee); });
     return Math.max(names.size, 1);
-  }, [vehicles, attendance, payroll]);
+  }, [safeVehicles, safeAttendance, safePayroll]);
 
   // Dynamic Chart Datasets
   const totalInventoryRevenue = useMemo(() => {
-    return inventory.reduce((sum, item) => sum + (item.sellingPrice * item.quantity), 0);
-  }, [inventory]);
+    return safeInventory.reduce((sum, item) => sum + ((item?.sellingPrice ?? 0) * (item?.quantity ?? 0)), 0);
+  }, [safeInventory]);
 
   const totalInventoryCost = useMemo(() => {
-    return inventory.reduce((sum, item) => sum + (item.purchasePrice * item.quantity), 0);
-  }, [inventory]);
+    return safeInventory.reduce((sum, item) => sum + ((item?.purchasePrice ?? 0) * (item?.quantity ?? 0)), 0);
+  }, [safeInventory]);
 
   const totalPayrollCost = useMemo(() => {
-    return payroll.reduce((sum, record) => sum + record.finalSalary, 0);
-  }, [payroll]);
+    return safePayroll.reduce((sum, record) => sum + (record?.finalSalary ?? 0), 0);
+  }, [safePayroll]);
 
   const revenueChartData = useMemo(() => {
     const totalCost = totalInventoryCost + totalPayrollCost;
@@ -211,7 +220,7 @@ export const Dashboard: React.FC = () => {
   }, [totalInventoryRevenue, totalInventoryCost, totalPayrollCost]);
 
   const inventoryChartData = useMemo(() => {
-    const totalItemsCount = inventory.reduce((sum, item) => sum + item.quantity, 0);
+    const totalItemsCount = safeInventory.reduce((sum, item) => sum + (item?.quantity ?? 0), 0);
     const factors = [0.12, 0.15, 0.18, 0.11, 0.24, 0.10, 0.10];
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return days.map((day, idx) => ({
@@ -219,11 +228,11 @@ export const Dashboard: React.FC = () => {
       itemsIn: Math.round(totalItemsCount * factors[idx]),
       itemsOut: Math.round(totalItemsCount * factors[idx] * 0.9)
     }));
-  }, [inventory]);
+  }, [safeInventory]);
 
   const attendanceChartData = useMemo(() => {
-    const totalPresent = attendance.filter(a => a.attendanceStatus === 'Present').length;
-    const totalLate = attendance.filter(a => a.attendanceStatus === 'Late').length;
+    const totalPresent = safeAttendance.filter(a => a?.attendanceStatus === 'Present').length;
+    const totalLate = safeAttendance.filter(a => a?.attendanceStatus === 'Late').length;
     const factors = [0.15, 0.18, 0.22, 0.15, 0.20, 0.05, 0.05];
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return days.map((day, idx) => ({
@@ -231,12 +240,12 @@ export const Dashboard: React.FC = () => {
       present: Math.round(totalPresent * factors[idx] * 7),
       late: Math.round(totalLate * factors[idx] * 7)
     }));
-  }, [attendance]);
+  }, [safeAttendance]);
 
   const fleetChartData = useMemo(() => {
-    const movingCount = vehicles.filter(v => v.status === 'Moving').length;
-    const idleCount = vehicles.filter(v => v.status === 'Idle').length;
-    const delayedCount = vehicles.filter(v => v.status === 'Delayed').length;
+    const movingCount = safeVehicles.filter(v => v?.status === 'Moving').length;
+    const idleCount = safeVehicles.filter(v => v?.status === 'Idle').length;
+    const delayedCount = safeVehicles.filter(v => v?.status === 'Delayed').length;
     const factors = [0.15, 0.18, 0.22, 0.15, 0.20, 0.05, 0.05];
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return days.map((day, idx) => ({
@@ -245,15 +254,16 @@ export const Dashboard: React.FC = () => {
       idle: Math.round(idleCount * factors[idx] * 7),
       delayed: Math.round(delayedCount * factors[idx] * 7)
     }));
-  }, [vehicles]);
+  }, [safeVehicles]);
 
   const stockSafetyChartData = useMemo(() => {
-    return inventory.map(item => ({
-      name: item.itemName.split(' ')[0],
-      safetyQty: item.minimumQuantity,
-      currentQty: item.quantity
+    return safeInventory.map(item => ({
+      name: (item?.itemName || (item as any)?.name || 'Item').split(' ')[0],
+      safetyQty: item?.minimumQuantity || 0,
+      currentQty: item?.quantity || 0
     }));
-  }, [inventory]);
+  }, [safeInventory]);
+
 
   // Actions
   const handleCreateTask = (e: React.FormEvent) => {

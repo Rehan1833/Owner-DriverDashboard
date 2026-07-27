@@ -380,7 +380,7 @@ export const Attendance: React.FC = () => {
                 style={{ top: drv.lat, left: drv.lng }}
               >
                 <div className="bg-slate-900/95 text-white font-mono font-bold text-[9px] px-1.5 py-0.5 rounded shadow border border-slate-700 whitespace-nowrap">
-                  {drv.name} ({drv.vehicle.split('-')[0]})
+                  {drv.name} ({(drv.vehicle || '').split('-')[0] || drv.vehicle})
                 </div>
                 <div
                   className="w-5 h-5 rounded-full text-white flex items-center justify-center border border-white shadow-lg animate-bounce mt-1"

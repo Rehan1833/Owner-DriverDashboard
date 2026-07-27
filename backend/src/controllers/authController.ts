@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
-import { verifyGoogleToken } from '../utils/googleAuth';
-import { generateOTP, sendMobileOTP, sendGmailCode } from '../utils/otpService';
+import VerificationCode from '../models/VerificationCode';
+import { sendMobileOTP } from '../utils/otpService';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'smartops_super_secret_key_123!';
 
@@ -19,39 +20,65 @@ const normalizeRole = (role?: string): 'Owner' | 'Driver' => {
 };
 
 /**
- * Controller to send Mobile OTP or Gmail Code to a Driver or Owner
+ * Generates a cryptographically secure 6-digit numeric OTP string
+ */
+export const generateSecureOTP = (): string => {
+  return crypto.randomInt(100000, 999999).toString();
+};
+
+/**
+ * Controller to send Mobile OTP
  */
 export const sendOTP = async (req: Request, res: Response) => {
   try {
-    const { email, mobileNumber } = req.body;
-    if (!email && !mobileNumber) {
-      return res.status(400).json({ message: 'Email address or mobile number is required to generate OTP.' });
+    const { email, mobileNumber, channel: requestedChannel } = req.body;
+
+    const channel: 'email' | 'mobile' = requestedChannel === 'mobile' || (!email && mobileNumber) ? 'mobile' : 'email';
+
+    if (channel === 'email') {
+      return res.status(400).json({
+        success: false,
+        message: 'Email verification is temporarily disabled.'
+      });
     }
 
-    const query: any[] = [];
-    if (email) query.push({ email: email.toLowerCase() });
-    if (mobileNumber) query.push({ mobileNumber });
-
-    const user = await User.findOne({ $or: query });
-
-    const otpCode = generateOTP();
-    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
-
-    if (user) {
-      user.otpCode = otpCode;
-      user.otpExpiresAt = otpExpiresAt;
-      await user.save();
-
-      if (user.mobileNumber) await sendMobileOTP(user.mobileNumber, otpCode);
-      if (user.email) await sendGmailCode(user.email, otpCode, user.role);
-    } else {
-      if (mobileNumber) await sendMobileOTP(mobileNumber, otpCode);
-      if (email) await sendGmailCode(email, otpCode, 'New Register');
+    if (!mobileNumber) {
+      return res.status(400).json({ message: 'Mobile number is required to generate OTP.' });
     }
 
+    const identifier = String(mobileNumber).trim();
+
+    const existingCode = await VerificationCode.findOne({ identifier, channel });
+    if (existingCode && existingCode.resendAvailableAt && existingCode.resendAvailableAt > new Date()) {
+      const waitSeconds = Math.ceil((existingCode.resendAvailableAt.getTime() - Date.now()) / 1000);
+      return res.status(429).json({
+        message: `Please wait ${waitSeconds} seconds before requesting a new verification code.`
+      });
+    }
+
+    await VerificationCode.deleteMany({ identifier, channel });
+
+    const rawOTP = generateSecureOTP();
+    const codeHash = await bcrypt.hash(rawOTP, 10);
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const resendAvailableAt = new Date(Date.now() + 30 * 1000);
+
+    await VerificationCode.create({
+      identifier,
+      channel,
+      codeHash,
+      attempts: 0,
+      maxAttempts: 5,
+      expiresAt,
+      resendAvailableAt
+    });
+
+    await sendMobileOTP(identifier, rawOTP);
     res.json({
-      message: `Authentication OTP code generated and dispatched to ${email || mobileNumber}.`,
-      otpCode
+      success: true,
+      message: `Verification OTP code dispatched to Mobile Number (${identifier}).`,
+      channel,
+      cooldownSeconds: 30
     });
   } catch (err: any) {
     res.status(500).json({ message: err.message });
@@ -59,43 +86,73 @@ export const sendOTP = async (req: Request, res: Response) => {
 };
 
 /**
- * Controller to verify Mobile OTP or Gmail Code
+ * Controller to verify Mobile OTP
  */
 export const verifyOTP = async (req: Request, res: Response) => {
   try {
-    const { email, mobileNumber, otpCode, code } = req.body;
+    const { email, mobileNumber, channel: requestedChannel, otpCode, code } = req.body;
     const inputCode = String(otpCode || code || '').trim();
 
     if (!inputCode) {
       return res.status(400).json({ message: 'OTP verification code is required.' });
     }
 
-    const query: any[] = [];
-    if (email) query.push({ email: email.toLowerCase() });
-    if (mobileNumber) query.push({ mobileNumber });
+    const channel: 'email' | 'mobile' = requestedChannel === 'mobile' || (!email && mobileNumber) ? 'mobile' : 'email';
 
-    if (query.length === 0) {
-      return res.status(400).json({ message: 'Email or mobile number is required for OTP verification.' });
+    if (channel === 'email') {
+      return res.status(400).json({ message: 'Email verification is temporarily disabled.' });
     }
 
-    const user = await User.findOne({ $or: query });
+    const identifier = String(mobileNumber).trim();
+
+    if (!identifier) {
+      return res.status(400).json({ message: 'Mobile number is required for OTP verification.' });
+    }
+
+    const user = await User.findOne({
+      $or: [
+        { mobileNumber: identifier },
+        ...(email ? [{ email: email.toLowerCase() }] : [])
+      ]
+    });
 
     if (!user) {
       return res.status(404).json({ message: 'User record not found. Please complete registration.' });
     }
 
-    // Verify OTP matching (or allow master code 123456 / 000000 for seamless testing)
-    const isValidOTP = (user.otpCode && user.otpCode === inputCode) || inputCode === '123456' || inputCode === '000000';
-    if (!isValidOTP) {
-      return res.status(400).json({ message: 'Invalid OTP code. Please enter the valid code sent to your Gmail or Mobile number.' });
+    const isMasterCode = inputCode === '123456' || inputCode === '000000';
+    const isUserOtpMatch = Boolean(user.otpCode && user.otpCode === inputCode);
+
+    const record = await VerificationCode.findOne({ identifier, channel });
+
+    if (!record && !isMasterCode && !isUserOtpMatch) {
+      return res.status(404).json({ message: 'No active verification code found. Please request a new code.' });
     }
 
-    if (user.otpExpiresAt && user.otpExpiresAt < new Date() && inputCode !== '123456' && inputCode !== '000000') {
-      return res.status(400).json({ message: 'OTP code has expired. Please request a new verification code.' });
+    if (record) {
+      if (record.expiresAt < new Date() && !isMasterCode && !isUserOtpMatch) {
+        await record.deleteOne();
+        return res.status(400).json({ message: 'Verification code has expired. Please request a new code.' });
+      }
+
+      if (record.attempts >= record.maxAttempts && !isMasterCode && !isUserOtpMatch) {
+        await record.deleteOne();
+        return res.status(400).json({ message: 'Maximum verification attempts exceeded. Please request a new verification code.' });
+      }
+
+      const isMatch = isMasterCode || isUserOtpMatch || (await bcrypt.compare(inputCode, record.codeHash));
+      if (!isMatch) {
+        record.attempts += 1;
+        await record.save();
+        const remaining = Math.max(0, record.maxAttempts - record.attempts);
+        return res.status(400).json({
+          message: `Invalid verification code. ${remaining} attempt(s) remaining.`
+        });
+      }
+
+      await record.deleteOne();
     }
 
-    // Mark user as authenticated and verified
-    user.isEmailVerified = true;
     user.isPhoneVerified = true;
     user.verifiedAt = new Date();
     user.otpCode = undefined;
@@ -105,12 +162,14 @@ export const verifyOTP = async (req: Request, res: Response) => {
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '12h' });
 
     res.json({
-      message: 'OTP authentication successful. Account verified.',
+      success: true,
+      message: 'Mobile number verified successfully. Account activated.',
       token,
       user: {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
+        mobileNumber: user.mobileNumber,
         role: user.role,
         isEmailVerified: user.isEmailVerified,
         isPhoneVerified: user.isPhoneVerified,
@@ -125,101 +184,48 @@ export const verifyOTP = async (req: Request, res: Response) => {
 };
 
 /**
- * Controller for Google OAuth Signup / Authentication
+ * TEMPORARILY DISABLED: Controller for Google OAuth Signup / Authentication
  */
-export const googleAuth = async (req: Request, res: Response) => {
-  try {
-    const googleToken = req.body.idToken || req.body.googleToken || req.body.token || req.body.credential;
-    if (!googleToken) {
-      return res.status(400).json({ message: 'Google OAuth token (idToken or googleToken) is required.' });
-    }
-
-    const payload = await verifyGoogleToken(googleToken);
-    const requestedRole = normalizeRole(req.body.role);
-
-    let user = await User.findOne({ email: payload.email });
-
-    if (user) {
-      let updated = false;
-      if (!user.googleId) {
-        user.googleId = payload.googleId;
-        updated = true;
-      }
-      if (user.provider !== 'google') {
-        user.provider = 'google';
-        updated = true;
-      }
-      if (!user.isEmailVerified && payload.isEmailVerified) {
-        user.isEmailVerified = true;
-        user.isPhoneVerified = true;
-        updated = true;
-      }
-      if (updated) {
-        await user.save();
-      }
-    } else {
-      const userDoc: any = {
-        fullName: req.body.fullName || payload.fullName,
-        email: payload.email,
-        mobileNumber: req.body.mobileNumber || '',
-        role: requestedRole,
-        googleId: payload.googleId,
-        provider: 'google',
-        isEmailVerified: true,
-        isPhoneVerified: true,
-        companyName: requestedRole === 'Owner' ? (req.body.companyName || '') : undefined,
-        vehicleNumber: req.body.vehicleNumber,
-        licenseNumber: req.body.licenseNumber
-      };
-
-      if (requestedRole === 'Driver') {
-        userDoc.driverId = req.body.driverId || `DRV-${Date.now().toString().slice(-4)}`;
-      }
-
-      user = new User(userDoc);
-      await user.save();
-    }
-
-    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '12h' });
-
-    res.status(user.isNew ? 201 : 200).json({
-      token,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
-        isEmailVerified: user.isEmailVerified,
-        companyName: user.companyName,
-        driverId: user.driverId,
-        vehicleNumber: user.vehicleNumber
-      }
-    });
-  } catch (err: any) {
-    res.status(401).json({ message: err.message || 'Google OAuth authentication failed.' });
-  }
+export const googleAuth = async (_req: Request, res: Response) => {
+  return res.status(400).json({
+    success: false,
+    message: 'Google authentication is temporarily disabled.'
+  });
 };
 
 export const register = async (req: Request, res: Response) => {
   try {
     const googleToken = req.body.idToken || req.body.googleToken || req.body.credential;
     if (googleToken) {
-      return googleAuth(req, res);
+      return res.status(400).json({
+        success: false,
+        message: 'Google authentication is temporarily disabled.'
+      });
     }
 
-    const { fullName, email, mobileNumber, role, password, companyName, driverId, vehicleNumber, licenseNumber, otpCode } = req.body;
+    const {
+      fullName,
+      email,
+      mobileNumber,
+      role,
+      password,
+      securityQuestion,
+      securityAnswer,
+      companyName,
+      driverId,
+      vehicleNumber,
+      licenseNumber
+    } = req.body;
 
     if (!fullName || !email || !password) {
       return res.status(400).json({ message: 'Full name, email address, and password are required.' });
     }
 
-    // Duplicate Email Check
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({ message: 'This email is already registered.' });
     }
 
-    // Duplicate Mobile Number Check
     if (mobileNumber && String(mobileNumber).trim() !== '') {
       const existingMobile = await User.findOne({ mobileNumber: String(mobileNumber).trim() });
       if (existingMobile) {
@@ -235,10 +241,12 @@ export const register = async (req: Request, res: Response) => {
     const passwordHash = await bcrypt.hash(password, salt);
     const normalizedRole = normalizeRole(role);
 
-    const generatedOTP = generateOTP();
-    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
-
-    const isVerified = Boolean(otpCode && (otpCode === generatedOTP || otpCode === '123456' || otpCode === '000000'));
+    // Hash Security Answer if provided
+    let securityAnswerHash: string | undefined = undefined;
+    const defaultQuestion = securityQuestion || "What is your best friend's name?";
+    if (securityAnswer && String(securityAnswer).trim() !== '') {
+      securityAnswerHash = await bcrypt.hash(String(securityAnswer).toLowerCase().trim(), 10);
+    }
 
     const newUser = new User({
       fullName,
@@ -247,29 +255,16 @@ export const register = async (req: Request, res: Response) => {
       role: normalizedRole,
       passwordHash,
       provider: 'local',
-      isEmailVerified: isVerified,
-      isPhoneVerified: isVerified,
-      otpCode: isVerified ? undefined : generatedOTP,
-      otpExpiresAt: isVerified ? undefined : otpExpiresAt,
+      isEmailVerified: true,
+      isPhoneVerified: true,
+      verifiedAt: new Date(),
+      securityQuestion: defaultQuestion,
+      securityAnswerHash,
       companyName,
       driverId: normalizedRole === 'Driver' ? (driverId || `DRV-${Date.now().toString().slice(-4)}`) : undefined,
       vehicleNumber,
       licenseNumber
     });
-
-    // Dispatch Gmail OTP verification code before creating account in DB
-    if (!isVerified) {
-      try {
-        if (mobileNumber) await sendMobileOTP(mobileNumber, generatedOTP);
-        await sendGmailCode(email, generatedOTP, normalizedRole);
-      } catch (emailErr: any) {
-        console.error(`[AUTH REGISTRATION ERROR] Aborting registration. Failed to send OTP email to ${email}:`, emailErr.message);
-        return res.status(500).json({
-          success: false,
-          message: emailErr.message || 'Failed to send OTP email.'
-        });
-      }
-    }
 
     await newUser.save();
 
@@ -277,15 +272,13 @@ export const register = async (req: Request, res: Response) => {
 
     res.status(201).json({
       success: true,
-      message: isVerified
-        ? `Registration completed for ${normalizedRole}.`
-        : 'OTP sent successfully.',
-      otpCode: generatedOTP,
+      message: `Registration completed successfully for ${normalizedRole}. You can now log in.`,
       token,
       user: {
         id: newUser._id,
         fullName: newUser.fullName,
         email: newUser.email,
+        mobileNumber: newUser.mobileNumber,
         role: newUser.role,
         isEmailVerified: newUser.isEmailVerified,
         companyName: newUser.companyName,
@@ -296,14 +289,6 @@ export const register = async (req: Request, res: Response) => {
   } catch (err: any) {
     if (err.code === 11000) {
       const field = Object.keys(err.keyPattern || err.keyValue || {})[0];
-      if (field === 'username') {
-        try {
-          if (User.collection) {
-            await User.collection.dropIndex('username_1');
-          }
-        } catch (e) {}
-        return res.status(400).json({ message: 'Legacy database index conflict resolved. Please click Register & Send Email OTP again.' });
-      }
       if (field === 'email') {
         return res.status(400).json({ message: 'This email is already registered.' });
       }
@@ -323,7 +308,10 @@ export const login = async (req: Request, res: Response) => {
   try {
     const googleToken = req.body.idToken || req.body.googleToken || req.body.credential;
     if (googleToken) {
-      return googleAuth(req, res);
+      return res.status(400).json({
+        success: false,
+        message: 'Google authentication is temporarily disabled.'
+      });
     }
 
     const { email, password } = req.body;
@@ -331,43 +319,19 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Email address and password are required.' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({
+      $or: [
+        { email: email.toLowerCase() },
+        { mobileNumber: String(email).trim() }
+      ]
+    });
+
     if (!user) {
       return res.status(404).json({ message: 'Account not found. Please register first.' });
     }
 
-    // Check if logging in using valid OTP code
-    const isOTPLogin = user.otpCode && (password === user.otpCode || password === '123456' || password === '000000');
-    const isOTPExpired = user.otpExpiresAt && user.otpExpiresAt < new Date() && password !== '123456' && password !== '000000';
-
-    let isMatch = false;
-    if (isOTPLogin && !isOTPExpired) {
-      isMatch = true;
-      user.isEmailVerified = true;
-      user.isPhoneVerified = true;
-      user.verifiedAt = new Date();
-      user.otpCode = undefined;
-      user.otpExpiresAt = undefined;
-      await user.save();
-    } else {
-      isMatch = await user.comparePassword(password);
-      if (isMatch && !user.isEmailVerified) {
-        // Generate and send fresh OTP code if unverified
-        if (!user.otpCode || (user.otpExpiresAt && user.otpExpiresAt < new Date())) {
-          const otpCode = generateOTP();
-          user.otpCode = otpCode;
-          user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
-          await user.save();
-          if (user.mobileNumber) await sendMobileOTP(user.mobileNumber, otpCode);
-          await sendGmailCode(user.email, otpCode, user.role);
-        }
-        return res.status(403).json({
-          message: 'Please verify your email first. A verification OTP code has been sent to your email.'
-        });
-      }
-    }
-
-    if (!isMatch) {
+    const isPassMatch = await user.comparePassword(password);
+    if (!isPassMatch) {
       return res.status(400).json({ message: 'Invalid email or password.' });
     }
 
@@ -380,8 +344,10 @@ export const login = async (req: Request, res: Response) => {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
+        mobileNumber: user.mobileNumber,
         role: user.role,
         isEmailVerified: user.isEmailVerified,
+        isPhoneVerified: user.isPhoneVerified,
         companyName: user.companyName,
         driverId: user.driverId,
         vehicleNumber: user.vehicleNumber
@@ -392,60 +358,76 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export const forgotPassword = async (req: Request, res: Response) => {
+/**
+ * Controller to fetch user's Security Question for Password Reset
+ */
+export const getSecurityQuestion = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
     if (!email) {
       return res.status(400).json({ message: 'Email address is required.' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({
+      $or: [
+        { email: email.toLowerCase().trim() },
+        { mobileNumber: String(email).trim() }
+      ]
+    });
+
     if (!user) {
-      return res.status(404).json({ message: 'Account not found. Please verify the email address.' });
+      return res.status(404).json({ message: 'Account not found. Please check your email address.' });
     }
 
-    const otpCode = generateOTP();
-    user.otpCode = otpCode;
-    user.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins expiry
-    await user.save();
-
-    await sendGmailCode(user.email, otpCode, 'Password Reset');
+    const question = user.securityQuestion || "What is your best friend's name?";
 
     res.json({
-      message: `Password reset OTP code dispatched to ${user.email}.`,
-      otpCode
+      success: true,
+      securityQuestion: question,
+      hasSecurityQuestion: Boolean(user.securityAnswerHash)
     });
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }
 };
 
-export const resetPassword = async (req: Request, res: Response) => {
+/**
+ * Controller to Reset Password using Security Question Answer
+ */
+export const resetPasswordWithSecurity = async (req: Request, res: Response) => {
   try {
-    const { email, otpCode, code, newPassword, password } = req.body;
-    const inputCode = String(otpCode || code || '').trim();
+    const { email, securityAnswer, newPassword, password } = req.body;
     const targetPassword = newPassword || password;
 
-    if (!email || !inputCode || !targetPassword) {
-      return res.status(400).json({ message: 'Email address, OTP code, and new password are required.' });
+    if (!email || !targetPassword) {
+      return res.status(400).json({ message: 'Email address and new password are required.' });
     }
 
     if (targetPassword.length < 6) {
       return res.status(400).json({ message: 'New password must be at least 6 characters long.' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({
+      $or: [
+        { email: email.toLowerCase().trim() },
+        { mobileNumber: String(email).trim() }
+      ]
+    });
+
     if (!user) {
       return res.status(404).json({ message: 'Account not found.' });
     }
 
-    const isValidOTP = (user.otpCode && user.otpCode === inputCode) || inputCode === '123456' || inputCode === '000000';
-    if (!isValidOTP) {
-      return res.status(400).json({ message: 'Invalid OTP' });
-    }
+    // Verify security answer if configured, or allow master key override / standard validation
+    if (user.securityAnswerHash) {
+      if (!securityAnswer) {
+        return res.status(400).json({ message: 'Security answer is required.' });
+      }
 
-    if (user.otpExpiresAt && user.otpExpiresAt < new Date() && inputCode !== '123456' && inputCode !== '000000') {
-      return res.status(400).json({ message: 'OTP expired' });
+      const isMatch = await user.compareSecurityAnswer(securityAnswer);
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Incorrect security answer. Please try again.' });
+      }
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -455,9 +437,14 @@ export const resetPassword = async (req: Request, res: Response) => {
     user.otpExpiresAt = undefined;
     await user.save();
 
-    res.json({ message: 'Password has been successfully updated. You can now log in.' });
+    res.json({
+      success: true,
+      message: 'Password has been updated successfully. You can now log in with your new password.'
+    });
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }
 };
 
+export const forgotPassword = getSecurityQuestion;
+export const resetPassword = resetPasswordWithSecurity;

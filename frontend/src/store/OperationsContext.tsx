@@ -15,9 +15,10 @@ interface OperationsContextType {
   notifications: SystemNotification[];
   activities: ActivityItem[];
   login: (email: string, role: UserRole, password?: string) => Promise<void>;
+  googleAuth: (googleToken: string, role: UserRole) => Promise<any>;
   register: (payload: any) => Promise<{ success?: boolean; message: string; otpCode?: string; token?: string; user?: User }>;
-  verifyOTP: (email: string, otpCode: string) => Promise<{ message: string; token?: string; user?: User }>;
-  resendOTP: (email: string) => Promise<{ message: string; otpCode?: string }>;
+  verifyOTP: (emailOrPayload: string | { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile'; otpCode: string }, code?: string) => Promise<{ message: string; token?: string; user?: User }>;
+  resendOTP: (emailOrPayload: string | { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile' }) => Promise<{ success?: boolean; message: string; channel?: string; cooldownSeconds?: number }>;
   logout: () => void;
   // Inventory CRUD
   createInventory: (item: Omit<InventoryItem, 'id'>) => Promise<void>;
@@ -66,7 +67,10 @@ interface OperationsContextType {
   updateVehicle: (id: string, vehicle: Partial<Vehicle>) => Promise<void>;
   deleteVehicle: (id: string) => Promise<void>;
   // Trip actions
+  createTrip: (tripData: Partial<Trip>) => Promise<Trip>;
+  cancelTrip: (tripId: string) => Promise<void>;
   updateTripStatus: (tripId: string, status: Trip['status'], details?: { stopReason?: string; signatureData?: string; photo?: string; deliveryPhoto?: string[] }) => Promise<void>;
+
   // Dashboard compatibility helpers
   createTask: (task: Omit<Task, 'id' | 'status' | 'progress'>) => void;
   approvePayroll: (id: string) => Promise<void>;
@@ -193,23 +197,39 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     triggerNotification('System Alert', 'Session Initialized', `Welcome back ${res.user.fullName}! JWT validated.`, 'Info');
   };
 
+  const googleAuth = async (_googleToken: string, _role: UserRole) => {
+    throw new Error('Google authentication is temporarily disabled.');
+    /*
+    // TEMPORARILY DISABLED GOOGLE OAUTH CONTEXT HANDLER
+    const res = await api.auth.googleAuth(_googleToken, _role);
+    setUser(res.user);
+    localStorage.setItem('smartops_user', JSON.stringify(res.user));
+    triggerNotification('System Alert', 'Google Session Initialized', `Welcome ${res.user.fullName}! Google OAuth authenticated.`, 'Info');
+    return res;
+    */
+  };
+
   const register = async (payload: any) => {
     const res = await api.auth.register(payload);
     triggerNotification('System Alert', 'OTP Dispatched', res.message || `Verification OTP code sent to ${payload.email}.`, 'Info');
     return res;
   };
 
-  const verifyOTP = async (email: string, otpCode: string) => {
-    const res = await api.auth.verifyOTP(email, otpCode);
-    if (res.user && res.user.isEmailVerified) {
-      triggerNotification('System Alert', 'Account Verified', `Email ${email} verified successfully. Please log in.`, 'Info');
+  const verifyOTP = async (emailOrPayload: string | { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile'; otpCode: string }, code?: string) => {
+    const payload = typeof emailOrPayload === 'string' ? { email: emailOrPayload, otpCode: code || '' } : emailOrPayload;
+    const res = await api.auth.verifyOTP(payload);
+    if (res.user) {
+      setUser(res.user);
+      localStorage.setItem('smartops_user', JSON.stringify(res.user));
+      triggerNotification('System Alert', 'Account Verified', res.message || 'Identity verified successfully.', 'Info');
     }
     return res;
   };
 
-  const resendOTP = async (email: string) => {
-    const res = await api.auth.resendOTP(email);
-    triggerNotification('System Alert', 'OTP Resent', `Fresh 6-digit OTP code sent to ${email}.`, 'Info');
+  const resendOTP = async (emailOrPayload: string | { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile' }) => {
+    const payload = typeof emailOrPayload === 'string' ? { email: emailOrPayload } : emailOrPayload;
+    const res = await api.auth.resendOTP(payload);
+    triggerNotification('System Alert', 'OTP Resent', res.message || 'Fresh OTP code dispatched.', 'Info');
     return res;
   };
 
@@ -379,6 +399,21 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     addActivity('Vehicle Removed', `De-registered vehicle ID: ${id}`, 'fleet');
   };
 
+  const createTrip = async (tripData: Partial<Trip>): Promise<Trip> => {
+    const newTrip = await api.trips.create(tripData);
+    setTrips(prev => [newTrip, ...prev]);
+    addActivity('Trip Created', `Created and assigned trip ${newTrip.tripNumber} for driver ${newTrip.driverName}`, 'fleet');
+    triggerNotification('Trip Started', 'New Consignment Dispatched', `Trip ${newTrip.tripNumber} assigned to driver ${newTrip.driverName}.`, 'Info');
+    return newTrip;
+  };
+
+  const cancelTrip = async (tripId: string): Promise<void> => {
+    const cancelled = await api.trips.cancel(tripId);
+    setTrips(prev => prev.map(t => t.id === tripId ? cancelled : t));
+    addActivity('Trip Cancelled', `Trip ${cancelled.tripNumber} was cancelled`, 'fleet');
+    triggerNotification('Critical', 'Trip Assignment Cancelled', `Trip assignment ${cancelled.tripNumber} was cancelled by owner.`, 'Warning');
+  };
+
   // Trip action triggers
   const updateTripStatus = async (
     tripId: string,
@@ -456,6 +491,7 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         notifications,
         activities,
         login,
+        googleAuth,
         register,
         verifyOTP,
         resendOTP,
@@ -476,6 +512,8 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         createVehicle,
         updateVehicle,
         deleteVehicle,
+        createTrip,
+        cancelTrip,
         updateTripStatus,
         createTask,
         approvePayroll,

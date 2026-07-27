@@ -59,6 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
           title: 'Operations',
           items: [
             { name: 'Dashboard', path: '/owner', icon: LayoutDashboard },
+            { name: 'Trips & Dispatch', path: '/owner/trips', icon: Truck },
             { name: 'Operations Log', path: '/owner/operations', icon: Activity },
             { name: 'Fleet Tracker', path: '/owner/fleet', icon: Truck },
             { name: 'Attendance Status', path: '/owner/attendance', icon: Users },

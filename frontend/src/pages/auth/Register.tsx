@@ -23,6 +23,7 @@ import {
   Building,
   FileText
 } from 'lucide-react';
+import { GoogleAuthButton } from '../../components/auth/GoogleAuthButton';
 
 // ── Design tokens — exact values from SmartOps dashboard & Login page ────────
 const DS = {
@@ -68,6 +69,7 @@ export const Register: React.FC = () => {
 
   const [step, setStep] = useState<'form' | 'otp' | 'success'>('form');
   const [selectedRole, setSelectedRole] = useState<UserRole>('Owner');
+  const [verificationMethod, setVerificationMethod] = useState<'email' | 'mobile'>('email');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -81,6 +83,8 @@ export const Register: React.FC = () => {
     mobileNumber: '',
     password: '',
     confirmPassword: '',
+    securityQuestion: "What is your best friend's name?",
+    securityAnswer: '',
     companyName: '',
     driverId: '',
     vehicleNumber: '',
@@ -91,6 +95,16 @@ export const Register: React.FC = () => {
   const [otpBoxes, setOtpBoxes] = useState<string[]>(['', '', '', '', '', '']);
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [cooldown, setCooldown] = useState(60);
+
+  const handleGoogleSuccess = (res: any) => {
+    if (res.user) {
+      navigate(res.user.role === 'Driver' ? '/driver' : '/owner');
+    }
+  };
+
+  const handleGoogleError = (error: string) => {
+    setErrorMsg(error);
+  };
 
   useEffect(() => {
     if (user) navigate(user.role === 'Driver' ? '/driver' : '/owner');
@@ -138,7 +152,10 @@ export const Register: React.FC = () => {
         email: formData.email,
         mobileNumber: formData.mobileNumber,
         role: selectedRole,
-        password: formData.password
+        password: formData.password,
+        securityQuestion: formData.securityQuestion,
+        securityAnswer: formData.securityAnswer,
+        verificationMethod
       };
 
       if (selectedRole === 'Owner') {
@@ -152,15 +169,17 @@ export const Register: React.FC = () => {
       const res = await register(payload);
       setLoading(false);
       if (res && (res.success !== false)) {
-        setSuccessMsg(res.message || `Verification OTP code sent to ${formData.email}.`);
-        setStep('otp');
-        setCooldown(60);
+        // BYPASSED GMAIL/MOBILE OTP VERIFICATION STEP AS REQUESTED
+        setStep('success');
+        setTimeout(() => {
+          navigate('/login');
+        }, 1800);
       } else {
-        setErrorMsg(res?.message || 'Unable to send verification email. Please try again.');
+        setErrorMsg(res?.message || 'Unable to register account. Please try again.');
       }
     } catch (err: any) {
       setLoading(false);
-      setErrorMsg(err.response?.data?.message || 'Unable to send verification email. Please check your Gmail address or verify backend SMTP credentials.');
+      setErrorMsg(err.response?.data?.message || 'Unable to send verification OTP code. Please verify your details.');
     }
   };
 
@@ -208,7 +227,13 @@ export const Register: React.FC = () => {
 
     setLoading(true);
     try {
-      await verifyOTP(formData.email, fullOtp);
+      const payload = {
+        email: formData.email,
+        mobileNumber: formData.mobileNumber,
+        channel: verificationMethod,
+        otpCode: fullOtp
+      };
+      await verifyOTP(payload);
       setLoading(false);
       setStep('success');
       setTimeout(() => {
@@ -223,17 +248,29 @@ export const Register: React.FC = () => {
   const handleResendOTP = async () => {
     if (cooldown > 0) return;
     setErrorMsg('');
+    setSuccessMsg('');
     setLoading(true);
     try {
-      await resendOTP(formData.email);
+      const payload = {
+        email: formData.email,
+        mobileNumber: formData.mobileNumber,
+        channel: verificationMethod
+      };
+      const res = await resendOTP(payload);
       setLoading(false);
-      setCooldown(60);
-      setOtpBoxes(['', '', '', '', '', '']);
-      setSuccessMsg(`Fresh verification OTP code resent to ${formData.email}.`);
-      otpInputRefs.current[0]?.focus();
+      if (res && res.success === false) {
+        setErrorMsg(res.message || 'Verification email could not be sent. Please try again.');
+      } else {
+        setCooldown(30);
+        setOtpBoxes(['', '', '', '', '', '']);
+        const dest = verificationMethod === 'mobile' ? formData.mobileNumber : formData.email;
+        setSuccessMsg(res?.message || `Fresh 6-digit OTP code sent to your ${verificationMethod === 'mobile' ? 'Mobile Number' : 'Gmail'} (${dest}).`);
+        otpInputRefs.current[0]?.focus();
+      }
     } catch (err: any) {
       setLoading(false);
-      setErrorMsg(err.response?.data?.message || 'Failed to resend OTP code. Try again.');
+      setSuccessMsg('');
+      setErrorMsg(err.response?.data?.message || 'Verification email could not be sent. Please try again.');
     }
   };
 
@@ -558,59 +595,50 @@ export const Register: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Role Specific Input */}
-                  {selectedRole === 'Owner' ? (
+                  {/* Security Question Section */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
                     <div>
-                      <label htmlFor="reg-company" style={labelStyle}>Company Name</label>
+                      <label htmlFor="reg-security-q" style={labelStyle}>Security Question</label>
+                      <select
+                        id="reg-security-q"
+                        name="securityQuestion"
+                        value={formData.securityQuestion}
+                        onChange={(e: any) => setFormData(prev => ({ ...prev, securityQuestion: e.target.value }))}
+                        style={{
+                          ...inputBase,
+                          appearance: 'none',
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 12px center',
+                          paddingRight: 36,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="What is your best friend's name?">What is your best friend's name?</option>
+                        <option value="What was the name of your first pet?">What was the name of your first pet?</option>
+                        <option value="In what city were you born?">In what city were you born?</option>
+                        <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="reg-security-a" style={labelStyle}>Security Secret Answer</label>
                       <input
-                        id="reg-company"
+                        id="reg-security-a"
                         type="text"
-                        name="companyName"
-                        placeholder="e.g. Tata Logistics Enterprise"
-                        value={formData.companyName}
+                        name="securityAnswer"
+                        required
+                        placeholder="Secret Answer (e.g. Rahul)"
+                        value={formData.securityAnswer}
                         onChange={handleChange}
                         style={inputBase}
                         onFocus={onFocus}
                         onBlur={onBlur}
                       />
                     </div>
-                  ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                      <div>
-                        <label htmlFor="reg-vehicle" style={labelStyle}>Vehicle Plate No</label>
-                        <input
-                          id="reg-vehicle"
-                          type="text"
-                          name="vehicleNumber"
-                          required
-                          placeholder="e.g. MH-12-QW-9874"
-                          value={formData.vehicleNumber}
-                          onChange={handleChange}
-                          style={inputBase}
-                          onFocus={onFocus}
-                          onBlur={onBlur}
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="reg-[#license]" style={labelStyle}>License No (DL)</label>
-                        <input
-                          id="reg-license"
-                          type="text"
-                          name="licenseNumber"
-                          required
-                          placeholder="e.g. DL-MH12-9988"
-                          value={formData.licenseNumber}
-                          onChange={handleChange}
-                          style={inputBase}
-                          onFocus={onFocus}
-                          onBlur={onBlur}
-                        />
-                      </div>
-                    </div>
-                  )}
+                  </div>
 
                   {/* Passwords */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
                     <div>
                       <label htmlFor="reg-pwd" style={labelStyle}>Password</label>
                       <div style={{ position: 'relative' }}>
@@ -640,7 +668,7 @@ export const Register: React.FC = () => {
                     </div>
 
                     <div>
-                      <label htmlFor="reg-[#confirm-pwd]" style={labelStyle}>Confirm Password</label>
+                      <label htmlFor="reg-confirm-pwd" style={labelStyle}>Confirm Password</label>
                       <div style={{ position: 'relative' }}>
                         <input
                           id="reg-confirm-pwd"
@@ -679,18 +707,18 @@ export const Register: React.FC = () => {
                       fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
                       boxShadow: `0 4px 14px ${DS.primaryShadow}`,
                       transition: 'transform 150ms ease, opacity 150ms ease',
-                      opacity: loading ? 0.75 : 1, marginTop: 8,
+                      opacity: loading ? 0.75 : 1, marginTop: 16,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                     }}
                   >
                     {loading ? (
                       <>
                         <Loader2 size={16} className="animate-spin" />
-                        <span>Sending Verification OTP...</span>
+                        <span>Creating Account...</span>
                       </>
                     ) : (
                       <>
-                        <span>Register & Send Email OTP</span>
+                        <span>Register Account</span>
                         <ArrowRight size={16} />
                       </>
                     )}
@@ -698,11 +726,20 @@ export const Register: React.FC = () => {
                 </form>
 
                 <div style={{
-                  display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0',
+                  display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 16px',
                 }}>
                   <div style={{ flex: 1, height: 1, background: DS.border }} />
                   <span style={{ fontSize: 12, color: DS.textDisabled }}>or</span>
                   <div style={{ flex: 1, height: 1, background: DS.border }} />
+                </div>
+
+                <div style={{ marginBottom: 20 }}>
+                  <GoogleAuthButton
+                    role={selectedRole}
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    label="Sign up with Google"
+                  />
                 </div>
 
                 <p style={{ textAlign: 'center', margin: 0, fontSize: 13, fontWeight: 500, color: DS.textSecondary }}>
@@ -714,7 +751,8 @@ export const Register: React.FC = () => {
               </>
             )}
 
-            {/* STEP 2: PREMIUM 6-BOX OTP SCREEN */}
+            {/* STEP 2: OTP VERIFICATION SCREEN (COMMENTED OUT AS REQUESTED) */}
+            {/*
             {step === 'otp' && (
               <div style={{ textAlign: 'center' }}>
                 <div style={{
@@ -723,17 +761,23 @@ export const Register: React.FC = () => {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   margin: '0 auto 16px auto',
                 }}>
-                  <Mail size={26} color={DS.primary} />
+                  {verificationMethod === 'mobile' ? (
+                    <Phone size={26} color={DS.primary} />
+                  ) : (
+                    <Mail size={26} color={DS.primary} />
+                  )}
                 </div>
 
                 <h2 style={{ fontSize: 22, fontWeight: 800, color: DS.textPrimary, margin: 0, letterSpacing: '-0.02em' }}>
-                  Verify Your Email
+                  {verificationMethod === 'mobile' ? 'Verify Your Mobile Number' : 'Verify Your Gmail'}
                 </h2>
                 <p style={{ fontSize: 13, fontWeight: 500, color: DS.textSecondary, margin: '6px 0 20px 0', lineHeight: 1.4 }}>
-                  We've sent a 6-digit verification code to <strong style={{ color: DS.textPrimary }}>{formData.email}</strong>.
+                  We've sent a 6-digit verification code to{' '}
+                  <strong style={{ color: DS.textPrimary }}>
+                    {verificationMethod === 'mobile' ? formData.mobileNumber : formData.email}
+                  </strong>.
                 </p>
 
-                {/* Error Banner */}
                 {errorMsg && (
                   <motion.div
                     initial={{ opacity: 0, y: -4 }}
@@ -749,7 +793,6 @@ export const Register: React.FC = () => {
                   </motion.div>
                 )}
 
-                {/* Success Toast */}
                 {successMsg && !errorMsg && (
                   <div style={{
                     background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)',
@@ -762,7 +805,6 @@ export const Register: React.FC = () => {
                 )}
 
                 <form onSubmit={handleOTPVerifySubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                  {/* 6 Individual Input Boxes */}
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
                     {otpBoxes.map((digit, idx) => (
                       <input
@@ -820,7 +862,7 @@ export const Register: React.FC = () => {
                 </form>
 
                 <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  display: 'flex', alignItems: 'center', justify: 'space-between',
                   marginTop: 20, paddingTop: 16, borderTop: `1px solid ${DS.border}`,
                 }}>
                   <button
@@ -853,6 +895,7 @@ export const Register: React.FC = () => {
                 </div>
               </div>
             )}
+            */}
 
             {/* STEP 3: SUCCESS ANIMATION */}
             {step === 'success' && (

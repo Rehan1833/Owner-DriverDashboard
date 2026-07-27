@@ -14,6 +14,8 @@ export interface IUser extends Document {
   otpCode?: string;
   otpExpiresAt?: Date;
   verifiedAt?: Date;
+  securityQuestion?: string;
+  securityAnswerHash?: string;
   // Owner Fields
   companyName?: string;
   // Driver Fields
@@ -21,6 +23,7 @@ export interface IUser extends Document {
   vehicleNumber?: string;
   licenseNumber?: string;
   comparePassword: (password: string) => Promise<boolean>;
+  compareSecurityAnswer: (answer: string) => Promise<boolean>;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -36,6 +39,8 @@ const UserSchema = new Schema<IUser>({
   otpCode: { type: String },
   otpExpiresAt: { type: Date },
   verifiedAt: { type: Date },
+  securityQuestion: { type: String },
+  securityAnswerHash: { type: String },
   companyName: { type: String },
   driverId: { type: String, unique: true, sparse: true },
   vehicleNumber: { type: String },
@@ -48,6 +53,12 @@ const UserSchema = new Schema<IUser>({
 UserSchema.methods.comparePassword = async function(password: string): Promise<boolean> {
   if (!this.passwordHash) return false;
   return bcrypt.compare(password, this.passwordHash);
+};
+
+// Security Answer verification method
+UserSchema.methods.compareSecurityAnswer = async function(answer: string): Promise<boolean> {
+  if (!this.securityAnswerHash) return false;
+  return bcrypt.compare(answer.toLowerCase().trim(), this.securityAnswerHash);
 };
 
 export default mongoose.model<IUser>('User', UserSchema);

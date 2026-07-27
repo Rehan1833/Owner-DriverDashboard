@@ -1,415 +1,279 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOperations } from '../../store/OperationsContext';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
-import { Table } from '../../components/tables/Table';
-import { CheckCircle, AlertTriangle, PenTool, Image, Clock, ShieldAlert, Sparkles, Navigation, Phone } from 'lucide-react';
+import {
+  Truck,
+  CheckCircle,
+  Clock,
+  Navigation,
+  MapPin,
+  FileText,
+  AlertTriangle,
+  Play,
+  ArrowRight,
+  ShieldCheck
+} from 'lucide-react';
 import { Trip } from '../../types';
 
 export const Trips: React.FC = () => {
-  const { trips, updateTripStatus, triggerNotification } = useOperations();
-  
-  // Rajesh (d1) active trips
-  const driverTrips = trips.filter(t => t.driverId === 'd1');
-  const activeTrip = trips.find(t => t.driverId === 'd1' && t.status !== 'Completed') || trips[0];
+  const { trips, user, updateTripStatus, triggerNotification } = useOperations();
+  const navigate = useNavigate();
 
-  // Stop Reason Modal
-  const [stopModalOpen, setStopModalOpen] = useState(false);
-  const [selectedReason, setSelectedReason] = useState('Traffic Congestion');
-  
-  // POD Modal
-  const [podModalOpen, setPodModalOpen] = useState(false);
-  const [photoMockUrl, setPhotoMockUrl] = useState<string | null>(null);
-  const [signatureSaved, setSignatureSaved] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'Assigned' | 'Active' | 'Completed' | 'Cancelled'>('Active');
+  const [selectedDetailsTrip, setSelectedDetailsTrip] = useState<Trip | null>(null);
 
-  // Canvas drawing ref
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const isDrawingRef = useRef(false);
+  // Filter ONLY trips assigned to logged-in Driver
+  const driverId = user?.driverId || user?.id || 'DRV-9041';
+  const myTrips = useMemo(() => {
+    return trips.filter(t => t.driverId === driverId || t.driverId === 'd1' || t.driverId === 'DRV-9041');
+  }, [trips, driverId]);
 
-  // Set up Drawing Canvas inside modal
-  useEffect(() => {
-    if (!podModalOpen || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  // Tabbed Trip Collections
+  const assignedTrips = useMemo(() => myTrips.filter(t => t.status === 'Assigned'), [myTrips]);
+  const activeTrips = useMemo(() => myTrips.filter(t => ['Accepted', 'Started', 'In Transit', 'At Stop', 'Reached Pickup', 'Loaded', 'Reached Destination', 'Delayed', 'Incident Reported'].includes(t.status)), [myTrips]);
+  const completedTrips = useMemo(() => myTrips.filter(t => t.status === 'Completed' || t.status === 'Delivered'), [myTrips]);
+  const cancelledTrips = useMemo(() => myTrips.filter(t => t.status === 'Cancelled'), [myTrips]);
 
-    ctx.strokeStyle = '#1E293B';
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
+  const displayedTrips =
+    activeTab === 'Assigned' ? assignedTrips :
+    activeTab === 'Active' ? activeTrips :
+    activeTab === 'Completed' ? completedTrips :
+    cancelledTrips;
 
-    const getCoords = (e: MouseEvent | TouchEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-      return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
-      };
-    };
-
-    const startDraw = (e: MouseEvent | TouchEvent) => {
-      e.preventDefault();
-      const coords = getCoords(e);
-      ctx.beginPath();
-      ctx.moveTo(coords.x, coords.y);
-      isDrawingRef.current = true;
-    };
-
-    const draw = (e: MouseEvent | TouchEvent) => {
-      if (!isDrawingRef.current) return;
-      e.preventDefault();
-      const coords = getCoords(e);
-      ctx.lineTo(coords.x, coords.y);
-      ctx.stroke();
-    };
-
-    const stopDraw = () => {
-      isDrawingRef.current = false;
-    };
-
-    canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDraw);
-    canvas.addEventListener('mouseleave', stopDraw);
-
-    return () => {
-      canvas.removeEventListener('mousedown', startDraw);
-      canvas.removeEventListener('mousemove', draw);
-      canvas.removeEventListener('mouseup', stopDraw);
-      canvas.removeEventListener('mouseleave', stopDraw);
-    };
-  }, [podModalOpen]);
-
-  const clearCanvas = () => {
-    if (!canvasRef.current) return;
-    const ctx = canvasRef.current.getContext('2d');
-    if (ctx) {
-      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-      setSignatureSaved(null);
+  const handleAccept = async (tripId: string) => {
+    try {
+      await updateTripStatus(tripId, 'Accepted');
+      triggerNotification('Trip Started', 'Trip Assignment Accepted', 'Consignment accepted. Ready for departure.', 'Info');
+    } catch (err: any) {
+      alert(err.message || 'Failed to accept trip.');
     }
   };
 
-  const saveSignature = () => {
-    if (!canvasRef.current) return;
-    const base64 = canvasRef.current.toDataURL('image/png');
-    setSignatureSaved(base64);
-    triggerNotification('Trip Started', 'Signature Cached', 'Consignee receiver signature recorded.', 'Info');
+  const handleStart = async (tripId: string) => {
+    try {
+      await updateTripStatus(tripId, 'In Transit');
+      triggerNotification('Trip Started', 'Trip Started', 'Live location streaming active.', 'Info');
+      navigate('/driver/active-trip');
+    } catch (err: any) {
+      alert(err.message || 'Failed to start trip.');
+    }
   };
 
-  const handleStopLog = () => {
-    if (!activeTrip) return;
-    updateTripStatus(activeTrip.id, 'Delayed' as any, { stopReason: selectedReason });
-    setStopModalOpen(false);
-    triggerNotification('Trip Started', 'Stop Logged', `Delayed: ${selectedReason}`, 'Warning');
-  };
-
-  const handleMockPhotoCapture = () => {
-    setPhotoMockUrl('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=200&q=80');
-    triggerNotification('Trip Started', 'Cargo Photo Captured', 'Cargo snapshot recorded.', 'Info');
-  };
-
-  const handleSubmitPOD = () => {
-    if (!activeTrip) return;
-    updateTripStatus(activeTrip.id, 'Completed', {
-      signatureData: signatureSaved || 'Simulated Signature',
-      photo: photoMockUrl || 'Cargo Photo Mock'
-    });
-    setPodModalOpen(false);
-    triggerNotification('Trip Started', 'POD Transmitted', `Proof of delivery generated for ${activeTrip.tripNumber}.`, 'Info');
-  };
-
-  const activeMilestones = [
-    { label: 'Assigned', status: 'Assigned' },
-    { label: 'Accepted', status: 'Accepted' },
-    { label: 'Started', status: 'Started' },
-    { label: 'Pickup Load', status: 'Reached Pickup' },
-    { label: 'Loaded', status: 'Loaded' },
-    { label: 'In Transit', status: 'In Transit' },
-    { label: 'Destination', status: 'Reached Destination' },
-  ];
-
-  const getActiveStepIndex = () => {
-    if (!activeTrip) return 0;
-    const current = activeTrip.status;
-    if ((current as any) === 'Delayed') return 4;
-    const idx = activeMilestones.findIndex(m => m.status === current);
-    return idx >= 0 ? idx : 6;
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'Completed':
+      case 'Delivered':
+        return 'success';
+      case 'In Transit':
+      case 'Started':
+      case 'Accepted':
+        return 'info';
+      case 'Assigned':
+        return 'warning';
+      case 'At Stop':
+        return 'warning';
+      case 'Cancelled':
+      case 'Incident Reported':
+        return 'danger';
+      default:
+        return 'neutral';
+    }
   };
 
   return (
     <div className="space-y-6 animate-fade-in text-left">
-      {/* Title */}
-      <div>
-        <h2 className="text-[26px] font-extrabold text-[#111827] dark:text-[#F8FAFC] tracking-tight leading-none">My Trips & Consignments</h2>
-        <p className="text-[13px] text-[#4B5563] dark:text-[#94A3B8] mt-1.5 font-medium">Track shift schedules, load manifests, routes, and update active milestone progress.</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Active Trip detail card */}
-        {activeTrip ? (
-          <div className="bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-5 lg:col-span-2 text-left">
-            <div className="flex items-center justify-between border-b border-[#E5E7EB] dark:border-[#334155] pb-3">
-              <div>
-                <span className="text-[11px] font-extrabold text-[#6B7280] dark:text-[#94A3B8] uppercase tracking-wider block">Active Consignment</span>
-                <span className="text-sm font-mono font-bold text-[#111827] dark:text-[#F8FAFC]">{activeTrip.tripNumber}</span>
-              </div>
-              <Badge variant={activeTrip.status === 'In Transit' ? 'info' : 'warning'}>
-                {activeTrip.status}
-              </Badge>
-            </div>
-
-            {/* Locations */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex gap-2.5 text-xs text-left">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#006A6A] mt-1 shrink-0 animate-pulse" />
-                <div>
-                  <span className="text-[10px] text-[#6B7280] dark:text-slate-400 uppercase font-extrabold block">Pickup Location</span>
-                  <span className="font-bold text-[#111827] dark:text-[#CBD5E1] block mt-0.5">{activeTrip.pickupLocation}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-2.5 text-xs text-left">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] mt-1 shrink-0 animate-pulse" />
-                <div>
-                  <span className="text-[10px] text-[#6B7280] dark:text-slate-400 uppercase font-extrabold block">Destination Point</span>
-                  <span className="font-bold text-[#111827] dark:text-[#CBD5E1] block mt-0.5">{activeTrip.dropLocation}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* details */}
-            <div className="grid grid-cols-3 gap-4 border-t border-[#E5E7EB] dark:border-[#334155] pt-4 text-xs">
-              <div>
-                <span className="text-[#6B7280] dark:text-slate-400 block text-[10px] uppercase font-extrabold">Consignor</span>
-                <span className="font-bold text-[#111827] dark:text-[#CBD5E1] block mt-0.5">{activeTrip.customerName}</span>
-              </div>
-              <div>
-                <span className="text-[#6B7280] dark:text-slate-400 block text-[10px] uppercase font-extrabold">Material Specs</span>
-                <span className="font-bold text-[#111827] dark:text-[#CBD5E1] block mt-0.5">{activeTrip.material} ({activeTrip.weight})</span>
-              </div>
-              <div>
-                <span className="text-[#6B7280] dark:text-slate-400 block text-[10px] uppercase font-extrabold">Remaining Dist</span>
-                <span className="font-bold text-[#111827] dark:text-[#CBD5E1] block mt-0.5 font-mono">{activeTrip.distanceRemaining} km left</span>
-              </div>
-            </div>
-
-            {/* Customer Call / Info */}
-            <div className="bg-[#F9FAFB] dark:bg-[#0F172A]/60 rounded-xl p-4 border border-[#E5E7EB] dark:border-[#334155] flex items-center justify-between shadow-sm">
-              <div className="text-xs text-left">
-                <p className="font-bold text-[#111827] dark:text-[#F8FAFC]">{activeTrip.customerName}</p>
-                <p className="text-[11px] text-[#4B5563] dark:text-[#94A3B8] mt-0.5 font-semibold">Consignee Helpline: {activeTrip.customerPhone}</p>
-              </div>
-              <a
-                href={`tel:${activeTrip.customerPhone}`}
-                className="p-2.5 bg-white dark:bg-[#1E293B] rounded-xl border border-[#E5E7EB] dark:border-[#334155] text-[#006A6A] dark:text-[#7DF5F5] hover:bg-[#F9FAFB] dark:hover:bg-slate-800 flex items-center justify-center shrink-0 cursor-pointer shadow-sm transition-all"
-              >
-                <Phone className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] rounded-2xl p-8 text-center text-[#6B7280] dark:text-slate-400 lg:col-span-2 flex flex-col items-center justify-center shadow-sm">
-            <CheckCircle className="h-10 w-10 text-emerald-500 mb-2" />
-            <p className="text-xs font-bold">No active trip assignments today!</p>
-          </div>
-        )}
-
-        {/* Stepper Card */}
-        {activeTrip && (
-          <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-6 flex flex-col justify-between text-left">
-            <div className="space-y-4">
-              <h4 className="text-[13px] font-extrabold text-[#111827] dark:text-slate-100 border-b border-[#E5E7EB] dark:border-[#334155] pb-2 uppercase tracking-wide">Trip Milestone Progress</h4>
-              
-              <div className="flex flex-col gap-4 relative pl-5">
-                <div className="absolute left-[7px] top-1.5 bottom-1.5 w-[2px] bg-[#E5E7EB] dark:bg-slate-800" />
-                {activeMilestones.map((milestone, idx) => {
-                  const activeIdx = getActiveStepIndex();
-                  const isPast = idx < activeIdx;
-                  const isCurrent = idx === activeIdx;
-
-                  return (
-                    <div key={idx} className="flex gap-3 text-xs leading-normal">
-                      <div
-                        className={`w-3.5 h-3.5 rounded-full shrink-0 border-2 mt-0.5 z-10 transition-all ${
-                          isPast 
-                            ? 'bg-[#10B981] border-[#10B981]' 
-                            : isCurrent 
-                            ? 'bg-[#006A6A] border-[#006A6A] shadow-md shadow-teal-500/20' 
-                            : 'bg-white dark:bg-[#0F172A] border-slate-300 dark:border-slate-800'
-                        }`}
-                      />
-                      <span className={`font-semibold ${isPast ? 'text-[#6B7280] dark:text-[#94A3B8]' : isCurrent ? 'text-[#111827] dark:text-slate-100 font-bold' : 'text-[#6B7280] dark:text-[#94A3B8]'}`}>
-                        {milestone.label}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 border-t border-[#E5E7EB] dark:border-[#334155] pt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setStopModalOpen(true)}
-                className="text-xs py-2.5 rounded-xl border border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#1E293B] text-[#EF4444] hover:bg-red-50/50 font-bold"
-              >
-                <AlertTriangle className="h-4 w-4 mr-1 text-[#EF4444]" /> Incident Halt
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setPodModalOpen(true)}
-                className="text-xs py-2.5 rounded-xl font-bold"
-              >
-                <PenTool className="h-4 w-4 mr-1" /> Close POD
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Trips list table */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm text-left">
-        <h3 className="text-[15px] font-extrabold text-[#111827] dark:text-slate-100 mb-5 uppercase tracking-wide">Consignment History Ledger</h3>
-        <Table
-          data={driverTrips}
-          columns={[
-            {
-              header: 'Trip Ref',
-              accessor: (row: Trip) => <span className="font-mono text-xs font-bold text-slate-808 dark:text-[#F8FAFC]">{row.tripNumber}</span>,
-              sortKey: 'tripNumber',
-            },
-            {
-              header: 'Customer',
-              accessor: 'customerName',
-              sortKey: 'customerName',
-            },
-            {
-              header: 'Locations Map',
-              accessor: (row: Trip) => (
-                <div className="text-xs flex flex-col gap-0.5 text-left">
-                  <span className="font-semibold text-slate-700">Pick: {row.pickupLocation}</span>
-                  <span className="text-[11px] text-slate-400">Drop: {row.dropLocation}</span>
-                </div>
-              ),
-            },
-            {
-              header: 'Material (Weight)',
-              accessor: (row: Trip) => `${row.material} (${row.weight})`,
-            },
-            {
-              header: 'ETA Clock',
-              accessor: 'eta',
-              sortKey: 'eta',
-            },
-            {
-              header: 'Trip Status',
-              accessor: (row: Trip) => (
-                <Badge variant={row.status === 'Completed' ? 'success' : row.status === 'In Transit' ? 'info' : 'warning'}>
-                  {row.status}
-                </Badge>
-              ),
-              sortKey: 'status',
-            }
-          ]}
-          searchKey="tripNumber"
-          searchPlaceholder="Search manifests..."
-          exportFileName="driver-trips-complete-log"
-        />
-      </div>
-
-      {/* Modals */}
-      <Modal isOpen={stopModalOpen} onClose={() => setStopModalOpen(false)} title="Log Stop Incident">
-        <div className="space-y-4 text-left">
-          <p className="text-xs text-[#6D7A79] font-medium">Select delay reason classification below:</p>
-          <div className="grid grid-cols-1 gap-2.5">
-            {['Heavy Traffic', 'Fuel Refill Station', 'Scheduled Lunch Break', 'Vehicle Mechanical Failure', 'Border Checkpoint Delay'].map(reason => (
-              <button
-                key={reason}
-                onClick={() => setSelectedReason(reason)}
-                className={`p-4 border rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${
-                  selectedReason === reason
-                    ? 'border-[#EF4444] bg-[#EF4444]/10 text-[#EF4444]'
-                    : 'border-[#E5EEFF] dark:border-[#334155] hover:border-slate-300 text-slate-700 bg-white'
-                }`}
-              >
-                {reason}
-              </button>
-            ))}
-          </div>
-          <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155]">
-            <Button variant="outline" onClick={() => setStopModalOpen(false)}>Cancel</Button>
-            <Button variant="danger" onClick={handleStopLog}>Submit Incident</Button>
-          </div>
+      {/* Header Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-slate-100 tracking-tight leading-none">
+            My Assigned Consignments
+          </h2>
+          <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">
+            View, accept, and execute your assigned delivery routes and freight orders.
+          </p>
         </div>
-      </Modal>
 
-      <Modal isOpen={podModalOpen} onClose={() => setPodModalOpen(false)} title="Submit Proof of Delivery (POD)">
-        <div className="space-y-5 text-left">
-          <div className="space-y-2">
-            <span className="text-[13px] font-bold text-[#545F73] dark:text-[#94A3B8] uppercase tracking-wide block">Step 1: Unloading Inspection Photo</span>
-            <div className="flex items-center gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleMockPhotoCapture}
-                className="flex items-center gap-1.5 text-xs bg-white border border-[#E5EEFF] dark:border-[#334155] text-slate-700"
-              >
-                <Image className="h-4 w-4" /> Camera Capture Mock
-              </Button>
-              {photoMockUrl && (
-                <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-[#E5EEFF] dark:border-[#334155] shadow-sm shrink-0">
-                  <img src={photoMockUrl} alt="Inspection" className="w-full h-full object-cover" />
+        {activeTrips.length > 0 && (
+          <Button
+            variant="primary"
+            onClick={() => navigate('/driver/active-trip')}
+            className="bg-[#006A6A] hover:bg-[#005555] text-white px-5 py-2.5 rounded-xl font-bold shadow-md"
+          >
+            <Navigation className="h-4 w-4 mr-2" /> Open Active Navigation Console
+          </Button>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex items-center gap-2 border-b border-[#E5EEFF] dark:border-[#334155] pb-2 font-bold text-xs">
+        <button
+          onClick={() => setActiveTab('Active')}
+          className={`px-4 py-2 rounded-xl transition-all ${
+            activeTab === 'Active'
+              ? 'bg-[#006A6A] text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          Active Trips ({activeTrips.length})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('Assigned')}
+          className={`px-4 py-2 rounded-xl transition-all ${
+            activeTab === 'Assigned'
+              ? 'bg-[#006A6A] text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          New Assignments ({assignedTrips.length})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('Completed')}
+          className={`px-4 py-2 rounded-xl transition-all ${
+            activeTab === 'Completed'
+              ? 'bg-[#006A6A] text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          Completed ({completedTrips.length})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('Cancelled')}
+          className={`px-4 py-2 rounded-xl transition-all ${
+            activeTab === 'Cancelled'
+              ? 'bg-[#006A6A] text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          Cancelled ({cancelledTrips.length})
+        </button>
+      </div>
+
+      {/* Trip Cards Grid */}
+      {displayedTrips.length === 0 ? (
+        <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-12 text-center max-w-xl mx-auto space-y-4">
+          <Truck className="w-12 h-12 text-slate-400 mx-auto" />
+          <h4 className="text-base font-bold text-slate-800 dark:text-slate-100">No Trips Found in "{activeTab}" Category</h4>
+          <p className="text-xs text-slate-400">Assignments will appear here when dispatched by your Fleet Manager.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {displayedTrips.map(trip => (
+            <div
+              key={trip.id}
+              className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-5 flex flex-col justify-between"
+            >
+              <div className="space-y-4">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-[#E5EEFF] dark:border-[#334155] pb-3">
+                  <div>
+                    <span className="text-[10px] font-extrabold text-[#6D7A79] uppercase tracking-wider block">Trip Reference</span>
+                    <span className="font-mono font-extrabold text-base text-slate-900 dark:text-white">
+                      {trip.tripNumber}
+                    </span>
+                  </div>
+                  <Badge variant={getStatusVariant(trip.status)} className="px-2.5 py-1 text-xs font-bold">
+                    {trip.status}
+                  </Badge>
                 </div>
-              )}
-            </div>
-          </div>
 
-          <div className="space-y-2 text-left">
-            <span className="text-[13px] font-bold text-[#545F73] dark:text-[#94A3B8] uppercase tracking-wide block">Step 2: Customer E-Signature</span>
-            <div className="border border-[#E5EEFF] dark:border-[#334155] rounded-2xl bg-[#F8F9FF] dark:bg-[#0F172A] overflow-hidden shadow-sm">
-              <canvas
-                ref={canvasRef}
-                width={380}
-                height={160}
-                className="bg-white dark:bg-[#1E293B] w-full cursor-crosshair h-32"
-              />
-              <div className="flex items-center justify-between p-2.5 bg-[#F8F9FF] dark:bg-[#0F172A] border-t border-[#E5EEFF]/80 dark:border-[#334155]/60">
-                <Button variant="ghost" size="sm" onClick={clearCanvas} className="text-xs text-[#6D7A79] dark:text-[#94A3B8] border border-transparent hover:bg-slate-200 dark:hover:bg-slate-800">
-                  Clear Pad
+                {/* Route */}
+                <div className="space-y-2 text-xs">
+                  <div className="p-2.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/50">
+                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold block mb-0.5 uppercase">Origin</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 block truncate">📍 {trip.pickupLocation}</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-red-50/60 dark:bg-red-950/20 border border-red-200/50">
+                    <span className="text-[10px] text-red-700 dark:text-red-400 font-bold block mb-0.5 uppercase">Destination</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 block truncate">🏁 {trip.dropLocation}</span>
+                  </div>
+                </div>
+
+                {/* Cargo Details */}
+                <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700">
+                  <div>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Material</span>
+                    <span className="font-bold text-slate-800 dark:text-white truncate block">{trip.material}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Truck</span>
+                    <span className="font-bold text-slate-800 dark:text-white truncate block">{trip.vehicleNumber}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contextual Action Buttons */}
+              <div className="pt-3 border-t border-[#E5EEFF] dark:border-[#334155] flex items-center justify-between gap-2">
+                <Button variant="outline" size="sm" onClick={() => setSelectedDetailsTrip(trip)} className="text-xs">
+                  View Manifest
                 </Button>
-                <Button variant="outline" size="sm" onClick={saveSignature} className="text-xs bg-white border border-[#E5EEFF] dark:border-[#334155] text-slate-700">
-                  Save Signature
-                </Button>
+
+                {trip.status === 'Assigned' && (
+                  <Button variant="primary" size="sm" onClick={() => handleAccept(trip.id)} className="bg-emerald-600 text-white font-bold text-xs">
+                    Accept Assignment
+                  </Button>
+                )}
+
+                {trip.status === 'Accepted' && (
+                  <Button variant="primary" size="sm" onClick={() => handleStart(trip.id)} className="bg-[#006A6A] text-white font-bold text-xs">
+                    Start Trip & Navigation
+                  </Button>
+                )}
+
+                {['In Transit', 'Started', 'At Stop', 'Reached Pickup', 'Loaded', 'Reached Destination'].includes(trip.status) && (
+                  <Button variant="primary" size="sm" onClick={() => navigate('/driver/active-trip')} className="bg-[#006A6A] text-white font-bold text-xs">
+                    Open Console <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </Button>
+                )}
+
+                {trip.status === 'Completed' && (
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <CheckCircle className="w-4 h-4" /> POD Transmitted
+                  </span>
+                )}
               </div>
             </div>
-            {signatureSaved && (
-              <div className="p-3 border border-[#E5EEFF] dark:border-[#334155] rounded-xl bg-white dark:bg-[#0F172A]/60 flex items-center justify-between shadow-sm">
-                <span className="text-[11px] text-[#6D7A79] dark:text-[#94A3B8] font-bold flex items-center gap-1.5">
-                  <Sparkles className="h-4 w-4 text-[#10B981]" /> Signature saved
-                </span>
-                <img src={signatureSaved} alt="Signature Preview" className="h-6 w-20 object-contain shrink-0" />
+          ))}
+        </div>
+      )}
+
+      {/* Trip Details Modal */}
+      {selectedDetailsTrip && (
+        <Modal
+          isOpen={Boolean(selectedDetailsTrip)}
+          onClose={() => setSelectedDetailsTrip(null)}
+          title={`Trip Manifest Details - ${selectedDetailsTrip.tripNumber}`}
+        >
+          <div className="space-y-4 text-left text-xs">
+            <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1">
+              <span className="text-slate-400 font-bold block">Assigned Truck & Driver</span>
+              <p className="font-extrabold text-slate-800 dark:text-white text-sm">{selectedDetailsTrip.driverName} ({selectedDetailsTrip.vehicleNumber})</p>
+            </div>
+
+            <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+              <span className="font-bold text-slate-700 dark:text-slate-300 block uppercase text-[10px]">Freight Cargo Specifications</span>
+              <div className="grid grid-cols-2 gap-2 text-slate-700 dark:text-slate-300">
+                <div>Material: <strong className="text-slate-900 dark:text-white">{selectedDetailsTrip.material}</strong></div>
+                <div>Weight: <strong className="text-slate-900 dark:text-white">{selectedDetailsTrip.weight}</strong></div>
+                <div>Invoice #: <strong className="text-slate-900 dark:text-white">{selectedDetailsTrip.invoiceNumber}</strong></div>
+                <div>Priority: <strong className="text-slate-900 dark:text-white">{selectedDetailsTrip.priority || 'Normal'}</strong></div>
+              </div>
+            </div>
+
+            {selectedDetailsTrip.notes && (
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 text-amber-800 dark:text-amber-300">
+                <strong className="block mb-0.5">Instructions:</strong>
+                {selectedDetailsTrip.notes}
               </div>
             )}
           </div>
-
-          <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155]">
-            <Button variant="outline" onClick={() => setPodModalOpen(false)}>Close</Button>
-            <Button
-              variant="primary"
-              onClick={handleSubmitPOD}
-              disabled={!photoMockUrl || !signatureSaved}
-            >
-              Transmit POD
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        </Modal>
+      )}
     </div>
   );
 };
-
-
-

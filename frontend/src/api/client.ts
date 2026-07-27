@@ -2,7 +2,7 @@ import axios from 'axios';
 import { User, Vehicle, Trip, Task, InventoryItem, PayrollRecord, AttendanceRecord, PODRecord } from '../types';
 import { mockVehicles, mockTrips, mockTasks, mockInventory, mockPayroll, mockAttendance } from './mockData';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Axios Instance
 const axiosInstance = axios.create({
@@ -98,9 +98,9 @@ export const api = {
         return { message: 'Registration initiated.', token: 'mock_jwt_token_payload', user: mockUser };
       }
     },
-    verifyOTP: async (email: string, otpCode: string): Promise<{ message: string; token?: string; user?: User }> => {
+    verifyOTP: async (payload: { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile'; otpCode: string }): Promise<{ message: string; token?: string; user?: User }> => {
       try {
-        const res = await axiosInstance.post('/auth/verify-otp', { email, otpCode });
+        const res = await axiosInstance.post('/auth/verify-otp', payload);
         if (res.data.token) {
           localStorage.setItem('smartops_jwt', res.data.token);
         }
@@ -112,15 +112,15 @@ export const api = {
         return { message: 'Account verified successfully.' };
       }
     },
-    resendOTP: async (email: string): Promise<{ message: string; otpCode?: string }> => {
+    resendOTP: async (payload: { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile' }): Promise<{ success?: boolean; message: string; channel?: string; cooldownSeconds?: number }> => {
       try {
-        const res = await axiosInstance.post('/auth/send-otp', { email });
+        const res = await axiosInstance.post('/auth/send-otp', payload);
         return res.data;
       } catch (err: any) {
         if (err.response) {
           throw err;
         }
-        return { message: 'New OTP sent to email.' };
+        return { message: 'New OTP sent.' };
       }
     },
     forgotPassword: async (email: string): Promise<{ message: string; otpCode?: string }> => {
@@ -144,6 +144,17 @@ export const api = {
         }
         return { message: 'Password has been updated successfully.' };
       }
+    },
+    googleAuth: async (_googleToken: string, _role: string): Promise<{ token: string; user: User }> => {
+      throw new Error('Google authentication is temporarily disabled.');
+      /*
+      // TEMPORARILY DISABLED GOOGLE OAUTH API CALL
+      const res = await axiosInstance.post('/auth/google', { idToken: _googleToken, googleToken: _googleToken, role: _role });
+      if (res.data.token) {
+        localStorage.setItem('smartops_jwt', res.data.token);
+      }
+      return res.data;
+      */
     }
   },
 
@@ -152,7 +163,8 @@ export const api = {
     getAll: async (): Promise<InventoryItem[]> => {
       try {
         const res = await axiosInstance.get('/inventory');
-        return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
+        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
         return LocalStorageFallback.get<InventoryItem>('smartops_inventory', mockInventory);
       }
@@ -196,7 +208,8 @@ export const api = {
     getAll: async (): Promise<AttendanceRecord[]> => {
       try {
         const res = await axiosInstance.get('/attendance');
-        return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
+        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
         return LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
       }
@@ -520,7 +533,8 @@ export const api = {
     getAll: async (): Promise<PayrollRecord[]> => {
       try {
         const res = await axiosInstance.get('/salary');
-        return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
+        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
         return LocalStorageFallback.get<PayrollRecord>('smartops_salary', mockPayroll);
       }
@@ -564,7 +578,8 @@ export const api = {
     getAll: async (): Promise<Vehicle[]> => {
       try {
         const res = await axiosInstance.get('/fleet');
-        return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
+        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
         return LocalStorageFallback.get<Vehicle>('smartops_fleet', mockVehicles);
       }
@@ -608,7 +623,8 @@ export const api = {
     getAll: async (): Promise<Trip[]> => {
       try {
         const res = await axiosInstance.get('/trips');
-        return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
+        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
         return LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
       }
@@ -642,7 +658,7 @@ export const api = {
         return api.trips.updateStatus(id, 'In Transit');
       }
     },
-    updateLocation: async (payload: { id: string; latitude?: number; longitude?: number; distanceRemaining?: number; eta?: string }): Promise<Trip> => {
+    updateLocation: async (payload: { id: string; latitude?: number; longitude?: number; speed?: number; heading?: number; distanceRemaining?: number; eta?: string }): Promise<Trip> => {
       try {
         const res = await axiosInstance.put('/trips/update-location', payload);
         return { ...res.data, id: res.data._id || res.data.id };
@@ -652,6 +668,7 @@ export const api = {
           if (t.id === payload.id) {
             return {
               ...t,
+              ...(payload.latitude && payload.longitude ? { currentLocation: `${payload.latitude}, ${payload.longitude}` } : {}),
               ...(payload.distanceRemaining !== undefined ? { distanceRemaining: payload.distanceRemaining } : {}),
               ...(payload.eta ? { eta: payload.eta } : {})
             };
@@ -662,9 +679,137 @@ export const api = {
         return updated.find(t => t.id === payload.id) as Trip;
       }
     },
+    getLiveTracking: async (tripId: string): Promise<any> => {
+      try {
+        const res = await axiosInstance.get(`/trips/${tripId}/live-tracking`);
+        return res.data;
+      } catch (err) {
+        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
+        const trip = local.find(t => t.id === tripId) || local[0];
+        return {
+          tripId: trip?.id || tripId,
+          tripNumber: trip?.tripNumber || 'TRP-2026-001',
+          driverName: trip?.driverName || 'Ramesh Sharma',
+          driverId: trip?.driverId || 'u-driver-101',
+          vehicleNumber: trip?.vehicleNumber || 'MH-12-QW-9874',
+          status: trip?.status || 'In Transit',
+          currentLocation: trip?.currentLocation || '18.5204, 73.8567',
+          currentAddress: 'Pune Central Logistics Hub',
+          latitude: 18.5204,
+          longitude: 73.8567,
+          speed: 42,
+          heading: 90,
+          distanceRemaining: trip?.distanceRemaining || 18.4,
+          eta: trip?.eta || '25 Mins',
+          pickupLocation: trip?.pickupLocation || 'Pune Central Logistics Hub',
+          pickupCoordinates: { lat: 18.5204, lng: 73.8567 },
+          dropLocation: trip?.dropLocation || 'Chakan Automotive Zone',
+          dropCoordinates: { lat: 18.7602, lng: 73.8612 },
+          locationHistory: [],
+          googleNavUrl: `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(trip?.pickupLocation || 'Pune')}&destination=${encodeURIComponent(trip?.dropLocation || 'Chakan')}`
+        };
+      }
+    },
+    create: async (tripData: Partial<Trip>): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post('/trips', tripData);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err: any) {
+        if (err.response?.data?.message) {
+          throw new Error(err.response.data.message);
+        }
+        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
+        const newTrip: Trip = {
+          id: `trp-${Date.now()}`,
+          tripNumber: tripData.tripNumber || `TRP-${Date.now().toString().slice(-6)}`,
+          vehicleNumber: tripData.vehicleNumber || 'MH-12-QW-9874',
+          driverId: tripData.driverId || 'DRV-9041',
+          driverName: tripData.driverName || 'Rajesh Kumar',
+          pickupLocation: tripData.pickupLocation || 'Pune DC',
+          dropLocation: tripData.dropLocation || 'Chakan Zone',
+          customerName: tripData.customerName || 'Logistics Client',
+          customerPhone: tripData.customerPhone || '9876543210',
+          material: tripData.material || 'General Freight',
+          weight: tripData.weight || '1.5 Tons',
+          invoiceNumber: tripData.invoiceNumber || 'INV-1001',
+          priority: tripData.priority || 'Normal',
+          cargo: tripData.cargo,
+          stops: tripData.stops || [],
+          scheduledStart: tripData.scheduledStart,
+          expectedEnd: tripData.expectedEnd,
+          notes: tripData.notes,
+          status: 'Assigned',
+          eta: '30 Mins',
+          distanceRemaining: 15.0,
+          timestamp: new Date().toISOString()
+        };
+        local.unshift(newTrip);
+        LocalStorageFallback.set('smartops_trips', local);
+        return newTrip;
+      }
+    },
+    assign: async (id: string, payload: { driverId: string; driverName: string; vehicleNumber?: string }): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${id}/assign`, payload);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'Assigned', payload);
+      }
+    },
+    accept: async (id: string): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${id}/accept`);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'Accepted');
+      }
+    },
+    arriveStop: async (id: string, stopId: string, coords?: { latitude?: number; longitude?: number }): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${id}/stops/${stopId}/arrive`, coords);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err: any) {
+        if (err.response?.data?.message) {
+          throw new Error(err.response.data.message);
+        }
+        return api.trips.updateStatus(id, 'At Stop');
+      }
+    },
+    completeStop: async (id: string, stopId: string, details?: { podId?: string; stopReason?: string; notes?: string }): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${id}/stops/${stopId}/complete`, details);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'In Transit');
+      }
+    },
+    reportDelay: async (id: string, reason: string, note?: string): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${id}/delay`, { reason, note });
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'Delayed', { stopReason: reason });
+      }
+    },
+    reportIncident: async (id: string, incidentType: string, description: string): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${id}/incident`, { incidentType, description });
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'Incident Reported', { stopReason: `${incidentType}: ${description}` });
+      }
+    },
+    cancel: async (id: string): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.put(`/trips/${id}/cancel`);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'Cancelled');
+      }
+    },
     complete: async (id: string, details?: { signatureData?: string; photo?: string }): Promise<Trip> => {
       try {
-        const res = await axiosInstance.put('/trips/complete', { id, ...details });
+        const res = await axiosInstance.post(`/trips/${id}/end`, details);
         return { ...res.data, id: res.data._id || res.data.id };
       } catch (err) {
         return api.trips.updateStatus(id, 'Completed', details);
@@ -695,6 +840,7 @@ export const api = {
       }
     }
   },
+
 
   // 7. PROOF OF DELIVERY (POD) API
   pod: {
@@ -826,7 +972,52 @@ export const api = {
         LocalStorageFallback.set('smartops_pods', filtered);
       }
     }
+  },
+
+  // 8. GOOGLE MAPS & GEOLOCATION PROXY API
+  maps: {
+    geocode: async (address: string): Promise<{ lat: number; lng: number }> => {
+      try {
+        const res = await axiosInstance.get('/maps/geocode', { params: { address } });
+        return res.data;
+      } catch (err) {
+        return { lat: 18.5204, lng: 73.8567 };
+      }
+    },
+    reverseGeocode: async (lat: number, lng: number): Promise<{ formattedAddress: string; city?: string; state?: string; country?: string }> => {
+      try {
+        const res = await axiosInstance.get('/maps/reverse-geocode', { params: { lat, lng } });
+        return res.data;
+      } catch (err) {
+        return { formattedAddress: `Location: (${lat.toFixed(4)}, ${lng.toFixed(4)})` };
+      }
+    },
+    getDistanceETA: async (origin: string, destination: string, speed?: number): Promise<{ distanceRemainingKm: number; distanceText: string; durationText: string; durationSeconds: number; etaString: string }> => {
+      try {
+        const res = await axiosInstance.get('/maps/distance-eta', { params: { origin, destination, speed } });
+        return res.data;
+      } catch (err) {
+        return {
+          distanceRemainingKm: 18.4,
+          distanceText: '18.4 km',
+          durationText: '25 mins',
+          durationSeconds: 1500,
+          etaString: '25 Mins'
+        };
+      }
+    },
+    getDirections: async (origin: string, destination: string, waypoints?: string[]): Promise<any> => {
+      try {
+        const res = await axiosInstance.get('/maps/directions', {
+          params: { origin, destination, waypoints: waypoints ? waypoints.join('|') : undefined }
+        });
+        return res.data;
+      } catch (err) {
+        return { status: 'ZERO_RESULTS', routes: [] };
+      }
+    }
   }
 };
+
 
 import { mockPODs } from './mockData';

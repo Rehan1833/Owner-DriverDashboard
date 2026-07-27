@@ -15,6 +15,7 @@ import {
   Activity,
   Package,
 } from 'lucide-react';
+import { GoogleAuthButton } from '../../components/auth/GoogleAuthButton';
 
 // ── Design tokens — exact values from SmartOps dashboard design system ────────
 const DS = {
@@ -88,6 +89,16 @@ export const Login: React.FC = () => {
       setLoading(false);
       setErrorMsg(err.response?.data?.message || 'Login failed. Verify your credentials.');
     }
+  };
+
+  const handleGoogleSuccess = (res: any) => {
+    if (res.user) {
+      navigate(res.user.role === 'Driver' ? '/driver' : '/owner');
+    }
+  };
+
+  const handleGoogleError = (error: string) => {
+    setErrorMsg(error);
   };
 
   // Input style helpers ───────────────────────────────────────────────────────
@@ -535,11 +546,20 @@ export const Login: React.FC = () => {
             {/* Divider */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: 10,
-              margin: '20px 0',
+              margin: '20px 0 16px',
             }}>
               <div style={{ flex: 1, height: 1, background: DS.border }} />
               <span style={{ fontSize: 12, color: DS.textDisabled }}>or</span>
               <div style={{ flex: 1, height: 1, background: DS.border }} />
+            </div>
+
+            {/* Google OAuth Button */}
+            <div style={{ marginBottom: 20 }}>
+              <GoogleAuthButton
+                role={selectedRole}
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+              />
             </div>
 
             {/* Create account */}

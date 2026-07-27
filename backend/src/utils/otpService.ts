@@ -1,4 +1,11 @@
-import nodemailer from 'nodemailer';
+/*
+ * TEMPORARILY DISABLED: Gmail / Nodemailer Email Verification Service
+ * To re-enable:
+ * 1. Uncomment import nodemailer from 'nodemailer';
+ * 2. Restore createSMTPTransporter and sendGmailCode Nodemailer logic below.
+ */
+
+// import nodemailer from 'nodemailer';
 
 /**
  * Interface for OTP delivery response
@@ -7,7 +14,94 @@ export interface OTPDeliveryResult {
   success: boolean;
   message: string;
   messageId?: string;
+  isDevBypass?: boolean;
 }
+
+/**
+ * Safely masks recipient email for secure logging (e.g. "rehanchaudhari181133@gmail.com" -> "reh***33@gmail.com")
+ */
+export const maskEmail = (email: string): string => {
+  if (!email || !email.includes('@')) return '***@***.com';
+  const [local, domain] = email.split('@');
+  if (local.length <= 3) {
+    return `${local[0]}***@${domain}`;
+  }
+  return `${local.slice(0, 3)}***${local.slice(-2)}@${domain}`;
+};
+
+/**
+ * TEMPORARILY DISABLED: Validates whether required email environment variables are configured
+ */
+export const isEmailConfigured = (): boolean => {
+  /*
+  // TEMPORARILY DISABLED EMAIL CONFIGURATION CHECK
+  const user = (process.env.EMAIL_USER || process.env.SMTP_USER || process.env.GMAIL_USER || '').trim();
+  const pass = (process.env.EMAIL_PASS || process.env.SMTP_PASS || process.env.GMAIL_PASS || '').trim();
+
+  if (!user || !pass || user.includes('your_gmail') || user.includes('your-sender') || user.includes('example.com')) {
+    return false;
+  }
+  return true;
+  */
+  return false;
+};
+
+/**
+ * TEMPORARILY DISABLED: Transporter setup for Nodemailer Gmail SMTP
+ */
+/*
+const createSMTPTransporter = () => {
+  const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(process.env.EMAIL_PORT || process.env.SMTP_PORT) || 465;
+  const secureEnv = process.env.EMAIL_SECURE || process.env.SMTP_SECURE;
+  const secure = secureEnv !== undefined ? secureEnv === 'true' : port === 465;
+
+  const user = (process.env.EMAIL_USER || process.env.SMTP_USER || process.env.GMAIL_USER || '').trim();
+  const rawPass = process.env.EMAIL_PASS || process.env.SMTP_PASS || process.env.GMAIL_PASS || '';
+  const pass = rawPass.replace(/\s+/g, '').trim();
+
+  const isGmailHost = host.toLowerCase().includes('gmail');
+
+  const transporterOptions: any = isGmailHost
+    ? {
+        service: 'gmail',
+        auth: { user, pass },
+        tls: { rejectUnauthorized: false }
+      }
+    : {
+        host,
+        port,
+        secure,
+        auth: { user, pass },
+        tls: { rejectUnauthorized: false }
+      };
+
+  return {
+    host,
+    port,
+    secure,
+    user,
+    pass,
+    transporter: nodemailer.createTransport(transporterOptions)
+  };
+};
+*/
+
+/**
+ * TEMPORARILY DISABLED: Validates email configuration at startup
+ */
+export const validateEmailEnvironment = (): boolean => {
+  console.log('[EMAIL] ℹ️ Email/Gmail verification service is temporarily disabled.');
+  return false;
+};
+
+/**
+ * TEMPORARILY DISABLED: Verifies SMTP connection
+ */
+export const verifySMTPConnection = async (): Promise<boolean> => {
+  console.log('[EMAIL] ℹ️ SMTP/Gmail connection check is temporarily disabled.');
+  return false;
+};
 
 /**
  * Generates a secure 6-digit numeric OTP code
@@ -17,104 +111,26 @@ export const generateOTP = (): string => {
 };
 
 /**
- * Transporter setup for Nodemailer Gmail SMTP
- */
-const createSMTPTransporter = () => {
-  const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = Number(process.env.EMAIL_PORT || process.env.SMTP_PORT) || 465;
-  const secure = (process.env.EMAIL_SECURE || process.env.SMTP_SECURE) !== 'false';
-  const user = process.env.EMAIL_USER || process.env.SMTP_USER || process.env.GMAIL_USER || '';
-  const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS || process.env.GMAIL_PASS || '';
-
-  return {
-    host,
-    port,
-    secure,
-    user,
-    pass,
-    transporter: nodemailer.createTransport({
-      host,
-      port,
-      secure,
-      auth: { user, pass }
-    })
-  };
-};
-
-/**
  * Dispatches Mobile SMS OTP Code to the Driver or Owner
  */
 export const sendMobileOTP = async (mobileNumber: string, otpCode: string): Promise<boolean> => {
-  console.log(`[SMS OTP SERVICE] 📱 Dispatching 6-Digit Mobile OTP [${otpCode}] to ${mobileNumber}`);
+  console.log(`[SMS OTP SERVICE] 📱 Dispatching 6-Digit Mobile OTP [${otpCode}] to ${mobileNumber.slice(-4).padStart(mobileNumber.length, '*')}`);
   return true;
 };
 
 /**
- * Dispatches Gmail / Email Verification Code to the Driver or Owner
+ * TEMPORARILY DISABLED: Dispatches Gmail / Email Verification Code
  */
-export const sendGmailCode = async (email: string, otpCode: string, role: string): Promise<OTPDeliveryResult> => {
-  console.log(`[GMAIL AUTH SERVICE] --------------------------------------------------`);
-  console.log(`[GMAIL AUTH SERVICE] 📧 Initiating Gmail OTP dispatch to: ${email} (${role})`);
-
-  const { host, port, user, pass, transporter } = createSMTPTransporter();
-
-  console.log(`[GMAIL AUTH SERVICE] Environment Variables Checked:`);
-  console.log(`[GMAIL AUTH SERVICE]   EMAIL_HOST: ${host}`);
-  console.log(`[GMAIL AUTH SERVICE]   EMAIL_PORT: ${port}`);
-  console.log(`[GMAIL AUTH SERVICE]   EMAIL_USER: ${user ? user : '❌ NOT CONFIGURED'}`);
-  console.log(`[GMAIL AUTH SERVICE]   EMAIL_PASS: ${pass ? '••••••••' : '❌ NOT CONFIGURED'}`);
-
-  if (!user || !pass) {
-    const errorMsg = 'Gmail SMTP credentials (EMAIL_USER & EMAIL_PASS) are missing in backend .env configuration. Please configure a valid Gmail App Password.';
-    console.error(`[GMAIL AUTH ERROR] ❌ ${errorMsg}`);
-    throw new Error(errorMsg);
-  }
-
-  try {
-    // 1. Verify SMTP Connection
-    console.log(`[GMAIL AUTH SERVICE] Connecting to Gmail SMTP (${host}:${port})...`);
-    await transporter.verify();
-    console.log(`[GMAIL AUTH SERVICE] ✅ SMTP Connection Verified & Connected Successfully`);
-
-    // 2. Log OTP Generation
-    console.log(`[GMAIL AUTH SERVICE] Generating OTP... Code: [${otpCode}]`);
-    console.log(`[GMAIL AUTH SERVICE] Sending Email to ${email}...`);
-
-    const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_FROM || `"SmartOps Enterprise Security" <${user}>`;
-
-    // 3. Dispatch Email via Nodemailer
-    const info = await transporter.sendMail({
-      from: fromAddress,
-      to: email,
-      subject: `SmartOps ${role} Verification Code: ${otpCode}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 24px; color: #0B1C30; background-color: #F8F9FF; border-radius: 12px;">
-          <div style="max-width: 500px; margin: 0 auto; background: #FFFFFF; border: 1px solid #E5EEFF; padding: 32px; border-radius: 16px;">
-            <h2 style="color: #006A6A; margin-top: 0;">SmartOps ${role} Identity Verification</h2>
-            <p style="color: #545F73; font-size: 14px;">Your single-use 6-digit authentication code is:</p>
-            <div style="font-size: 32px; font-weight: bold; color: #006A6A; letter-spacing: 6px; padding: 16px 0; text-align: center; background: #EFF4FF; border-radius: 8px; margin: 16px 0;">${otpCode}</div>
-            <p style="color: #545F73; font-size: 13px;">This verification code is valid for 5 minutes. Do not share this code with anyone.</p>
-            <hr style="border: none; border-top: 1px solid #E5EEFF; margin: 24px 0;" />
-            <p style="font-size: 11px; color: #6D7A79; text-align: center;">SmartOps Platform & Telemetry Systems · Production Control</p>
-          </div>
-        </div>
-      `
-    });
-
-    console.log(`[GMAIL AUTH SERVICE] ✅ Email Sent Successfully`);
-    console.log(`[GMAIL AUTH SERVICE]   Message ID: ${info.messageId}`);
-    console.log(`[GMAIL AUTH SERVICE]   Recipient Email: ${email}`);
-    console.log(`[GMAIL AUTH SERVICE]   SMTP Response: ${info.response}`);
-    console.log(`[GMAIL AUTH SERVICE] --------------------------------------------------`);
-
-    return {
-      success: true,
-      message: 'OTP sent successfully.',
-      messageId: info.messageId
-    };
-  } catch (err: any) {
-    console.error(`[GMAIL AUTH ERROR] ❌ SMTP Verification or Dispatch Failed for ${email}: ${err.message}`);
-    console.log(`[GMAIL AUTH SERVICE] --------------------------------------------------`);
-    throw new Error(`Failed to send OTP email: ${err.message}`);
-  }
+export const sendGmailCode = async (_email: string, _otpCode: string, _role: string): Promise<OTPDeliveryResult> => {
+  console.log('[EMAIL] ℹ️ sendGmailCode call ignored - Email/Gmail verification is temporarily disabled.');
+  /*
+  // TEMPORARILY DISABLED GMAIL SENDMAIL IMPLEMENTATION
+  const maskedTarget = maskEmail(_email);
+  const { user, transporter } = createSMTPTransporter();
+  ...
+  */
+  return {
+    success: false,
+    message: 'Email verification is temporarily disabled.'
+  };
 };

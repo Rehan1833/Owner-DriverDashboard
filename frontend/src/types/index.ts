@@ -38,10 +38,26 @@ export interface Vehicle {
   insuranceExpiry?: string;
 }
 
+export interface TripStop {
+  id?: string;
+  _id?: string;
+  sequence: number;
+  address: string;
+  latitude: number;
+  longitude: number;
+  status: 'Pending' | 'Arrived' | 'Completed' | 'Skipped';
+  arrivedAt?: string;
+  completedAt?: string;
+  stopReason?: string;
+  podId?: string;
+  notes?: string;
+}
+
 export interface Trip {
   id: string;
   tripNumber: string;
   vehicleNumber: string;
+  vehicleId?: string;
   driverId: string;
   driverName: string;
   pickupLocation: string;
@@ -51,15 +67,41 @@ export interface Trip {
   material: string;
   weight: string;
   invoiceNumber: string;
-  status: 'Assigned' | 'Accepted' | 'Started' | 'Reached Pickup' | 'Loaded' | 'In Transit' | 'Reached Destination' | 'Delivered' | 'Completed' | 'Delayed';
+  priority?: 'Normal' | 'High' | 'Urgent';
+  cargo?: {
+    description?: string;
+    quantity?: number;
+    weight?: string;
+  };
+  stops?: TripStop[];
+  scheduledStart?: string;
+  expectedEnd?: string;
+  notes?: string;
+  status: 'Draft' | 'Assigned' | 'Accepted' | 'Started' | 'Reached Pickup' | 'Loaded' | 'In Transit' | 'At Stop' | 'Reached Destination' | 'Delivered' | 'Completed' | 'Cancelled' | 'Delayed' | 'Incident Reported';
   eta: string;
   distanceRemaining: number;
   stopReason?: string;
   deliveryPhoto?: string[];
   signatureData?: string;
   timestamp: string;
-  vehicleId?: string;
+  startedAt?: string;
+  completedAt?: string;
+  // Google Maps Telemetry Fields
+  currentLocation?: string;
+  currentAddress?: string;
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
+  speed?: number;
+  heading?: number;
+  lastGpsUpdate?: string;
+  gpsFreshnessStatus?: 'LIVE' | 'STALE' | 'OFFLINE';
+  gpsFreshnessMinutesAgo?: number;
+  pickupCoordinates?: { lat: number; lng: number };
+  dropCoordinates?: { lat: number; lng: number };
+  locationHistory?: Array<{ lat: number; lng: number; timestamp: string; address?: string; speed?: number; heading?: number; accuracy?: number }>;
 }
+
 
 export interface Task {
   id: string;

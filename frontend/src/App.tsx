@@ -1,4 +1,4 @@
-﻿import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { OperationsProvider } from './store/OperationsContext';
 import { ThemeProvider } from './store/ThemeContext';
@@ -40,6 +40,7 @@ const OwnerWorkers = lazy(() => import('./pages/owner/Workers').then(m => ({ def
 const OwnerAnalytics = lazy(() => import('./pages/owner/Analytics').then(m => ({ default: m.Analytics })));
 const OwnerProfile = lazy(() => import('./pages/owner/Profile').then(m => ({ default: m.Profile })));
 const OwnerPOD = lazy(() => import('./pages/owner/POD').then(m => ({ default: m.POD })));
+const OwnerTrips = lazy(() => import('./pages/owner/Trips').then(m => ({ default: m.OwnerTrips })));
 
 // Driver Pages (Lazy Loaded)
 const DriverDashboard = lazy(() => import('./pages/driver/Dashboard').then(m => ({ default: m.Home })));
@@ -77,6 +78,7 @@ const App: React.FC = () => {
                 <Route element={<DashboardLayout />}>
                   <Route index element={<OwnerDashboard />} />
                   <Route path="operations" element={<OwnerOperations />} />
+                  <Route path="trips" element={<OwnerTrips />} />
                   <Route path="inventory" element={<OwnerInventory />} />
                   <Route path="attendance" element={<OwnerAttendance />} />
                   <Route path="fleet" element={<OwnerFleet />} />
@@ -91,6 +93,7 @@ const App: React.FC = () => {
                   <Route path="pod" element={<OwnerPOD />} />
                 </Route>
               </Route>
+
 
               {/* Driver Portal (Decoupled Dashboard Wrapper) */}
               <Route path="/driver" element={<DriverLayout />}>

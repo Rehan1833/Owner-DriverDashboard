@@ -9,6 +9,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 
 jest.mock('../models/User');
+jest.mock('../models/VerificationCode');
 jest.mock('../utils/otpService');
 
 describe('Secure Driver & Owner Authentication & OTP Verification API', () => {
