@@ -145,7 +145,7 @@ export const Navbar: React.FC = () => {
             className="relative hidden sm:flex items-center gap-2 px-3 py-2 border border-[#E5E7EB] dark:border-[#334155] rounded-xl bg-white dark:bg-[#1E293B] hover:bg-[#F9FAFB] dark:hover:bg-[#0F172A] cursor-pointer transition-colors text-xs font-semibold text-[#111827] dark:text-[#CBD5E1] shadow-sm whitespace-nowrap"
           >
             <Shield className="h-3.5 w-3.5 text-[#006A6A] dark:text-[#7DF5F5] shrink-0" />
-            <span>{user?.companyName || 'SmartOps Ltd'}</span>
+            <span>{user?.companyName || user?.fullName || 'Enterprise Portal'}</span>
           </div>
         )}
 

@@ -31,18 +31,14 @@ interface Worker {
   performanceScore: number;
 }
 
-const INITIAL_WORKERS: Worker[] = [
-  { id: 'w-1', name: 'Rajesh Kumar', role: 'Senior Driver', email: 'rajesh.kumar@smartops.com', phone: '+91 9123456789', status: 'Active', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Rajesh&backgroundColor=0284C7', branch: 'Pune HQ', performanceScore: 98 },
-  { id: 'w-2', name: 'Arjun Singh', role: 'Driver', email: 'arjun.singh@smartops.com', phone: '+91 9812345670', status: 'On Break', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Arjun&backgroundColor=F59E0B', branch: 'Pune HQ', performanceScore: 90 },
-  { id: 'w-3', name: 'Amit Patel', role: 'Warehouse Supervisor', email: 'amit.patel@smartops.com', phone: '+91 9543210987', status: 'Active', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Amit&backgroundColor=10B981', branch: 'Mumbai Hub', performanceScore: 95 },
-  { id: 'w-4', name: 'Vikram Singh', role: 'Fleet Manager', email: 'vikram.singh@smartops.com', phone: '+91 9776543210', status: 'Off Duty', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Vikram&backgroundColor=8B5CF6', branch: 'Pune HQ', performanceScore: 97 },
-  { id: 'w-5', name: 'Sanjay Dutt', role: 'Technician', email: 'sanjay.dutt@smartops.com', phone: '+91 9332115500', status: 'Absent', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Sanjay&backgroundColor=EF4444', branch: 'Bangalore Whse', performanceScore: 84 },
-  { id: 'w-6', name: 'Sunita Sharma', role: 'Inventory Clerk', email: 'sunita.sharma@smartops.com', phone: '+91 9223344556', status: 'Active', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Sunita&backgroundColor=EC4899', branch: 'Mumbai Hub', performanceScore: 94 }
-];
+const INITIAL_WORKERS: Worker[] = [];
 
 export const Workers: React.FC = () => {
   const { triggerNotification, addActivity } = useOperations();
-  const [workers, setWorkers] = useState<Worker[]>(INITIAL_WORKERS);
+  const [workers, setWorkers] = useState<Worker[]>(() => {
+    const saved = localStorage.getItem('smartops_workers');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
@@ -87,7 +83,11 @@ export const Workers: React.FC = () => {
       performanceScore: 100
     };
 
-    setWorkers(prev => [newWorker, ...prev]);
+    setWorkers(prev => {
+      const updated = [newWorker, ...prev];
+      localStorage.setItem('smartops_workers', JSON.stringify(updated));
+      return updated;
+    });
     setAddModalOpen(false);
     playSound('Success');
     triggerNotification('System Alert', 'Roster Updated', `Registered staff member ${newWorkerName} under branch: ${newWorkerBranch}`, 'Info');
@@ -101,7 +101,11 @@ export const Workers: React.FC = () => {
 
   const handleDeleteWorker = (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to remove ${name} from the active personnel registry?`)) {
-      setWorkers(prev => prev.filter(w => w.id !== id));
+      setWorkers(prev => {
+        const updated = prev.filter(w => w.id !== id);
+        localStorage.setItem('smartops_workers', JSON.stringify(updated));
+        return updated;
+      });
       playSound('Error');
       triggerNotification('System Alert', 'Roster Removed', `Revoked access credentials for staff: ${name}`, 'Warning');
       addActivity('Staff Suspended', `Removed team member: ${name}`, 'attendance');

@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useOperations } from '../../store/OperationsContext';
 import { OperationsChart } from '../../components/charts/Charts';
 import {
   TrendingUp,
@@ -11,29 +12,41 @@ import {
 
 export const Analytics: React.FC = () => {
   const [timeRange, setTimeRange] = useState('Month');
+  const { inventory, vehicles, payroll, trips } = useOperations();
 
-  // Datasets
-  const monthlyRevenueData = [
-    { name: 'Jan', target: 80000, revenue: 78000, cost: 42000 },
-    { name: 'Feb', target: 85000, revenue: 89000, cost: 45000 },
-    { name: 'Mar', target: 90000, revenue: 94000, cost: 47000 },
-    { name: 'Apr', target: 100000, revenue: 98000, cost: 52000 },
-    { name: 'May', target: 110000, revenue: 122000, cost: 58000 },
-    { name: 'Jun', target: 120000, revenue: 128000, cost: 60000 }
-  ];
+  const totalRevenue = useMemo(() => inventory.reduce((sum, i) => sum + (i.sellingPrice * i.quantity), 0), [inventory]);
+  const totalCost = useMemo(() => inventory.reduce((sum, i) => sum + (i.purchasePrice * i.quantity), 0) + payroll.reduce((sum, p) => sum + p.finalSalary, 0), [inventory, payroll]);
 
-  const fuelConsumptionData = [
-    { name: 'Pune Hub', activeVehicles: 15, fuelUsed: 450, mileageCost: 45000 },
-    { name: 'Mumbai Hub', activeVehicles: 12, fuelUsed: 380, mileageCost: 38000 },
-    { name: 'Bangalore Hub', activeVehicles: 8, fuelUsed: 220, mileageCost: 22000 }
-  ];
+  const monthlyRevenueData = useMemo(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    return months.map(m => ({
+      name: m,
+      target: 0,
+      revenue: Math.round(totalRevenue / 6),
+      cost: Math.round(totalCost / 6)
+    }));
+  }, [totalRevenue, totalCost]);
 
-  const stockTurnoverData = [
-    { name: 'Raw Metal', turnoverRate: 4.5, orderLeadTime: 3 },
-    { name: 'Finished Boxes', turnoverRate: 8.2, orderLeadTime: 1.5 },
-    { name: 'Fasteners', turnoverRate: 2.1, orderLeadTime: 5 },
-    { name: 'Drums / Caps', turnoverRate: 5.4, orderLeadTime: 2.5 }
-  ];
+  const fuelConsumptionData = useMemo(() => {
+    if (vehicles.length === 0) return [];
+    return [
+      { name: 'Primary Hub', activeVehicles: vehicles.length, fuelUsed: 0, mileageCost: 0 }
+    ];
+  }, [vehicles]);
+
+  const stockTurnoverData = useMemo(() => {
+    if (inventory.length === 0) return [];
+    return inventory.map(item => ({
+      name: item.itemName,
+      turnoverRate: Number((item.quantity / (item.minimumQuantity || 1)).toFixed(1)),
+      orderLeadTime: 2
+    }));
+  }, [inventory]);
+
+  const profitMarginPercent = totalRevenue > 0 ? (((totalRevenue - totalCost) / totalRevenue) * 100).toFixed(1) + '%' : '0%';
+  const avgCostPerTrip = trips.length > 0 ? `₹${Math.round(totalCost / trips.length)}` : '₹0';
+  const stockTurn = `${inventory.length}.0x`;
+  const operationalEfficiency = trips.length > 0 ? `${Math.round((trips.filter(t => t.status === 'Completed').length / trips.length) * 100)}%` : '100%';
 
   return (
     <div className="space-y-8 max-w-[1600px] mx-auto pb-16 text-left animate-fade-in">
@@ -68,17 +81,16 @@ export const Analytics: React.FC = () => {
       {/* Mini KPI Analytics cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { title: 'Gross Profit Margin', value: '47.5%', change: '+3.2%', isPositive: true, desc: 'Gross margin vs target', icon: DollarSign, color: '#006A6A', bg: 'bg-[#006A6A]/10' },
-          { title: 'Average Cost Per Trip', value: '?4,120', change: '-4.8%', isPositive: true, desc: 'Fuel and maintenance costs', icon: Truck, color: '#14B8A6', bg: 'bg-[#14B8A6]/10' },
-          { title: 'Inventory Stock Turn', value: '5.8x', change: '+1.2%', isPositive: true, desc: 'Average cycles this month', icon: Warehouse, color: '#F59E0B', bg: 'bg-[#F59E0B]/10' },
-          { title: 'Operational Efficiency', value: '94.2%', change: '+1.5%', isPositive: true, desc: 'SLA delivery timelines met', icon: TrendingUp, color: '#10B981', bg: 'bg-[#10B981]/10' }
+          { title: 'Gross Profit Margin', value: profitMarginPercent, change: '', isPositive: true, desc: 'Gross margin vs cost', icon: DollarSign, color: '#006A6A', bg: 'bg-[#006A6A]/10' },
+          { title: 'Average Cost Per Trip', value: avgCostPerTrip, change: '', isPositive: true, desc: 'Fuel and maintenance costs', icon: Truck, color: '#14B8A6', bg: 'bg-[#14B8A6]/10' },
+          { title: 'Inventory Stock Turn', value: stockTurn, change: '', isPositive: true, desc: 'Active stock items count', icon: Warehouse, color: '#F59E0B', bg: 'bg-[#F59E0B]/10' },
+          { title: 'Operational Efficiency', value: operationalEfficiency, change: '', isPositive: true, desc: 'SLA delivery timelines met', icon: TrendingUp, color: '#10B981', bg: 'bg-[#10B981]/10' }
         ].map((kpi, idx) => (
           <div key={idx} className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center">
             <div className="space-y-2">
               <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">{kpi.title}</span>
               <h4 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-white leading-tight">{kpi.value}</h4>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-emerald-600">{kpi.change}</span>
                 <span className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] font-semibold">{kpi.desc}</span>
               </div>
             </div>

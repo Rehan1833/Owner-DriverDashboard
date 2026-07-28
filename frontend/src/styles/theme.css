@@ -28,13 +28,20 @@ main .glass-panel:hover,
 .dark main .bg-white.rounded-3xl,
 .dark main .bg-white.rounded-2xl,
 .dark main .glass-panel,
-.dark .glass-panel,
 .dark main .dark\:bg-slate-900.rounded-3xl,
 .dark main .dark\:bg-slate-900.rounded-2xl,
 .dark main .dark\:bg-\[\#1E293B\].rounded-2xl {
   background: rgba(30, 41, 59, 0.78) !important;
   backdrop-filter: blur(16px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1px solid #334155 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3) !important;
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1), border-color 280ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.dark .glass-panel {
+  background: #1E293B !important;
   border: 1px solid #334155 !important;
   border-radius: 16px !important;
   box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3) !important;

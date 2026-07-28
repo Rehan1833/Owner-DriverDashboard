@@ -79,7 +79,7 @@ const MetricCard: React.FC<{
 };
 
 export const Attendance: React.FC = () => {
-  const { attendance, vehicles, trips, payroll } = useOperations();
+  const { attendance, vehicles, trips, payroll, notifications } = useOperations();
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -107,57 +107,30 @@ export const Attendance: React.FC = () => {
   const completedTripsCount = trips.filter(t => t.status === 'Completed').length;
 
   // Mock Notifications for alerts strip
-  const systemAlerts = [
-    { type: 'emergency', msg: 'Emergency SOS: Flat tyre reported on KA-03-MN-4512 near Hosur toll.', time: '10 mins ago' },
-    { type: 'delay', msg: 'Trip TRP-2026-8801 is delayed by 25 mins due to express highway traffic.', time: '15 mins ago' },
-    { type: 'late', msg: 'Late Check-In: Driver Rajesh Kumar checked in 15 mins after shift schedule.', time: 'Just Now' },
-    { type: 'overtime', msg: 'Regulatory Warning: Driver Arjun Sharma is nearing 10 consecutive hours on duty.', time: '1 hr ago' }
-  ];
+  const systemAlerts = useMemo(() => {
+    return notifications.map(n => ({
+      type: n.severity === 'Error' ? 'emergency' : n.severity === 'Warning' ? 'delay' : 'info',
+      msg: `${n.title}: ${n.message}`,
+      time: n.timestamp
+    }));
+  }, [notifications]);
 
   // 2. MAP TRAJECTORY COORDINATES (Simulated vector paths)
   const mapDrivers = useMemo(() => {
-    return [
-      {
-        id: 'DRV-9041',
-        name: 'Rajesh Kumar',
-        vehicle: 'MH-12-QW-9874',
-        status: 'On Duty',
-        location: 'Pune Highway',
-        lat: 250,
-        lng: 150,
-        dest: 'Mumbai DC',
-        progress: 60,
-        eta: '16:45 PM',
-        color: 'var(--color-success)' // Green
-      },
-      {
-        id: 'DRV-9042',
-        name: 'Satnam Singh',
-        vehicle: 'KA-03-MN-4512',
-        status: 'On Trip',
-        location: 'Bengaluru Gate 2',
-        lat: 180,
-        lng: 230,
-        dest: 'Chennai DC',
-        progress: 25,
-        eta: '22:15 PM',
-        color: 'var(--color-primary)' // Blue
-      },
-      {
-        id: 'DRV-9043',
-        name: 'Arjun Sharma',
-        vehicle: 'HR-55-ZX-3344',
-        status: 'On Break',
-        location: 'Highway Plaza Halt',
-        lat: 380,
-        lng: 110,
-        dest: 'Delhi Cold Stg',
-        progress: 80,
-        eta: '18:30 PM',
-        color: 'var(--color-warning)' // Orange
-      }
-    ];
-  }, []);
+    return attendance.map((att, idx) => ({
+      id: att.driverId || `drv-${idx}`,
+      name: att.driverName || att.employeeName,
+      vehicle: att.vehicleNumber || 'Vehicle Yard',
+      status: att.currentStatus || att.status,
+      location: att.checkInWarehouse || att.address || 'Yard Location',
+      lat: 150 + (idx * 60) % 250,
+      lng: 120 + (idx * 40) % 200,
+      dest: 'Destination Terminal',
+      progress: att.tripsCompleted ? 100 : 50,
+      eta: 'In Transit',
+      color: att.currentStatus === 'On Duty' ? 'var(--color-success)' : 'var(--color-primary)'
+    }));
+  }, [attendance]);
 
   // 3. TABLE FILTERING LOGIC
   const filteredAttendance = useMemo(() => {
@@ -264,7 +237,7 @@ export const Attendance: React.FC = () => {
           change="Daily presence logs"
           isPositive={true}
           icon={UserCheck}
-          sparklineData={[5, 5, 6, 6, 6, 7, presentDriversCount]}
+          sparklineData={[0, 0, 0, 0, 0, 0, presentDriversCount]}
           color="text-blue-600"
           bgColor="bg-blue-50 dark:bg-blue-950/20"
         />
@@ -274,7 +247,7 @@ export const Attendance: React.FC = () => {
           change="Awaiting clock-in"
           isPositive={false}
           icon={UserX}
-          sparklineData={[3, 2, 2, 3, 1, 2, absentDriversCount]}
+          sparklineData={[0, 0, 0, 0, 0, 0, absentDriversCount]}
           color="text-[#6D7A79]"
           bgColor="bg-[#F8F9FF] dark:bg-[#0F172A]/20"
         />
@@ -284,7 +257,7 @@ export const Attendance: React.FC = () => {
           change="Checked-in after 08:30"
           isPositive={false}
           icon={AlertTriangle}
-          sparklineData={[1, 0, 2, 1, 0, 1, lateCheckInCount]}
+          sparklineData={[0, 0, 0, 0, 0, 0, lateCheckInCount]}
           color="text-amber-500"
           bgColor="bg-amber-50 dark:bg-amber-950/20"
         />
@@ -294,27 +267,27 @@ export const Attendance: React.FC = () => {
           change="Shift completed"
           isPositive={true}
           icon={CheckCircle2}
-          sparklineData={[4, 5, 4, 6, 5, 6, checkedOutDriversCount]}
+          sparklineData={[0, 0, 0, 0, 0, 0, checkedOutDriversCount]}
           color="text-emerald-600"
           bgColor="bg-emerald-50 dark:bg-emerald-950/20"
         />
         <MetricCard
           title="Total Driver Pool"
           value={totalDriversCount}
-          change="+1 new operator"
+          change="Operators rostered"
           isPositive={true}
           icon={Users}
-          sparklineData={[5, 5, 6, 6, 6, 7, totalDriversCount]}
+          sparklineData={[0, 0, 0, 0, 0, 0, totalDriversCount]}
           color="text-violet-600"
           bgColor="bg-violet-50 dark:bg-violet-950/20"
         />
         <MetricCard
           title="Overtime Hours"
           value={`${overtimeCount} drivers`}
-          change="+12% overtime"
+          change="Shift overtime logs"
           isPositive={true}
           icon={Clock}
-          sparklineData={[1, 2, 1, 3, 2, 2, overtimeCount]}
+          sparklineData={[0, 0, 0, 0, 0, 0, overtimeCount]}
           color="text-rose-600"
           bgColor="bg-rose-50 dark:bg-rose-950/20"
         />
@@ -324,17 +297,17 @@ export const Attendance: React.FC = () => {
           change="Live consignments"
           isPositive={true}
           icon={Truck}
-          sparklineData={[3, 4, 3, 5, 4, 3, activeTripsCount]}
+          sparklineData={[0, 0, 0, 0, 0, 0, activeTripsCount]}
           color="text-sky-600"
           bgColor="bg-sky-50 dark:bg-sky-950/20"
         />
         <MetricCard
           title="Completed Delivery"
           value={completedTripsCount}
-          change="100% SLA target"
+          change="SLA target tracking"
           isPositive={true}
           icon={TrendingUp}
-          sparklineData={[15, 18, 16, 20, 22, 19, completedTripsCount]}
+          sparklineData={[0, 0, 0, 0, 0, 0, completedTripsCount]}
           color="text-indigo-600"
           bgColor="bg-indigo-50 dark:bg-indigo-950/20"
         />
@@ -422,11 +395,13 @@ export const Attendance: React.FC = () => {
             <div className="relative z-10 bg-slate-900/90 backdrop-blur-md rounded-xl p-3.5 text-white border border-slate-800 flex justify-between items-center text-xs shadow-lg">
               <div>
                 <p className="text-[10px] text-slate-400 uppercase font-semibold">Active Telemetry Tracker</p>
-                <p className="font-bold text-slate-200">MH-12-QW-9874 • Rajesh Kumar</p>
+                <p className="font-bold text-slate-200">
+                  {mapDrivers[0] ? `${mapDrivers[0].vehicle} • ${mapDrivers[0].name}` : 'No active driver telemetry'}
+                </p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] text-slate-400 uppercase font-semibold">ETA to Destination</p>
-                <p className="font-bold font-mono text-[#14B8A6]">16:45 PM</p>
+                <p className="font-bold font-mono text-[#14B8A6]">{mapDrivers[0]?.eta || '--'}</p>
               </div>
             </div>
           </div>
@@ -440,26 +415,25 @@ export const Attendance: React.FC = () => {
             </h3>
             
             <div className="space-y-3 pt-4">
-              {[
-                { name: 'Rajesh Kumar', vehicle: 'MH-12-QW-9874', loc: 'Pune Warehouse A', status: 'On Duty', variant: 'success', time: 'Check-In: 08:45 AM', color: 'bg-emerald-500' },
-                { name: 'Satnam Singh', vehicle: 'KA-03-MN-4512', loc: 'Bengaluru Gate 2', status: 'On Trip', variant: 'info', time: 'In Transit to Chennai', color: 'bg-blue-600' },
-                { name: 'Arjun Sharma', vehicle: 'HR-55-ZX-3344', loc: 'Highway Plaza Halt', status: 'On Break', variant: 'warning', time: 'Rest Break (30m)', color: 'bg-amber-500' },
-                { name: 'Amit Patel', vehicle: 'DL-01-AB-1234', loc: 'Offline', status: 'Off Duty', variant: 'neutral', time: 'Clocked Out', color: 'bg-slate-400' }
-              ].map((driver, index) => (
-                <div key={index} className="flex justify-between items-center text-xs p-3 border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 rounded-xl hover:bg-[#F8F9FF]/50 transition-colors shadow-sm">
-                  <div className="space-y-1 text-left">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2.5 h-2.5 rounded-full ${driver.color}`} />
-                      <p className="font-bold text-slate-800 dark:text-[#F8FAFC]">{driver.name}</p>
+              {attendance.length === 0 ? (
+                <p className="text-xs text-[#6D7A79] font-medium py-4 text-center">No drivers currently on duty.</p>
+              ) : (
+                attendance.map((driver, index) => (
+                  <div key={driver.id || index} className="flex justify-between items-center text-xs p-3 border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 rounded-xl hover:bg-[#F8F9FF]/50 transition-colors shadow-sm">
+                    <div className="space-y-1 text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                        <p className="font-bold text-slate-800 dark:text-[#F8FAFC]">{driver.driverName || driver.employeeName}</p>
+                      </div>
+                      <p className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] font-semibold">{driver.vehicleNumber || 'MH-12'} • {driver.checkInWarehouse || 'Yard'}</p>
                     </div>
-                    <p className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] font-semibold">{driver.vehicle} • {driver.loc}</p>
+                    <div className="text-right space-y-1">
+                      <Badge variant="success">{driver.currentStatus || driver.status}</Badge>
+                      <p className="text-[10px] text-[#6D7A79] dark:text-[#6D7A79] font-bold block">{driver.checkInTime || driver.checkIn}</p>
+                    </div>
                   </div>
-                  <div className="text-right space-y-1">
-                    <Badge variant={driver.variant as any}>{driver.status}</Badge>
-                    <p className="text-[10px] text-[#6D7A79] dark:text-[#6D7A79] font-bold block">{driver.time}</p>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
