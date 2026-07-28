@@ -173,7 +173,7 @@ export const Register: React.FC = () => {
 
       const res = await register(payload);
       setLoading(false);
-      if (res && (res.success !== false)) {
+      if (res && res.success !== false) {
         // BYPASSED GMAIL/MOBILE OTP VERIFICATION STEP AS REQUESTED
         setStep('success');
         setTimeout(() => {

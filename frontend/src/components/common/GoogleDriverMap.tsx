@@ -21,12 +21,15 @@ export interface MapLocation {
   address?: string;
   speed?: number;
   heading?: number;
+  accuracy?: number;
+  timestamp?: Date | string;
 }
 
 interface GoogleDriverMapProps {
   driverLocation?: MapLocation;
   pickupLocation?: MapLocation;
   dropLocation?: MapLocation;
+  locationHistory?: MapLocation[];
   driverName?: string;
   vehicleNumber?: string;
   tripNumber?: string;
@@ -104,6 +107,7 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
   driverLocation = { lat: 18.5204, lng: 73.8567, address: 'Pune Central Depot', speed: 45, heading: 90 },
   pickupLocation = { lat: 18.5204, lng: 73.8567, address: 'Pune Central Logistics Depot' },
   dropLocation = { lat: 18.7602, lng: 73.8612, address: 'Chakan Industrial Zone' },
+  locationHistory = [],
   driverName = 'Driver',
   vehicleNumber = 'MH-12-QW-9874',
   tripNumber = 'TRP-ACTIVE',
@@ -298,11 +302,27 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
         }
       );
 
+      // Location History Trail Polyline
+      if (locationHistory && locationHistory.length > 0) {
+        const historyPath = locationHistory.map(pt => ({ lat: pt.lat, lng: pt.lng }));
+        new window.google.maps.Polyline({
+          path: historyPath,
+          geodesic: true,
+          strokeColor: '#10B981',
+          strokeOpacity: 0.95,
+          strokeWeight: 5,
+          map
+        });
+      }
+
       // Fit bounds to cover driver, pickup and dropoff
       const bounds = new window.google.maps.LatLngBounds();
       bounds.extend({ lat: pickupLocation.lat, lng: pickupLocation.lng });
       bounds.extend({ lat: driverLocation.lat, lng: driverLocation.lng });
       bounds.extend({ lat: dropLocation.lat, lng: dropLocation.lng });
+      if (locationHistory && locationHistory.length > 0) {
+        locationHistory.forEach(pt => bounds.extend({ lat: pt.lat, lng: pt.lng }));
+      }
       map.fitBounds(bounds, 50);
 
     } catch (e) {

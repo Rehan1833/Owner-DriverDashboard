@@ -118,9 +118,10 @@ export const ActiveTrip: React.FC = () => {
                 id: driverActiveTrip.id,
                 latitude,
                 longitude,
-                accuracy,
+                accuracy: accuracy || 10,
                 speed: currentSpeed,
-                heading: currentHeading
+                heading: currentHeading,
+                timestamp: new Date().toISOString()
               });
               if (updatedTrip && updatedTrip.currentAddress) {
                 setLiveCoords(prev => ({ ...prev, address: updatedTrip.currentAddress }));
@@ -361,23 +362,60 @@ export const ActiveTrip: React.FC = () => {
     );
   }
 
+  const handleStartTrip = async () => {
+    if (!driverActiveTrip) return;
+    try {
+      await updateTripStatus(driverActiveTrip.id, 'In Transit');
+      setIsGpsTracking(true);
+      requestGpsPermission();
+      triggerNotification('Trip Started', 'Delivery In Progress', 'Location tracking is active for this delivery.', 'Info');
+    } catch (err: any) {
+      alert(err.message || 'Failed to start trip.');
+    }
+  };
+
+  const handleStopTrip = async () => {
+    if (!driverActiveTrip) return;
+    try {
+      setIsGpsTracking(false);
+      setPodModalOpen(true);
+    } catch (err: any) {
+      alert(err.message || 'Failed to stop trip.');
+    }
+  };
+
   const activeStepIdx = getActiveStepIndex();
   const progressPercent = Math.min(100, Math.max(15, Math.round(((activeStepIdx + 1) / statusMilestones.length) * 100)));
 
   return (
     <div className="space-y-6 animate-fade-in text-left">
-      {/* Location Permission Warning Bar if Denied */}
-      {gpsPermissionState === 'denied' && (
+      {/* Location Permission Warning Bar / Status Bar */}
+      {gpsPermissionState === 'denied' ? (
         <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 text-amber-800 dark:text-amber-300 flex items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
-            <span><strong>Location Permission Required:</strong> Real-time GPS tracking requires browser location permission.</span>
+            <span><strong>Location Permission Required:</strong> Location permission is required to track this active delivery.</span>
           </div>
           <Button variant="primary" size="sm" onClick={requestGpsPermission} className="bg-amber-600 text-white text-xs py-1">
             Try Again
           </Button>
         </div>
-      )}
+      ) : gpsPermissionState === 'unsupported' ? (
+        <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-300 text-red-800 dark:text-red-300 flex items-center gap-2 text-xs">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+          <span><strong>Unsupported Device:</strong> Live GPS tracking is not supported on this device.</span>
+        </div>
+      ) : isGpsTracking && driverActiveTrip?.status !== 'Completed' && driverActiveTrip?.status !== 'Cancelled' ? (
+        <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+            <span>Location tracking is active for this delivery.</span>
+          </div>
+          <span className="font-mono text-[11px] text-emerald-700 dark:text-emerald-400 font-bold">
+            🎯 {liveCoords.accuracy || 10}m Accuracy · ⚡ {liveCoords.speed || 0} km/h
+          </span>
+        </div>
+      ) : null}
 
       {/* Header Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -395,7 +433,27 @@ export const ActiveTrip: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {driverActiveTrip.status !== 'In Transit' && driverActiveTrip.status !== 'Completed' ? (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleStartTrip}
+              className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold shadow-md py-2 px-4"
+            >
+              <Navigation className="h-4 w-4 mr-1.5" /> START TRIP
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleStopTrip}
+              className="text-xs border-emerald-600 text-emerald-700 dark:text-emerald-300 font-extrabold shadow-sm py-2 px-4"
+            >
+              <CheckCircle className="h-4 w-4 mr-1.5 text-emerald-600" /> STOP / END TRIP
+            </Button>
+          )}
+
           <Button
             variant="danger"
             size="sm"

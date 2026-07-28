@@ -238,13 +238,28 @@ export const startTrip = async (req: Request, res: Response): Promise<void> => {
 
 export const updateLocation = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id, latitude, longitude, accuracy, speed, heading, distanceRemaining, eta } = req.body;
+    const { id, latitude, longitude, accuracy, speed, heading, distanceRemaining, eta, timestamp } = req.body;
     const tripId = id || req.params.id;
 
     const existingTrip = await Trip.findById(tripId);
     if (!existingTrip) {
       res.status(404).json({ message: 'Trip not found.' });
       return;
+    }
+
+    // Driver authorization check
+    const authReq = req as any;
+    const requestingUserId = authReq.userId;
+    const requestingRole = authReq.userRole;
+
+    if (requestingRole === 'Driver') {
+      const requestingUser = await User.findById(requestingUserId);
+      const isAssigned = existingTrip.driverId === requestingUserId || 
+                         (requestingUser && requestingUser.driverId === existingTrip.driverId);
+      if (!isAssigned) {
+        res.status(403).json({ message: 'Unauthorized. You can only transmit location for your assigned trip.' });
+        return;
+      }
     }
 
     if (existingTrip.status === 'Completed' || existingTrip.status === 'Cancelled') {
@@ -256,10 +271,15 @@ export const updateLocation = async (req: Request, res: Response): Promise<void>
     const lngNum = typeof longitude === 'string' ? parseFloat(longitude) : longitude;
     const speedNum = typeof speed === 'string' ? parseFloat(speed) : (speed || 0);
     const headingNum = typeof heading === 'string' ? parseFloat(heading) : (heading || 0);
-    const accuracyNum = typeof accuracy === 'string' ? parseFloat(accuracy) : accuracy;
+    const accuracyNum = typeof accuracy === 'string' ? parseFloat(accuracy) : (accuracy !== undefined ? parseFloat(accuracy) : 10);
 
     if (isNaN(latNum) || isNaN(lngNum) || latNum < -90 || latNum > 90 || lngNum < -180 || lngNum > 180) {
       res.status(400).json({ message: 'Invalid latitude or longitude coordinates provided.' });
+      return;
+    }
+
+    if (accuracyNum !== undefined && (isNaN(accuracyNum) || accuracyNum < 0)) {
+      res.status(400).json({ message: 'Invalid GPS accuracy value provided.' });
       return;
     }
 
@@ -285,15 +305,17 @@ export const updateLocation = async (req: Request, res: Response): Promise<void>
 
     // 3. Save telemetry location to indexed LocationHistory collection
     const locDoc = new LocationHistory({
-      tripId,
+      tripId: existingTrip._id.toString(),
       driverId: existingTrip.driverId,
+      vehicleId: existingTrip.vehicleId || existingTrip.vehicleNumber,
       latitude: latNum,
       longitude: lngNum,
       accuracy: accuracyNum,
       speed: speedNum,
       heading: headingNum,
       address: reverseGeoAddress,
-      timestamp: now
+      timestamp: timestamp ? new Date(timestamp) : now,
+      serverReceivedAt: now
     });
     await locDoc.save();
 
@@ -329,7 +351,7 @@ export const updateLocation = async (req: Request, res: Response): Promise<void>
     await existingTrip.save();
 
     const socketPayload = {
-      tripId,
+      tripId: existingTrip._id.toString(),
       vehicleNumber: existingTrip.vehicleNumber,
       driverId: existingTrip.driverId,
       latitude: latNum,
@@ -349,7 +371,22 @@ export const updateLocation = async (req: Request, res: Response): Promise<void>
     // Broadcast real-time telemetry update over WebSocket connections
     emitTelemetryUpdate(socketPayload);
 
-    res.json(existingTrip);
+    res.json({
+      success: true,
+      data: {
+        tripId: existingTrip._id.toString(),
+        location: {
+          latitude: latNum,
+          longitude: lngNum,
+          accuracy: accuracyNum,
+          speed: speedNum,
+          heading: headingNum,
+          address: reverseGeoAddress,
+          timestamp: now
+        },
+        trip: existingTrip
+      }
+    });
   } catch (err: any) {
     res.status(400).json({ message: err.message });
   }
@@ -547,7 +584,21 @@ export const getTripLiveTracking = async (req: Request, res: Response): Promise<
 export const getLocationHistory = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const history = await LocationHistory.find({ tripId: id }).sort({ timestamp: -1 }).limit(500);
+    const { driverId, startDate, endDate } = req.query;
+
+    const query: any = { tripId: id };
+
+    if (driverId) {
+      query.driverId = String(driverId);
+    }
+
+    if (startDate || endDate) {
+      query.timestamp = {};
+      if (startDate) query.timestamp.$gte = new Date(String(startDate));
+      if (endDate) query.timestamp.$lte = new Date(String(endDate));
+    }
+
+    const history = await LocationHistory.find(query).sort({ timestamp: -1 }).limit(500);
     res.json(history);
   } catch (err: any) {
     res.status(500).json({ message: err.message });

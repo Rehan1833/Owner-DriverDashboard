@@ -21,9 +21,11 @@ import {
   Calendar,
   Zap,
   Activity,
-  ShieldAlert
+  ShieldAlert,
+  History
 } from 'lucide-react';
 import { Trip } from '../../types';
+import { api } from '../../api/client';
 
 export const OwnerTrips: React.FC = () => {
   const { trips, cancelTrip, triggerNotification } = useOperations();
@@ -34,6 +36,9 @@ export const OwnerTrips: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedTrackingTrip, setSelectedTrackingTrip] = useState<Trip | null>(null);
   const [viewDetailsTrip, setViewDetailsTrip] = useState<Trip | null>(null);
+  const [historyTrip, setHistoryTrip] = useState<Trip | null>(null);
+  const [locationHistoryRecords, setLocationHistoryRecords] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Extract unique drivers for filter dropdown
   const uniqueDrivers = useMemo(() => {
@@ -93,12 +98,25 @@ export const OwnerTrips: React.FC = () => {
   };
 
   const calculateFreshness = (trip: Trip) => {
-    if (!trip.lastGpsUpdate && !trip.latitude) return { label: '🔴 GPS OFFLINE', color: 'text-red-500 bg-red-50 dark:bg-red-950/40 border-red-200' };
+    if (!trip.lastGpsUpdate && !trip.latitude) return { label: '🔴 GPS OFFLINE', status: 'OFFLINE', color: 'text-red-500 bg-red-50 dark:bg-red-950/40 border-red-200' };
     const lastTime = trip.lastGpsUpdate ? new Date(trip.lastGpsUpdate).getTime() : new Date(trip.timestamp).getTime();
     const diffMins = Math.floor((Date.now() - lastTime) / 60000);
-    if (diffMins < 3) return { label: '🟢 LIVE', color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200' };
-    if (diffMins < 10) return { label: `🟡 ${diffMins}m ago`, color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/40 border-amber-200' };
-    return { label: '🔴 GPS OFFLINE', color: 'text-red-500 bg-red-50 dark:bg-red-950/40 border-red-200' };
+    if (diffMins < 2) return { label: '🟢 LIVE', status: 'LIVE', color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200' };
+    if (diffMins < 5) return { label: `🟡 STALE (${diffMins}m ago)`, status: 'STALE', color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/40 border-amber-200' };
+    return { label: '🔴 GPS OFFLINE', status: 'OFFLINE', color: 'text-red-500 bg-red-50 dark:bg-red-950/40 border-red-200' };
+  };
+
+  const handleOpenHistory = async (trip: Trip) => {
+    setHistoryTrip(trip);
+    setHistoryLoading(true);
+    try {
+      const records = await api.trips.getLocationHistory(trip.id);
+      setLocationHistoryRecords(records);
+    } catch (err) {
+      console.error('Failed to fetch location history:', err);
+    } finally {
+      setHistoryLoading(false);
+    }
   };
 
   const columns = [
@@ -311,64 +329,180 @@ export const OwnerTrips: React.FC = () => {
       />
 
       {/* Owner Live Driver Tracking Drawer Modal */}
-      {selectedTrackingTrip && (
+      {selectedTrackingTrip && (() => {
+        const fresh = calculateFreshness(selectedTrackingTrip);
+        return (
+          <Modal
+            isOpen={Boolean(selectedTrackingTrip)}
+            onClose={() => setSelectedTrackingTrip(null)}
+            title={`Live GPS Control Desk - ${selectedTrackingTrip.tripNumber}`}
+          >
+            <div className="space-y-4 text-left">
+              <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-900 p-3.5 rounded-xl border border-slate-700 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <span className={`px-2.5 py-1 rounded-md text-[11px] font-extrabold border ${fresh.color}`}>
+                    {fresh.label}
+                  </span>
+                  <span className="font-bold text-white">Driver: {selectedTrackingTrip.driverName} ({selectedTrackingTrip.vehicleNumber})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={getStatusBadgeVariant(selectedTrackingTrip.status)}>
+                    {selectedTrackingTrip.status}
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const t = selectedTrackingTrip;
+                      setSelectedTrackingTrip(null);
+                      handleOpenHistory(t);
+                    }}
+                    className="text-xs text-emerald-400 border-emerald-500/40 hover:bg-emerald-950/40 bg-slate-800 py-1"
+                  >
+                    <History className="w-3.5 h-3.5 mr-1" /> Location History
+                  </Button>
+                </div>
+              </div>
+
+              <GoogleDriverMap
+                driverLocation={{
+                  lat: selectedTrackingTrip.latitude || selectedTrackingTrip.pickupCoordinates?.lat || 18.5204,
+                  lng: selectedTrackingTrip.longitude || selectedTrackingTrip.pickupCoordinates?.lng || 73.8567,
+                  speed: selectedTrackingTrip.speed || 0,
+                  heading: selectedTrackingTrip.heading || 0,
+                  address: selectedTrackingTrip.currentAddress || selectedTrackingTrip.pickupLocation
+                }}
+                pickupLocation={{
+                  lat: selectedTrackingTrip.pickupCoordinates?.lat || 18.5204,
+                  lng: selectedTrackingTrip.pickupCoordinates?.lng || 73.8567,
+                  address: selectedTrackingTrip.pickupLocation
+                }}
+                dropLocation={{
+                  lat: selectedTrackingTrip.dropCoordinates?.lat || 18.7602,
+                  lng: selectedTrackingTrip.dropCoordinates?.lng || 73.8612,
+                  address: selectedTrackingTrip.dropLocation
+                }}
+                driverName={selectedTrackingTrip.driverName}
+                vehicleNumber={selectedTrackingTrip.vehicleNumber}
+                tripNumber={selectedTrackingTrip.tripNumber}
+                eta={selectedTrackingTrip.eta}
+                distanceRemaining={selectedTrackingTrip.distanceRemaining}
+                status={selectedTrackingTrip.status}
+                height="340px"
+                showControls={true}
+              />
+
+              {/* Telemetry Metrics Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs pt-1">
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-slate-400 block font-bold text-[10px] uppercase mb-0.5">Latitude / Longitude</span>
+                  <span className="font-semibold text-slate-800 dark:text-white font-mono text-[11px]">
+                    {selectedTrackingTrip.latitude ? `${selectedTrackingTrip.latitude.toFixed(4)}, ${selectedTrackingTrip.longitude?.toFixed(4)}` : '18.5204, 73.8567'}
+                  </span>
+                </div>
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-slate-400 block font-bold text-[10px] uppercase mb-0.5">GPS Accuracy</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-mono text-[11px]">
+                    🎯 {selectedTrackingTrip.accuracy ? `${selectedTrackingTrip.accuracy} m` : '8.2 m'}
+                  </span>
+                </div>
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-slate-400 block font-bold text-[10px] uppercase mb-0.5">Speed / Heading</span>
+                  <span className="font-semibold text-slate-800 dark:text-white font-mono text-[11px]">
+                    ⚡ {selectedTrackingTrip.speed || 0} km/h ({selectedTrackingTrip.heading || 0}°)
+                  </span>
+                </div>
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-slate-400 block font-bold text-[10px] uppercase mb-0.5">Last Signal Update</span>
+                  <span className="font-semibold text-slate-800 dark:text-white text-[11px]">
+                    {selectedTrackingTrip.lastGpsUpdate ? new Date(selectedTrackingTrip.lastGpsUpdate).toLocaleTimeString() : 'Active Stream'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Modal>
+        );
+      })()}
+
+      {/* Location History Trail Modal */}
+      {historyTrip && (
         <Modal
-          isOpen={Boolean(selectedTrackingTrip)}
-          onClose={() => setSelectedTrackingTrip(null)}
-          title={`Live GPS Control Desk - ${selectedTrackingTrip.tripNumber}`}
+          isOpen={Boolean(historyTrip)}
+          onClose={() => setHistoryTrip(null)}
+          title={`Location History Audit Trail - ${historyTrip.tripNumber}`}
         >
           <div className="space-y-4 text-left">
-            <div className="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-700 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                <span className="font-bold text-white">Driver: {selectedTrackingTrip.driverName} ({selectedTrackingTrip.vehicleNumber})</span>
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-900 p-3.5 rounded-xl border border-slate-700 text-xs text-white">
+              <div>
+                <span className="font-bold block">Driver: {historyTrip.driverName} ({historyTrip.driverId})</span>
+                <span className="text-slate-400 text-[11px]">Vehicle: {historyTrip.vehicleNumber} · Status: {historyTrip.status}</span>
               </div>
-              <Badge variant={getStatusBadgeVariant(selectedTrackingTrip.status)}>
-                {selectedTrackingTrip.status}
-              </Badge>
+              <div className="text-right">
+                <span className="bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-md font-mono text-[11px] font-bold border border-emerald-500/30">
+                  {locationHistoryRecords.length} GPS Trail Records
+                </span>
+              </div>
             </div>
 
             <GoogleDriverMap
               driverLocation={{
-                lat: selectedTrackingTrip.latitude || selectedTrackingTrip.pickupCoordinates?.lat || 18.5204,
-                lng: selectedTrackingTrip.longitude || selectedTrackingTrip.pickupCoordinates?.lng || 73.8567,
-                speed: selectedTrackingTrip.speed || 0,
-                heading: selectedTrackingTrip.heading || 0,
-                address: selectedTrackingTrip.currentAddress || selectedTrackingTrip.pickupLocation
+                lat: historyTrip.latitude || 18.5204,
+                lng: historyTrip.longitude || 73.8567,
+                address: historyTrip.currentAddress
               }}
               pickupLocation={{
-                lat: selectedTrackingTrip.pickupCoordinates?.lat || 18.5204,
-                lng: selectedTrackingTrip.pickupCoordinates?.lng || 73.8567,
-                address: selectedTrackingTrip.pickupLocation
+                lat: historyTrip.pickupCoordinates?.lat || 18.5204,
+                lng: historyTrip.pickupCoordinates?.lng || 73.8567,
+                address: historyTrip.pickupLocation
               }}
               dropLocation={{
-                lat: selectedTrackingTrip.dropCoordinates?.lat || 18.7602,
-                lng: selectedTrackingTrip.dropCoordinates?.lng || 73.8612,
-                address: selectedTrackingTrip.dropLocation
+                lat: historyTrip.dropCoordinates?.lat || 18.7602,
+                lng: historyTrip.dropCoordinates?.lng || 73.8612,
+                address: historyTrip.dropLocation
               }}
-              driverName={selectedTrackingTrip.driverName}
-              vehicleNumber={selectedTrackingTrip.vehicleNumber}
-              tripNumber={selectedTrackingTrip.tripNumber}
-              eta={selectedTrackingTrip.eta}
-              distanceRemaining={selectedTrackingTrip.distanceRemaining}
-              status={selectedTrackingTrip.status}
-              height="380px"
-              showControls={true}
+              locationHistory={locationHistoryRecords.map(r => ({
+                lat: r.latitude,
+                lng: r.longitude,
+                address: r.address,
+                timestamp: r.timestamp,
+                speed: r.speed
+              }))}
+              height="300px"
             />
 
-            <div className="grid grid-cols-2 gap-3 text-xs pt-1">
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
-                <span className="text-slate-400 block font-bold mb-0.5">Last Signal Received</span>
-                <span className="font-semibold text-slate-800 dark:text-white">
-                  {selectedTrackingTrip.lastGpsUpdate ? new Date(selectedTrackingTrip.lastGpsUpdate).toLocaleTimeString() : 'Active Browser Stream'}
-                </span>
-              </div>
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
-                <span className="text-slate-400 block font-bold mb-0.5">Current Address</span>
-                <span className="font-semibold text-slate-800 dark:text-white truncate block">
-                  {selectedTrackingTrip.currentAddress || 'In Transit Area'}
-                </span>
-              </div>
+            {/* Recorded Location Breadcrumbs Table */}
+            <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700 p-3 max-h-56 overflow-y-auto space-y-2 text-xs">
+              <span className="font-bold text-slate-700 dark:text-slate-300 block text-[11px] uppercase tracking-wider">
+                MongoDB Location Audit Trail ({locationHistoryRecords.length})
+              </span>
+              {historyLoading ? (
+                <div className="py-6 text-center text-slate-400">Loading location history trail...</div>
+              ) : locationHistoryRecords.length === 0 ? (
+                <div className="py-6 text-center text-slate-400">No historical GPS breadcrumbs recorded yet.</div>
+              ) : (
+                <div className="divide-y divide-slate-200 dark:divide-slate-700/60">
+                  {locationHistoryRecords.map((item, idx) => (
+                    <div key={item._id || idx} className="py-2 flex items-center justify-between gap-3 text-[11px]">
+                      <div>
+                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
+                          📍 {item.latitude?.toFixed(4)}, {item.longitude?.toFixed(4)}
+                        </span>
+                        <span className="text-slate-500 dark:text-slate-400 block text-[10px] truncate max-w-xs">
+                          {item.address || 'In Transit Area'}
+                        </span>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="font-mono text-slate-600 dark:text-slate-300 block">
+                          ⚡ {item.speed || 0} km/h · 🎯 {item.accuracy || 10}m
+                        </span>
+                        <span className="text-slate-400 text-[10px]">
+                          {item.timestamp ? new Date(item.timestamp).toLocaleString() : 'Just now'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </Modal>

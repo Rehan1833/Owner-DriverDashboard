@@ -662,25 +662,38 @@ export const api = {
         return api.trips.updateStatus(id, 'In Transit');
       }
     },
-    updateLocation: async (payload: { id: string; latitude?: number; longitude?: number; speed?: number; heading?: number; distanceRemaining?: number; eta?: string }): Promise<Trip> => {
+    updateLocation: async (payload: { id: string; latitude?: number; longitude?: number; accuracy?: number; speed?: number; heading?: number; distanceRemaining?: number; eta?: string; timestamp?: string }): Promise<Trip> => {
       try {
-        const res = await axiosInstance.put('/trips/update-location', payload);
-        return { ...res.data, id: res.data._id || res.data.id };
+        const res = await axiosInstance.post(`/trips/${payload.id}/location`, payload);
+        const data = res.data?.data?.trip || res.data;
+        return { ...data, id: data._id || data.id };
       } catch (err) {
         const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
         const updated = local.map(t => {
           if (t.id === payload.id) {
             return {
               ...t,
-              ...(payload.latitude && payload.longitude ? { currentLocation: `${payload.latitude}, ${payload.longitude}` } : {}),
+              ...(payload.latitude && payload.longitude ? { currentLocation: `${payload.latitude}, ${payload.longitude}`, latitude: payload.latitude, longitude: payload.longitude } : {}),
+              ...(payload.accuracy !== undefined ? { accuracy: payload.accuracy } : {}),
+              ...(payload.speed !== undefined ? { speed: payload.speed } : {}),
+              ...(payload.heading !== undefined ? { heading: payload.heading } : {}),
               ...(payload.distanceRemaining !== undefined ? { distanceRemaining: payload.distanceRemaining } : {}),
-              ...(payload.eta ? { eta: payload.eta } : {})
+              ...(payload.eta ? { eta: payload.eta } : {}),
+              lastGpsUpdate: new Date()
             };
           }
           return t;
         });
         LocalStorageFallback.set('smartops_trips', updated);
         return updated.find(t => t.id === payload.id) as Trip;
+      }
+    },
+    getLocationHistory: async (tripId: string, filters?: { driverId?: string; startDate?: string; endDate?: string }): Promise<any[]> => {
+      try {
+        const res = await axiosInstance.get(`/trips/${tripId}/location-history`, { params: filters });
+        return Array.isArray(res.data) ? res.data : [];
+      } catch (err) {
+        return [];
       }
     },
     getLiveTracking: async (tripId: string): Promise<any> => {
