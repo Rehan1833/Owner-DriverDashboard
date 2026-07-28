@@ -93,13 +93,13 @@ export const Navbar: React.FC = () => {
 
       {/* LEFT: Search Bar (always visible) */}
       <form onSubmit={handleSearchSubmit} className="flex relative w-full max-w-[240px] shrink-0">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B7280] dark:text-[#94A3B8] pointer-events-none" />
+        <Search className="search-icon-glow absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none z-10" />
         <input
           type="text"
-          placeholder=""
+          placeholder="Search...."
           value={searchVal}
           onChange={e => setSearchVal(e.target.value)}
-          className="w-full pl-9 pr-3 h-9 text-xs border border-[#E5E7EB] dark:border-[#334155] rounded-xl bg-slate-50/50 dark:bg-slate-800/40 text-[#111827] dark:text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#006A6A] focus:border-[#006A6A] transition-all font-medium"
+          className="navbar-search-input w-full pl-9 pr-3 h-9 text-xs border border-[#E5E7EB] dark:border-[#334155] rounded-full bg-slate-50/50 dark:bg-slate-800/40 text-[#111827] dark:text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#006A6A] focus:border-[#006A6A] transition-all font-medium"
         />
       </form>
 

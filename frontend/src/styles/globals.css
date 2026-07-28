@@ -34,7 +34,7 @@
   --color-outline: var(--color-outline);
   
   /* Tailwind color overrides → mapped to design tokens */
-  --color-white: var(--color-card);
+  --color-white: #FFFFFF;
   --color-slate-50: var(--color-bg);
   --color-slate-100: var(--color-surface-low);
   --color-slate-200: var(--color-surface-dim);
@@ -44,8 +44,8 @@
   --color-slate-600: var(--color-text-secondary);
   --color-slate-700: var(--color-text-primary);
   --color-slate-800: var(--color-text-primary);
-  --color-slate-900: var(--color-card);
-  --color-slate-950: var(--color-bg);
+  --color-slate-900: #0F172A;
+  --color-slate-950: #090D16;
   
   --color-gray-50: var(--color-surface-low);
   --color-gray-100: var(--color-border);

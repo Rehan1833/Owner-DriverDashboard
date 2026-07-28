@@ -10,19 +10,9 @@ export const DriverLayout: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isModalDismissed, setIsModalDismissed] = useState(false);
 
-  // Route protection
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Allow Drivers and Owners to access the portal layout
-  if (user.role !== 'Driver' && user.role !== 'Owner') {
-    return <Navigate to="/login" replace />;
-  }
-
   // Check if today's attendance exists and is present/late
   const todayStr = new Date().toISOString().split('T')[0];
-  const todayRecord = user.role === 'Driver'
+  const todayRecord = user && user.role === 'Driver'
     ? attendance.find(a => a.driverId === user.driverId && a.date === todayStr)
     : null;
 
@@ -34,6 +24,16 @@ export const DriverLayout: React.FC = () => {
       setIsModalDismissed(true);
     }
   }, [isPresent]);
+
+  // Route protection
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Allow Drivers and Owners to access the portal layout
+  if (user.role !== 'Driver' && user.role !== 'Owner') {
+    return <Navigate to="/login" replace />;
+  }
 
   const showAttendanceModal = user.role === 'Driver' && !isModalDismissed;
 

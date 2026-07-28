@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
@@ -83,9 +84,13 @@ const KPICard: React.FC<{
   sparklineData: number[];
   color: string;
   description: string;
-}> = ({ id, title, value, change, isPositive, icon: Icon, sparklineData, color, description }) => {
+  onClick?: () => void;
+}> = ({ id, title, value, change, isPositive, icon: Icon, sparklineData, color, description, onClick }) => {
   return (
-    <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] p-6 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between items-stretch gap-4 group cursor-pointer text-left">
+    <div 
+      onClick={onClick}
+      className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] p-6 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between items-stretch gap-4 group cursor-pointer text-left"
+    >
       <div className="flex justify-between items-start">
         <div className="space-y-1 min-w-0">
           <span className="text-[15px] font-semibold text-[#6D7A79] dark:text-[#94A3B8] tracking-tight block whitespace-normal break-words leading-tight">{title}</span>
@@ -116,6 +121,7 @@ const KPICard: React.FC<{
 };
 
 export const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const {
     user,
     vehicles,
@@ -129,6 +135,43 @@ export const Dashboard: React.FC = () => {
     triggerNotification,
     addActivity
   } = useOperations();
+
+  const handleCardClick = (id: string) => {
+    switch (id) {
+      case 'rev':
+        navigate('/owner/analytics');
+        break;
+      case 'fleet':
+        navigate('/owner/fleet');
+        break;
+      case 'stock':
+        navigate('/owner/inventory');
+        break;
+      case 'att':
+        navigate('/owner/attendance');
+        break;
+      case 'total':
+        navigate('/owner/workers');
+        break;
+      case 'del':
+        navigate('/owner/pod');
+        break;
+      case 'ship':
+        navigate('/owner/fleet');
+        break;
+      case 'alerts':
+        navigate('/owner/notifications');
+        break;
+      case 'salary':
+        navigate('/owner/payroll');
+        break;
+      case 'inc':
+        navigate('/owner/operations');
+        break;
+      default:
+        break;
+    }
+  };
 
   // Selected multi-metric chart trigger
   const [activeChartTab, setActiveChartTab] = useState<'Inventory' | 'Revenue' | 'Attendance' | 'Fleet' | 'Stock'>('Revenue');
@@ -413,6 +456,7 @@ export const Dashboard: React.FC = () => {
           icon={DollarSign}
           sparklineData={[0, 0, 0, 0, 0, 0, totalInventoryRevenue]}
           color="#10B981"
+          onClick={() => handleCardClick('rev')}
         />
         <KPICard
           id="fleet"
@@ -424,6 +468,7 @@ export const Dashboard: React.FC = () => {
           icon={Truck}
           sparklineData={[0, 0, 0, 0, 0, 0, activeVehiclesCount]}
           color="#006A6A"
+          onClick={() => handleCardClick('fleet')}
         />
         <KPICard
           id="stock"
@@ -435,6 +480,7 @@ export const Dashboard: React.FC = () => {
           icon={Package}
           sparklineData={[0, 0, 0, 0, 0, 0, lowStockCount]}
           color="#F59E0B"
+          onClick={() => handleCardClick('stock')}
         />
         <KPICard
           id="att"
@@ -446,6 +492,7 @@ export const Dashboard: React.FC = () => {
           icon={Users}
           sparklineData={[0, 0, 0, 0, 0, 0, presentCount]}
           color="#14B8A6"
+          onClick={() => handleCardClick('att')}
         />
         <KPICard
           id="total"
@@ -457,6 +504,7 @@ export const Dashboard: React.FC = () => {
           icon={Users}
           sparklineData={[0, 0, 0, 0, 0, 0, totalEmployeesCount]}
           color="#8B5CF6"
+          onClick={() => handleCardClick('total')}
         />
         <KPICard
           id="del"
@@ -468,6 +516,7 @@ export const Dashboard: React.FC = () => {
           icon={CheckCircle}
           sparklineData={[0, 0, 0, 0, 0, 0, trips.filter(t => t.status === 'Completed').length]}
           color="#10B981"
+          onClick={() => handleCardClick('del')}
         />
         <KPICard
           id="ship"
@@ -479,6 +528,7 @@ export const Dashboard: React.FC = () => {
           icon={ShoppingCart}
           sparklineData={[0, 0, 0, 0, 0, 0, pendingTripsCount]}
           color="#3b82f6"
+          onClick={() => handleCardClick('ship')}
         />
         <KPICard
           id="alerts"
@@ -490,6 +540,7 @@ export const Dashboard: React.FC = () => {
           icon={Bell}
           sparklineData={[0, 0, 0, 0, 0, 0, notifications.filter(n => !n.read).length]}
           color="#EF4444"
+          onClick={() => handleCardClick('alerts')}
         />
         <KPICard
           id="salary"
@@ -501,6 +552,7 @@ export const Dashboard: React.FC = () => {
           icon={Wallet}
           sparklineData={[0, 0, 0, 0, 0, 0, processedPayrollCount]}
           color="#EC4899"
+          onClick={() => handleCardClick('salary')}
         />
         <KPICard
           id="inc"
@@ -512,6 +564,7 @@ export const Dashboard: React.FC = () => {
           icon={CheckCircle}
           sparklineData={[0, 0, 0, 0, 0, 0, 0]}
           color="#10B981"
+          onClick={() => handleCardClick('inc')}
         />
       </div>
 
@@ -713,13 +766,13 @@ export const Dashboard: React.FC = () => {
           <div className="flex flex-wrap gap-2.5 items-center w-full lg:w-auto">
             {/* Search */}
             <div className="relative flex-1 lg:flex-none">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="search-icon-glow absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none z-10" />
               <input
                 type="text"
                 placeholder={`Search ${activeTableTab.toLowerCase()}...`}
                 value={tableSearch}
                 onChange={e => setTableSearch(e.target.value)}
-                className="w-full lg:w-60 pl-9 pr-4 py-2 h-10 text-xs border border-[#E5EEFF] dark:border-[#334155] rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-700 dark:text-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] transition-all font-medium"
+                className="navbar-search-input w-full lg:w-60 pl-9 pr-3 h-9 text-xs border border-[#E5E7EB] dark:border-[#334155] rounded-full bg-slate-50/50 dark:bg-slate-800/40 text-[#111827] dark:text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#006A6A] focus:border-[#006A6A] transition-all font-medium"
               />
             </div>
 
