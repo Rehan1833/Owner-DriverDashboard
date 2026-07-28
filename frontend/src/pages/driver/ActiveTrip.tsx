@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOperations } from '../../store/OperationsContext';
 import { Badge } from '../../components/ui/Badge';
@@ -234,13 +234,13 @@ export const ActiveTrip: React.FC = () => {
   // 3. EMPTY STATE
   if (!driverActiveTrip) {
     return (
-      <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-12 text-center max-w-2xl mx-auto my-12 shadow-sm space-y-6">
-        <div className="w-20 h-20 bg-teal-50 dark:bg-teal-950/40 rounded-full flex items-center justify-center mx-auto border border-teal-200 dark:border-teal-800">
-          <Truck className="h-10 w-10 text-[#006A6A] dark:text-[#14B8A6]" />
+      <div className="bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] rounded-2xl p-12 text-center max-w-2xl mx-auto my-12 shadow-sm space-y-6">
+        <div className="w-20 h-20 bg-[#006A6A]/10 rounded-full flex items-center justify-center mx-auto border border-[#006A6A]/20">
+          <Truck className="h-10 w-10 text-[#006A6A] dark:text-[#7DF5F5]" />
         </div>
         <div className="space-y-2">
-          <h3 className="text-xl font-extrabold text-[#0B1C30] dark:text-slate-100">No Active Trip Assignment</h3>
-          <p className="text-xs text-[#6D7A79] dark:text-[#94A3B8] max-w-md mx-auto leading-relaxed">
+          <h3 className="text-xl font-extrabold text-[#111827] dark:text-[#F8FAFC]">No Active Trip Assignment</h3>
+          <p className="text-xs text-[#4B5563] dark:text-[#94A3B8] max-w-md mx-auto leading-relaxed font-medium">
             You currently have no ongoing trip assignments or consignments scheduled for active transit. Check back later or contact your Fleet Dispatcher.
           </p>
         </div>
@@ -259,19 +259,19 @@ export const ActiveTrip: React.FC = () => {
   const progressPercent = Math.min(100, Math.max(10, Math.round(((activeStepIdx + 1) / statusMilestones.length) * 100)));
 
   return (
-    <div className="space-y-8 animate-fade-in text-left">
+    <div className="space-y-6 animate-fade-in text-left">
       {/* Header Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-slate-100 tracking-tight leading-none">
+            <h2 className="text-[26px] font-extrabold text-[#111827] dark:text-[#F8FAFC] tracking-tight leading-none">
               Active Trip Console
             </h2>
             <Badge variant={driverActiveTrip.status === 'In Transit' ? 'info' : 'warning'} className="px-3 py-1 font-mono text-xs">
               {driverActiveTrip.status}
             </Badge>
           </div>
-          <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">
+          <p className="text-[13px] text-[#4B5563] dark:text-[#94A3B8] mt-1.5 font-medium">
             Live consignment telemetry, waypoint guidance, and milestone operational controls.
           </p>
         </div>
@@ -281,7 +281,7 @@ export const ActiveTrip: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => { setIsLoading(true); setTimeout(() => setIsLoading(false), 400); }}
-            className="text-xs bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] text-slate-700 dark:text-[#F8FAFC]"
+            className="text-xs bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] text-[#111827] dark:text-[#F8FAFC] font-bold"
           >
             <RotateCw className="h-3.5 w-3.5 mr-1.5" /> Sync Coordinates
           </Button>
@@ -290,7 +290,7 @@ export const ActiveTrip: React.FC = () => {
             variant="danger"
             size="sm"
             onClick={() => setSosModalOpen(true)}
-            className="text-xs bg-red-600 text-white shadow-md shadow-red-500/20"
+            className="text-xs bg-red-600 text-white shadow-md shadow-red-500/20 font-bold"
           >
             <ShieldAlert className="h-4 w-4 mr-1.5 animate-pulse" /> Emergency SOS
           </Button>
@@ -301,25 +301,25 @@ export const ActiveTrip: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Column: Current Trip Card (2 Cols) */}
-        <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-6 lg:col-span-2 text-left">
+        <div className="bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-6 lg:col-span-2 text-left">
           
           {/* Card Top Details Header */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E7EB] dark:border-[#334155] pb-4">
             <div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Consignment Reference</span>
+              <span className="text-[10px] font-extrabold text-[#6B7280] dark:text-[#94A3B8] uppercase tracking-widest block">Consignment Reference</span>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-base font-mono font-extrabold text-[#0B1C30] dark:text-slate-100">
+                <span className="text-base font-mono font-extrabold text-[#111827] dark:text-[#F8FAFC]">
                   {driverActiveTrip.tripNumber}
                 </span>
-                <span className="text-xs font-mono font-bold text-[#006A6A] dark:text-teal-400 bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-800">
+                <span className="text-xs font-mono font-bold text-[#006A6A] dark:text-[#7DF5F5] bg-[#006A6A]/10 px-2 py-0.5 rounded-md border border-[#006A6A]/20">
                   ORD-8841
                 </span>
               </div>
             </div>
 
             <div className="text-right">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Assigned Truck</span>
-              <span className="text-xs font-mono font-bold text-slate-700 dark:text-[#F8FAFC] block mt-0.5">
+              <span className="text-[10px] font-extrabold text-[#6B7280] dark:text-[#94A3B8] uppercase tracking-widest block">Assigned Truck</span>
+              <span className="text-xs font-mono font-bold text-[#111827] dark:text-[#F8FAFC] block mt-0.5">
                 {driverActiveTrip.vehicleNumber || driverVehicle?.vehicleNumber || 'MH-12-QW-9874'}
               </span>
             </div>
@@ -473,10 +473,10 @@ export const ActiveTrip: React.FC = () => {
                     <span
                       className={`font-semibold ${
                         isPast
-                          ? 'text-slate-400 dark:text-[#6D7A79] line-through'
+                          ? 'text-slate-400 dark:text-[#94A3B8] line-through'
                           : isCurrent
                           ? 'text-slate-900 dark:text-slate-100 font-extrabold text-xs'
-                          : 'text-slate-400 dark:text-[#545F73]'
+                          : 'text-slate-400 dark:text-[#64748B]'
                       }`}
                     >
                       {milestone.label}

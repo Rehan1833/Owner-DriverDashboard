@@ -8,12 +8,10 @@ main .bg-white.rounded-3xl,
 main .bg-white.rounded-2xl,
 main .glass-panel,
 .glass-panel {
-  background: rgba(255, 255, 255, 0.78) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  background: #FFFFFF !important;
   border: 1px solid var(--color-border) !important;
-  border-radius: 18px !important;
-  box-shadow: 0 1px 3px 0 rgba(11, 28, 48, 0.03), 0 4px 12px -4px rgba(11, 28, 48, 0.04) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 2px 8px -2px rgba(0, 0, 0, 0.04) !important;
   transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1), border-color 280ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
@@ -21,9 +19,9 @@ main .bg-white.rounded-3xl:hover,
 main .bg-white.rounded-2xl:hover,
 main .glass-panel:hover,
 .glass-panel:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 8px 24px -4px rgba(0, 106, 106, 0.08), 0 4px 12px -4px rgba(11, 28, 48, 0.04) !important;
-  border-color: rgba(0, 106, 106, 0.18) !important;
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 30px -4px rgba(0, 106, 106, 0.1), 0 0 16px 2px rgba(0, 163, 163, 0.2) !important;
+  border-color: #00A3A3 !important;
 }
 
 /* Dark mode cards */
@@ -33,14 +31,26 @@ main .glass-panel:hover,
 .dark .glass-panel,
 .dark main .dark\:bg-slate-900.rounded-3xl,
 .dark main .dark\:bg-slate-900.rounded-2xl,
-.dark main .dark\:bg-\[\#1E293B\].rounded-2xl,
-.dark main .dark\:bg-\[1E293B\].rounded-2xl {
+.dark main .dark\:bg-\[\#1E293B\].rounded-2xl {
   background: rgba(30, 41, 59, 0.78) !important;
   backdrop-filter: blur(16px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
   border: 1px solid #334155 !important;
-  border-radius: 18px !important;
+  border-radius: 16px !important;
   box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3) !important;
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1), border-color 280ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.dark main .bg-white.rounded-3xl:hover,
+.dark main .bg-white.rounded-2xl:hover,
+.dark main .glass-panel:hover,
+.dark .glass-panel:hover,
+.dark main .dark\:bg-slate-900.rounded-3xl:hover,
+.dark main .dark\:bg-slate-900.rounded-2xl:hover,
+.dark main .dark\:bg-\[\#1E293B\].rounded-2xl:hover {
+  transform: translateY(-4px) !important;
+  border-color: #7DF5F5 !important;
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.4), 0 0 20px 3px rgba(125, 245, 245, 0.28) !important;
 }
 
 /* ── Tables — floating container ── */
@@ -61,15 +71,21 @@ button.bg-teal-600 {
   font-weight: 600 !important;
   border-radius: 12px !important;
   box-shadow: 0 2px 8px 0 rgba(0, 106, 106, 0.15) !important;
-  transition: transform 200ms ease, box-shadow 200ms ease, opacity 200ms ease !important;
+  transition: transform 200ms ease, box-shadow 200ms ease, opacity 200ms ease, border-color 200ms ease !important;
 }
 
 .btn-primary:hover,
 button.bg-primary:hover,
 button.bg-teal-600:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px 0 rgba(0, 106, 106, 0.25) !important;
+  box-shadow: 0 6px 20px 0 rgba(0, 106, 106, 0.25), 0 0 12px 3px rgba(0, 163, 163, 0.4) !important;
   opacity: 0.95 !important;
+}
+
+.dark .btn-primary:hover,
+.dark button.bg-primary:hover,
+.dark button.bg-teal-600:hover {
+  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.3), 0 0 16px 4px rgba(125, 245, 245, 0.45) !important;
 }
 
 /* ── Secondary Button ── */
@@ -81,14 +97,21 @@ button.bg-secondary {
   font-weight: 600 !important;
   border-radius: 12px !important;
   box-shadow: 0 1px 3px 0 rgba(11, 28, 48, 0.03) !important;
-  transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease !important;
+  transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease, border-color 200ms ease !important;
 }
 
 .btn-secondary:hover,
 button.bg-secondary:hover {
   transform: translateY(-2px) !important;
   background-color: #F8F9FF !important;
-  box-shadow: 0 4px 12px 0 rgba(11, 28, 48, 0.05) !important;
+  border-color: #00A3A3 !important;
+  box-shadow: 0 4px 12px 0 rgba(11, 28, 48, 0.05), 0 0 10px 2px rgba(0, 163, 163, 0.2) !important;
+}
+
+.dark .btn-secondary:hover,
+.dark button.bg-secondary:hover {
+  border-color: #7DF5F5 !important;
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.3), 0 0 12px 2px rgba(125, 245, 245, 0.3) !important;
 }
 
 /* ── Danger Button ── */
@@ -100,13 +123,13 @@ button.bg-danger {
   font-weight: 600 !important;
   border-radius: 12px !important;
   box-shadow: 0 2px 8px 0 rgba(186, 26, 26, 0.15) !important;
-  transition: transform 200ms ease, box-shadow 200ms ease !important;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease !important;
 }
 
 .btn-danger:hover,
 button.bg-danger:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px 0 rgba(186, 26, 26, 0.25) !important;
+  box-shadow: 0 6px 20px 0 rgba(186, 26, 26, 0.25), 0 0 12px 2px rgba(186, 26, 26, 0.35) !important;
 }
 
 /* ── Status Pills ── */
@@ -234,41 +257,146 @@ input[type="checkbox"] {
   outline-color: #7DF5F5;
 }
 
-/* ── Fallback Text Readability in Dark Mode ── */
-.dark .text-slate-300,
-.dark .text-slate-400,
-.dark .text-slate-500,
-.dark .text-slate-600,
-.dark .text-slate-700,
-.dark .text-slate-800,
-.dark .text-slate-900,
-.dark .dark\:text-slate-300,
-.dark .dark\:text-slate-400,
-.dark .dark\:text-slate-500,
-.dark .dark\:text-slate-600,
-.dark .dark\:text-slate-700,
-.dark .dark\:text-slate-800,
-.dark .dark\:text-slate-900,
-.dark .text-\[\#CBD5E1\],
-.dark .text-\[\#cbd5e1\],
-.dark .text-\[\#94A3B8\],
-.dark .text-\[\#94a3b8\],
-.dark .text-\[\#6D7A79\],
-.dark .text-\[\#6d7a79\],
-.dark .text-\[\#545F73\],
-.dark .text-\[\#545f73\],
-.dark .text-\[\#0B1C30\],
-.dark .text-\[\#0b1c30\],
-.dark .dark\:text-\[\#CBD5E1\],
-.dark .dark\:text-\[\#cbd5e1\],
-.dark .dark\:text-\[\#94A3B8\],
-.dark .dark\:text-\[\#94a3b8\],
-.dark .dark\:text-\[\#6D7A79\],
-.dark .dark\:text-\[\#6d7a79\],
-.dark .dark\:text-\[\#545F73\],
-.dark .dark\:text-\[\#545f73\],
-.dark .dark\:text-\[\#0B1C30\],
-.dark .dark\:text-\[\#0b1c30\] {
+/* ── Fallback Text Readability & Dynamic Contrast Rules ── */
+/* 1. Force white/light text to black when on white/light backgrounds (excluding buttons & badges) */
+:is(
+  body:not(.dark),
+  main:not(.dark),
+  [class*="bg-white"],
+  [class*="bg-slate-50"],
+  [class*="bg-slate-100"],
+  [class*="bg-slate-200"],
+  [class*="bg-slate-300"],
+  [class*="bg-[#FFFFFF]"],
+  [class*="bg-[#ffffff]"]
+) :is(
+  .text-white,
+  .text-slate-100,
+  .text-slate-200,
+  .text-slate-300,
+  .text-\[\#F8FAFC\],
+  .text-\[\#cbd5e1\],
+  .text-\[\#CBD5E1\]
+):not(
+  .btn-primary,
+  .btn-primary *,
+  button,
+  button *,
+  [class*="bg-[#006A6A]"],
+  [class*="bg-[#006A6A]"] *,
+  [class*="bg-teal"],
+  [class*="bg-teal"] *,
+  [class*="bg-emerald"],
+  [class*="bg-emerald"] *,
+  [class*="bg-red"],
+  [class*="bg-red"] *,
+  [class*="bg-rose"],
+  [class*="bg-rose"] *,
+  [class*="bg-blue"],
+  [class*="bg-blue"] *,
+  [class*="bg-success"],
+  [class*="bg-success"] *,
+  [class*="bg-danger"],
+  [class*="bg-danger"] *
+) {
+  color: #000000 !important;
+}
+
+/* 2. Force dark text to white when on black/dark backgrounds (excluding inputs/dropdowns/textareas) */
+:is(
+  .dark,
+  [class*="bg-slate-9"],
+  [class*="bg-slate-950"],
+  [class*="bg-[#0B1C30]"],
+  [class*="bg-[#0b1c30]"],
+  [class*="bg-black"],
+  [class*="bg-slate-8"],
+  [class*="from-slate-9"],
+  [class*="from-slate-8"],
+  [class*="from-[#0B1C30]"],
+  [class*="from-[#0b1c30]"]
+) :is(
+  .text-slate-300,
+  .text-slate-400,
+  .text-slate-500,
+  .text-slate-600,
+  .text-slate-700,
+  .text-slate-800,
+  .text-slate-900,
+  .text-slate-950,
+  .text-gray-555,
+  .text-gray-655,
+  .text-gray-755,
+  .text-gray-855,
+  .text-gray-955,
+  .text-\[\#CBD5E1\],
+  .text-\[\#cbd5e1\],
+  .text-\[\#94A3B8\],
+  .text-\[\#94a3b8\],
+  .text-\[\#6D7A79\],
+  .text-\[\#6d7a79\],
+  .text-\[\#545F73\],
+  .text-\[\#545f73\],
+  .text-\[\#0B1C30\],
+  .text-\[\#0b1c30\],
+  .text-\[\#111827\],
+  .dark\:text-slate-300,
+  .dark\:text-slate-400,
+  .dark\:text-slate-555,
+  .dark\:text-slate-655,
+  .dark\:text-[#F8FAFC]
+):not(input, textarea, select) {
   color: #FFFFFF !important;
+}
+
+/* ── Navbar Search Input Overrides ── */
+input.navbar-search-input {
+  height: 36px !important;
+  border-radius: 9999px !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid var(--color-border) !important;
+  padding-left: 36px !important;
+  padding-right: 12px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  width: 100% !important;
+  color: #000000 !important;
+  transition: border-color 200ms ease, box-shadow 200ms ease !important;
+}
+
+input.navbar-search-input::placeholder {
+  color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark input.navbar-search-input {
+  background-color: #1E293B !important;
+  border: 1px solid #334155 !important;
+  color: #F8FAFC !important;
+}
+
+.dark input.navbar-search-input::placeholder {
+  color: rgba(248, 250, 252, 0.5) !important;
+}
+
+input.navbar-search-input:focus {
+  border-color: #006A6A !important;
+  box-shadow: 0 0 0 1px #006A6A !important;
+}
+
+.dark input.navbar-search-input:focus {
+  border-color: #7DF5F5 !important;
+  box-shadow: 0 0 0 1px #7DF5F5 !important;
+}
+
+/* Search Icon Glow */
+.search-icon-glow {
+  color: #00A3A3 !important;
+  filter: drop-shadow(0 0 2px rgba(0, 163, 163, 0.65)) !important;
+}
+
+.dark .search-icon-glow {
+  color: #7DF5F5 !important;
+  filter: drop-shadow(0 0 4px rgba(125, 245, 245, 0.8)) !important;
 }
 
