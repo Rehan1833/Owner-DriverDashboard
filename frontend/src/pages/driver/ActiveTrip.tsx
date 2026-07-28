@@ -33,7 +33,7 @@ export const ActiveTrip: React.FC = () => {
   const { trips, vehicles, user, updateTripStatus, triggerNotification } = useOperations();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  
+
   // Modals & Permissions
   const [showPermissionModal, setShowPermissionModal] = useState<boolean>(false);
   const [gpsPermissionState, setGpsPermissionState] = useState<'prompt' | 'granted' | 'denied' | 'unsupported'>('prompt');
@@ -66,8 +66,8 @@ export const ActiveTrip: React.FC = () => {
   const driverId = user?.driverId || user?.id || 'DRV-9041';
   const driverActiveTrip = trips.find(
     t => (t.driverId === driverId || t.driverId === 'd1' || t.driverId === 'DRV-9041') &&
-         t.status !== 'Completed' &&
-         t.status !== 'Cancelled'
+      t.status !== 'Completed' &&
+      t.status !== 'Cancelled'
   ) || trips.find(t => t.status !== 'Completed' && t.status !== 'Cancelled');
 
   const [isGpsTracking, setIsGpsTracking] = useState<boolean>(true);
@@ -551,22 +551,20 @@ export const ActiveTrip: React.FC = () => {
                 return (
                   <div key={idx} className="flex items-center gap-3 text-xs">
                     <div
-                      className={`w-3.5 h-3.5 rounded-full shrink-0 border-2 z-10 transition-all ${
-                        isPast
+                      className={`w-3.5 h-3.5 rounded-full shrink-0 border-2 z-10 transition-all ${isPast
                           ? 'bg-[#10B981] border-[#10B981]'
                           : isCurrent
-                          ? 'bg-[#006A6A] border-[#006A6A] shadow-md shadow-teal-500/30 animate-pulse'
-                          : 'bg-white dark:bg-[#0F172A] border-slate-300 dark:border-slate-800'
-                      }`}
+                            ? 'bg-[#006A6A] border-[#006A6A] shadow-md shadow-teal-500/30 animate-pulse'
+                            : 'bg-white dark:bg-[#0F172A] border-slate-300 dark:border-slate-800'
+                        }`}
                     />
                     <span
-                      className={`font-semibold ${
-                        isPast
+                      className={`font-semibold ${isPast
                           ? 'text-slate-400 dark:text-[#94A3B8] line-through'
                           : isCurrent
-                          ? 'text-slate-900 dark:text-slate-100 font-extrabold text-xs'
-                          : 'text-slate-400 dark:text-[#64748B]'
-                      }`}
+                            ? 'text-slate-900 dark:text-slate-100 font-extrabold text-xs'
+                            : 'text-slate-400 dark:text-[#64748B]'
+                        }`}
                     >
                       {milestone.label}
                     </span>
@@ -584,11 +582,10 @@ export const ActiveTrip: React.FC = () => {
               </h4>
               <button
                 onClick={() => setIsGpsTracking(prev => !prev)}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all ${
-                  isGpsTracking
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all ${isGpsTracking
                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
                     : 'bg-slate-700 text-slate-300'
-                }`}
+                  }`}
               >
                 <span className={`w-2 h-2 rounded-full ${isGpsTracking ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}`} />
                 {isGpsTracking ? 'GPS Active' : 'GPS Paused'}
@@ -641,11 +638,10 @@ export const ActiveTrip: React.FC = () => {
               <button
                 key={reason}
                 onClick={() => setSelectedReason(reason)}
-                className={`p-3.5 border rounded-xl text-left font-bold transition-all cursor-pointer ${
-                  selectedReason === reason
+                className={`p-3.5 border rounded-xl text-left font-bold transition-all cursor-pointer ${selectedReason === reason
                     ? 'border-red-500 bg-red-50 text-red-700'
                     : 'border-slate-200 text-slate-700 bg-white'
-                }`}
+                  }`}
               >
                 {reason}
               </button>

@@ -241,6 +241,10 @@ export const register = async (req: Request, res: Response) => {
     const passwordHash = await bcrypt.hash(password, salt);
     const normalizedRole = normalizeRole(role);
 
+    if (normalizedRole === 'Owner' && email.toLowerCase().trim() !== 'rehanchaudhari181133@gmail.com') {
+      return res.status(403).json({ message: 'Only rehanchaudhari181133@gmail.com is authorized as Owner. Additional owner accounts are disabled.' });
+    }
+
     // Hash Security Answer if provided
     let securityAnswerHash: string | undefined = undefined;
     const defaultQuestion = securityQuestion || "What is your best friend's name?";

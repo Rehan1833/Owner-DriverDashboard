@@ -145,6 +145,11 @@ export const Register: React.FC = () => {
       return;
     }
 
+    if (selectedRole === 'Owner' && formData.email.toLowerCase().trim() !== 'rehanchaudhari181133@gmail.com') {
+      setErrorMsg("Only rehanchaudhari181133@gmail.com is authorized to register as Owner account.");
+      return;
+    }
+
     setLoading(true);
     try {
       const payload: any = {

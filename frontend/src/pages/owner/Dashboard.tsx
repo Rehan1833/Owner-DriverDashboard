@@ -378,7 +378,7 @@ export const Dashboard: React.FC = () => {
           <span className="text-[13px] font-bold text-[#14B8A6] tracking-widest uppercase">Admin Executive Console</span>
           <h2 className="text-[42px] font-extrabold tracking-tight leading-none text-white">Welcome back, {user?.fullName || 'Owner'}</h2>
           <p className="text-slate-400 text-[15px] leading-relaxed max-w-2xl font-medium pt-1">
-            Role: <span className="text-[#14B8A6] font-bold">{user?.role || 'Owner'}</span> · Email: <span className="text-white font-semibold">{user?.email || 'user@company.com'}</span>
+            Role: <span className="text-[#14B8A6] font-bold">{user?.role || 'Owner'}</span> · Email: <span className="text-white font-semibold">{user?.email || 'rehanchaudhari181133@gmail.com'}</span>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 shrink-0">

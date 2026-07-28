@@ -379,7 +379,7 @@ export const ForgotPassword: React.FC = () => {
                       <input
                         type="email"
                         required
-                        placeholder="e.g. rehan@company.com"
+                        placeholder="rehanchaudhari181133@gmail.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         style={{ ...inputBase, paddingLeft: 42 }}

@@ -54,23 +54,27 @@ export const api = {
           throw err;
         }
         console.warn('Backend Auth Offline. Simulating local token verification.');
+        const isOwner = role === 'Owner';
         const mockUser: User = {
-          id: role === 'Owner' ? 'u-owner' : 'u-driver',
-          fullName: email.split('@')[0],
-          email,
+          id: isOwner ? 'u-owner-rehan' : 'u-driver',
+          fullName: isOwner ? 'Rehan Chaudhari' : email.split('@')[0],
+          email: isOwner ? 'rehanchaudhari181133@gmail.com' : email,
           mobileNumber: '9999999999',
           role: role as any,
-          companyName: role === 'Owner' ? 'SmartOps Manufacturing Ltd.' : undefined,
+          companyName: isOwner ? 'SmartOps Manufacturing Ltd.' : undefined,
           driverId: role === 'Driver' ? `DRV-${Date.now().toString().slice(-4)}` : undefined,
           vehicleNumber: role === 'Driver' ? 'MH-12-QW-9874' : undefined,
           licenseNumber: role === 'Driver' ? 'DL-MH12-9988' : undefined,
-          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}&backgroundColor=2563EB`
+          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(isOwner ? 'Rehan Chaudhari' : email)}&backgroundColor=2563EB`
         };
         localStorage.setItem('smartops_jwt', 'mock_jwt_token_payload');
         return { token: 'mock_jwt_token_payload', user: mockUser };
       }
     },
     register: async (payload: any): Promise<{ success?: boolean; message: string; otpCode?: string; token?: string; user?: User }> => {
+      if (payload.role === 'Owner' && payload.email.toLowerCase().trim() !== 'rehanchaudhari181133@gmail.com') {
+        throw { response: { data: { message: 'Only rehanchaudhari181133@gmail.com is authorized as Owner. Additional owner accounts are disabled.' } } };
+      }
       try {
         const res = await axiosInstance.post('/auth/register', payload);
         if (res.data.token) {
