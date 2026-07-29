@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -16,9 +16,9 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
   const { vehicles, attendance, createTrip, triggerNotification } = useOperations();
 
   const [tripId] = useState<string>(`TRP-${Date.now().toString().slice(-6)}`);
-  const [driverId, setDriverId] = useState<string>('DRV-9041');
-  const [driverName, setDriverName] = useState<string>('Rajesh Kumar');
-  const [vehicleNumber, setVehicleNumber] = useState<string>('MH-12-QW-9874');
+  const [driverId, setDriverId] = useState<string>('');
+  const [driverName, setDriverName] = useState<string>('');
+  const [vehicleNumber, setVehicleNumber] = useState<string>('');
   const [pickupLocation, setPickupLocation] = useState<string>('Pune DC Gate 1, Maharashtra');
   const [pickupLat, setPickupLat] = useState<number>(18.5204);
   const [pickupLng, setPickupLng] = useState<number>(73.8567);
@@ -53,38 +53,46 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Dynamically load all active drivers
+  // ── Real registered drivers from DB via attendance records ──
+  // attendance is populated by the OperationsContext from /api/attendance
+  // Only drivers who have checked in (started duty) appear here.
   const activeDrivers = React.useMemo(() => {
-    const defaultDrivers = [
-      { driverId: 'DRV-9041', name: 'Rajesh Kumar', status: 'On Duty' },
-      { driverId: 'DRV-4012', name: 'Suresh Patil', status: 'On Duty' },
-      { driverId: 'DRV-1088', name: 'Vikram Singh', status: 'On Duty' },
-      { driverId: 'DRV-5521', name: 'Ramesh Sharma', status: 'On Duty' },
-      { driverId: 'DRV-3310', name: 'Amit Verma', status: 'On Duty' }
-    ];
+    const seen = new Set<string>();
+    const list: { driverId: string; name: string; status: string }[] = [];
 
-    const list = attendance.map(a => ({
-      driverId: a.driverId || `DRV-${(a.employeeName || 'Driver').split(' ')[0].toUpperCase()}`,
-      name: a.driverName || a.employeeName || 'Driver',
-      status: a.currentStatus || 'On Duty'
-    }));
-
-    const map = new Map<string, { driverId: string; name: string; status: string }>();
-    defaultDrivers.forEach(d => map.set(d.driverId, d));
-    list.forEach(d => {
-      if (d.driverId) map.set(d.driverId, d);
+    attendance.forEach(a => {
+      const id = a.driverId;
+      const name = a.driverName || a.employeeName || '';
+      if (id && name && !seen.has(id)) {
+        seen.add(id);
+        list.push({
+          driverId: id,
+          name,
+          status: a.currentStatus || 'On Duty',
+        });
+      }
     });
 
-    return Array.from(map.values());
+    return list;
   }, [attendance]);
 
+  // Set default driver selection to first real driver whenever the list loads
+  useEffect(() => {
+    if (activeDrivers.length > 0 && !driverId) {
+      setDriverId(activeDrivers[0].driverId);
+      setDriverName(activeDrivers[0].name);
+    }
+  }, [activeDrivers]);
 
-  // Filter Available Vehicles
-  const availableVehicles = vehicles.length > 0 ? vehicles : [
-    { id: 'v1', vehicleNumber: 'MH-12-QW-9874', vehicleType: 'Heavy Freight Truck' },
-    { id: 'v2', vehicleNumber: 'MH-14-GH-1234', vehicleType: 'Medium Express Van' },
-    { id: 'v3', vehicleNumber: 'MH-04-AB-9988', vehicleType: 'Container Truck' }
-  ];
+  // ── Real vehicles from DB via fleet records ──
+  const availableVehicles = vehicles.length > 0 ? vehicles : [];
+
+  // Set default vehicle when list loads
+  useEffect(() => {
+    if (availableVehicles.length > 0 && !vehicleNumber) {
+      setVehicleNumber(availableVehicles[0].vehicleNumber);
+    }
+  }, [availableVehicles]);
 
   const handleAddStop = () => {
     setStops(prev => [
@@ -203,17 +211,24 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
           <label className="block text-[#6D7A79] font-bold mb-1.5 flex items-center gap-1">
             <User className="w-3.5 h-3.5 text-[#006A6A]" /> Assign Active Driver *
           </label>
-          <select
-            value={driverId}
-            onChange={handleDriverChange}
-            className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] font-medium text-slate-800 dark:text-white"
-          >
-            {activeDrivers.map(d => (
-              <option key={d.driverId} value={d.driverId}>
-                {d.name} ({d.driverId}) - [{d.status}]
-              </option>
-            ))}
-          </select>
+          {activeDrivers.length === 0 ? (
+            <div className="w-full p-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 text-xs font-semibold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              No drivers currently on duty. Drivers must start their shift first via the Driver Dashboard.
+            </div>
+          ) : (
+            <select
+              value={driverId}
+              onChange={handleDriverChange}
+              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] font-medium text-slate-800 dark:text-white"
+            >
+              {activeDrivers.map(d => (
+                <option key={d.driverId} value={d.driverId}>
+                  {d.name} ({d.driverId}) - [{d.status}]
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Pickup Location & Coordinates */}
@@ -432,7 +447,12 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
           <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" className="bg-[#006A6A] hover:bg-[#005555] text-white px-6 font-bold" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            variant="primary"
+            className="bg-[#006A6A] hover:bg-[#005555] text-white px-6 font-bold"
+            disabled={isSubmitting || activeDrivers.length === 0}
+          >
             {isSubmitting ? 'Creating Consignment...' : 'Create & Assign Trip'}
           </Button>
         </div>

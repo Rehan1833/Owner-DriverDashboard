@@ -1,23 +1,48 @@
 import axios from 'axios';
-import { User, Vehicle, Trip, Task, InventoryItem, PayrollRecord, AttendanceRecord, PODRecord } from '../types';
+import { User, Vehicle, Trip, Task, InventoryItem, PayrollRecord, AttendanceRecord, PODRecord, DriverRecord } from '../types';
 import { mockVehicles, mockTrips, mockTasks, mockInventory, mockPayroll, mockAttendance } from './mockData';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// Axios Instance
+// Axios Instance — higher timeout for DB-backed operations
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 4000
+  timeout: 15000  // 15 seconds: accommodates MongoDB Atlas cold starts and slow connections
 });
 
-// Bind Token to Requests
+// ── REQUEST INTERCEPTOR: attach Bearer token ──────────────────────────────────
 axiosInstance.interceptors.request.use((config: any) => {
   const token = localStorage.getItem('smartops_jwt');
-  if (token) {
+  // Only attach token if it is a real JWT (not empty, not the legacy mock string)
+  if (token && token !== 'mock_jwt_token_payload' && token.trim() !== '') {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 }, (error: any) => Promise.reject(error));
+
+// ── RESPONSE INTERCEPTOR: global 401 / session-expired handler ───────────────
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token is invalid or expired — clear session and redirect to login
+      const currentToken = localStorage.getItem('smartops_jwt');
+      // Only auto-redirect if there was actually a token (avoid redirect loops on login page)
+      if (currentToken) {
+        console.warn('[SmartOps Auth] Session expired (401). Clearing token and redirecting to login.');
+        localStorage.removeItem('smartops_jwt');
+        localStorage.removeItem('smartops_user');
+        // Dispatch a custom event so React components can react (e.g., reset user state)
+        window.dispatchEvent(new CustomEvent('smartops:session-expired'));
+        // Redirect to login if not already there
+        if (!window.location.pathname.startsWith('/login') && window.location.pathname !== '/') {
+          window.location.href = '/';
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // LocalStorage Fallback Helper class
 class LocalStorageFallback {
@@ -47,13 +72,21 @@ export const api = {
     login: async (email: string, role: string, password?: string): Promise<{ token: string; user: User }> => {
       try {
         const res = await axiosInstance.post('/auth/login', { email, password: password || '' });
-        localStorage.setItem('smartops_jwt', res.data.token);
+        // Validate the token is a real JWT before storing
+        const receivedToken: string = res.data.token || '';
+        if (receivedToken && receivedToken !== 'mock_jwt_token_payload') {
+          localStorage.setItem('smartops_jwt', receivedToken);
+        }
         return res.data;
       } catch (err: any) {
+        // If the backend returned an HTTP error response (400, 401, 404, 500, etc.),
+        // always propagate it — NEVER fall back to mock. Only the catch block for
+        // network-level failures (no response at all) may use offline mode.
         if (err.response) {
           throw err;
         }
-        console.warn('Backend Auth Offline. Simulating local token verification.');
+        // Network-level failure only (no response = backend truly unreachable)
+        console.warn('[SmartOps Auth] Backend unreachable. Offline mode activated.');
         const isOwner = role === 'Owner';
         const mockUser: User = {
           id: isOwner ? 'u-owner-rehan' : 'u-driver',
@@ -67,8 +100,11 @@ export const api = {
           licenseNumber: role === 'Driver' ? 'DL-MH12-9988' : undefined,
           avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(isOwner ? 'Rehan Chaudhari' : email)}&backgroundColor=2563EB`
         };
-        localStorage.setItem('smartops_jwt', 'mock_jwt_token_payload');
-        return { token: 'mock_jwt_token_payload', user: mockUser };
+        // IMPORTANT: Do NOT store 'mock_jwt_token_payload' — store empty string so
+        // authenticated endpoints get a clean 401 rather than a confusing 403.
+        // The offline session still works for non-authenticated features.
+        localStorage.removeItem('smartops_jwt');
+        return { token: '', user: mockUser };
       }
     },
     register: async (payload: any): Promise<{ success?: boolean; message: string; otpCode?: string; token?: string; user?: User }> => {
@@ -705,28 +741,29 @@ export const api = {
         const trip = local.find(t => t.id === tripId) || local[0];
         return {
           tripId: trip?.id || tripId,
-          tripNumber: trip?.tripNumber || 'TRP-2026-001',
-          driverName: trip?.driverName || 'Ramesh Sharma',
-          driverId: trip?.driverId || 'u-driver-101',
-          vehicleNumber: trip?.vehicleNumber || 'MH-12-QW-9874',
+          tripNumber: trip?.tripNumber || '',
+          driverName: trip?.driverName || '',
+          driverId: trip?.driverId || '',
+          vehicleNumber: trip?.vehicleNumber || '',
           status: trip?.status || 'In Transit',
-          currentLocation: trip?.currentLocation || '18.5204, 73.8567',
-          currentAddress: 'Pune Central Logistics Hub',
-          latitude: 18.5204,
-          longitude: 73.8567,
-          speed: 42,
-          heading: 90,
-          distanceRemaining: trip?.distanceRemaining || 18.4,
-          eta: trip?.eta || '25 Mins',
-          pickupLocation: trip?.pickupLocation || 'Pune Central Logistics Hub',
-          pickupCoordinates: { lat: 18.5204, lng: 73.8567 },
-          dropLocation: trip?.dropLocation || 'Chakan Automotive Zone',
-          dropCoordinates: { lat: 18.7602, lng: 73.8612 },
+          currentLocation: trip?.currentLocation || '',
+          currentAddress: trip?.currentAddress || '',
+          latitude: trip?.latitude || 0,
+          longitude: trip?.longitude || 0,
+          speed: 0,
+          heading: 0,
+          distanceRemaining: trip?.distanceRemaining || 0,
+          eta: trip?.eta || 'N/A',
+          pickupLocation: trip?.pickupLocation || '',
+          pickupCoordinates: trip?.pickupCoordinates || { lat: 0, lng: 0 },
+          dropLocation: trip?.dropLocation || '',
+          dropCoordinates: trip?.dropCoordinates || { lat: 0, lng: 0 },
           locationHistory: [],
-          googleNavUrl: `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(trip?.pickupLocation || 'Pune')}&destination=${encodeURIComponent(trip?.dropLocation || 'Chakan')}`
+          googleNavUrl: ''
         };
       }
     },
+
     create: async (tripData: Partial<Trip>): Promise<Trip> => {
       try {
         const res = await axiosInstance.post('/trips', tripData);
@@ -739,16 +776,16 @@ export const api = {
         const newTrip: Trip = {
           id: `trp-${Date.now()}`,
           tripNumber: tripData.tripNumber || `TRP-${Date.now().toString().slice(-6)}`,
-          vehicleNumber: tripData.vehicleNumber || 'MH-12-QW-9874',
-          driverId: tripData.driverId || 'DRV-9041',
-          driverName: tripData.driverName || 'Rajesh Kumar',
-          pickupLocation: tripData.pickupLocation || 'Pune DC',
-          dropLocation: tripData.dropLocation || 'Chakan Zone',
-          customerName: tripData.customerName || 'Logistics Client',
-          customerPhone: tripData.customerPhone || '9876543210',
-          material: tripData.material || 'General Freight',
-          weight: tripData.weight || '1.5 Tons',
-          invoiceNumber: tripData.invoiceNumber || 'INV-1001',
+          vehicleNumber: tripData.vehicleNumber || '',
+          driverId: tripData.driverId || '',
+          driverName: tripData.driverName || '',
+          pickupLocation: tripData.pickupLocation || '',
+          dropLocation: tripData.dropLocation || '',
+          customerName: tripData.customerName || '',
+          customerPhone: tripData.customerPhone || '',
+          material: tripData.material || '',
+          weight: tripData.weight || '',
+          invoiceNumber: tripData.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
           priority: tripData.priority || 'Normal',
           cargo: tripData.cargo,
           stops: tripData.stops || [],
@@ -765,6 +802,7 @@ export const api = {
         return newTrip;
       }
     },
+
     assign: async (id: string, payload: { driverId: string; driverName: string; vehicleNumber?: string }): Promise<Trip> => {
       try {
         const res = await axiosInstance.post(`/trips/${id}/assign`, payload);
@@ -921,12 +959,13 @@ export const api = {
         }
 
         const podId = `POD-2026-${String(local.length + 8801).padStart(4, '0')}`;
-        
+        // Read the real logged-in driver from localStorage (set during login)
+        const storedUser = (() => { try { return JSON.parse(localStorage.getItem('smartops_user') || '{}'); } catch { return {}; } })();
         const newRecord: PODRecord = {
           id: `pod-${Date.now()}`,
           podId,
-          driverId: 'u-driver',
-          driverName: 'Rajesh Kumar',
+          driverId: storedUser.id || storedUser.driverId || '',
+          driverName: storedUser.fullName || '',
           vehicleNumber: payload.vehicleNumber,
           orderNumber: payload.orderNumber,
           customerName: payload.customerName,
@@ -952,10 +991,11 @@ export const api = {
         return res.data;
       } catch (err) {
         const local = LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
+        const approver = (() => { try { return JSON.parse(localStorage.getItem('smartops_user') || '{}'); } catch { return {}; } })();
         const updated = local.map(p => p.id === id || p.podId === id ? { 
           ...p, 
           status: 'Approved' as const, 
-          approvedBy: 'Harsh Vardhan', 
+          approvedBy: approver.fullName || 'Owner',
           approvedAt: new Date().toISOString(),
           rejectedReason: undefined
         } : p);
@@ -963,6 +1003,7 @@ export const api = {
         return updated.find(p => p.id === id || p.podId === id) as PODRecord;
       }
     },
+
     reject: async (id: string, rejectedReason: string): Promise<PODRecord> => {
       try {
         const res = await axiosInstance.put(`/pod/reject/${id}`, { rejectedReason });
@@ -1033,7 +1074,59 @@ export const api = {
         return { status: 'ZERO_RESULTS', routes: [] };
       }
     }
-  }
+  },
+
+  // 9. DRIVERS API — Owner-only, database-driven (NO localStorage fallback)
+  drivers: {
+    /**
+     * Fetch all registered Driver accounts from MongoDB.
+     * Throws on any error so the caller can render the proper error state.
+     *
+     * @param params.search  - partial match on name, email, mobile
+     * @param params.status  - 'Active' | 'Inactive' | 'All'
+     * @param params.page    - page number (default 1)
+     * @param params.limit   - page size (default 20)
+     */
+    getAll: async (params?: {
+      search?: string;
+      status?: string;
+      page?: number;
+      limit?: number;
+    }): Promise<{ data: DriverRecord[]; pagination: { page: number; limit: number; total: number; pages: number } }> => {
+      const res = await axiosInstance.get('/users/drivers', { params });
+      return res.data;
+    },
+
+    /**
+     * Soft-deactivate or reactivate a driver.
+     * Sets isEmailVerified to true (active) or false (inactive) in MongoDB.
+     */
+    updateStatus: async (id: string, status: 'active' | 'inactive'): Promise<DriverRecord> => {
+      const res = await axiosInstance.patch(`/users/drivers/${id}/status`, { status });
+      return res.data.data as DriverRecord;
+    },
+
+    /**
+     * Register a new driver via the existing auth endpoint.
+     * Delegates to POST /api/auth/register with role=Driver.
+     * On success the driver will immediately be visible in getAll().
+     */
+    register: async (payload: {
+      fullName: string;
+      email: string;
+      mobileNumber?: string;
+      password: string;
+      driverId?: string;
+      vehicleNumber?: string;
+      licenseNumber?: string;
+    }): Promise<{ success?: boolean; message: string; user?: User }> => {
+      const res = await axiosInstance.post('/auth/register', {
+        ...payload,
+        role: 'Driver',
+      });
+      return res.data;
+    },
+  },
 };
 
 

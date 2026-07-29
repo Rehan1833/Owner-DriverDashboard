@@ -15,6 +15,27 @@ export interface User {
   avatarUrl?: string;
 }
 
+/**
+ * DriverRecord — shape returned by GET /api/users/drivers.
+ * Mirrors the backend DTO (no sensitive fields).
+ */
+export interface DriverRecord {
+  id: string;
+  fullName: string;
+  email: string;
+  mobileNumber: string;
+  role: 'Driver';
+  driverId: string | null;
+  vehicleNumber: string | null;
+  licenseNumber: string | null;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+  /** Derived by backend: 'Active' when isEmailVerified=true, 'Inactive' otherwise */
+  status: 'Active' | 'Inactive';
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
 export interface Vehicle {
   id: string;
   vehicleNumber: string;

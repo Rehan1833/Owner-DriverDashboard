@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { soundPlayer } from '../../utils/audio';
+import { api } from '../../api/client';
+import { DriverRecord } from '../../types';
 import {
   Users,
   Search,
@@ -16,49 +18,65 @@ import {
   Send,
   SlidersHorizontal,
   Edit2,
-  Trash2
+  Trash2,
+  RefreshCw,
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 
-interface Worker {
-  id: string;
-  name: string;
-  role: string;
-  email: string;
-  phone: string;
-  status: 'Active' | 'On Break' | 'Off Duty' | 'Absent';
-  avatar: string;
-  branch: string;
-  performanceScore: number;
-}
+// ─── helpers ────────────────────────────────────────────────────────────────
 
-const INITIAL_WORKERS: Worker[] = [];
+const getAvatarUrl = (name: string) =>
+  `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=006A6A`;
+
+const formatDate = (iso: string | null) => {
+  if (!iso) return 'N/A';
+  try {
+    return new Date(iso).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return 'N/A';
+  }
+};
+
+// ─── component ──────────────────────────────────────────────────────────────
 
 export const Workers: React.FC = () => {
   const { triggerNotification, addActivity } = useOperations();
-  const [workers, setWorkers] = useState<Worker[]>(() => {
-    const saved = localStorage.getItem('smartops_workers');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState('All');
-  const [filterStatus, setFilterStatus] = useState('All');
 
-  // Modal State
+  // ── real database state ──────────────────────────────────────────────────
+  const [drivers, setDrivers] = useState<DriverRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, pages: 1 });
+
+  // ── filter / search ───────────────────────────────────────────────────────
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('All');
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── modal state ───────────────────────────────────────────────────────────
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
-  const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
+  const [selectedDriver, setSelectedDriver] = useState<DriverRecord | null>(null);
 
-  // New Worker Form State
-  const [newWorkerName, setNewWorkerName] = useState('');
-  const [newWorkerRole, setNewWorkerRole] = useState('Driver');
-  const [newWorkerEmail, setNewWorkerEmail] = useState('');
-  const [newWorkerPhone, setNewWorkerPhone] = useState('');
-  const [newWorkerBranch, setNewWorkerBranch] = useState('Pune HQ');
+  // ── add-driver form state ─────────────────────────────────────────────────
+  const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newVehicleNumber, setNewVehicleNumber] = useState('');
+  const [newLicenseNumber, setNewLicenseNumber] = useState('');
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
-  // Message Form State
+  // ── message form state ────────────────────────────────────────────────────
   const [messageText, setMessageText] = useState('');
 
-  // Audio Play Trigger
+  // ── audio ─────────────────────────────────────────────────────────────────
   const playSound = (severity: 'Success' | 'Warning' | 'Error' | 'Info') => {
     const savedSettings = localStorage.getItem('smartops_owner_settings');
     const settings = savedSettings ? JSON.parse(savedSettings) : { soundEnabled: true, soundVolume: 0.5 };
@@ -67,75 +85,171 @@ export const Workers: React.FC = () => {
     }
   };
 
-  const handleAddWorker = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newWorkerName || !newWorkerEmail) return;
+  // ── fetch from real API ───────────────────────────────────────────────────
+  const fetchDrivers = useCallback(
+    async (search: string, status: string, page = 1) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params: Record<string, any> = { page, limit: 20 };
+        if (search.trim()) params.search = search.trim();
+        if (status !== 'All') params.status = status;
 
-    const newWorker: Worker = {
-      id: `w-${Date.now()}`,
-      name: newWorkerName,
-      role: newWorkerRole,
-      email: newWorkerEmail,
-      phone: newWorkerPhone || '+91 9000000000',
-      status: 'Off Duty',
-      avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(newWorkerName)}&backgroundColor=006A6A`,
-      branch: newWorkerBranch,
-      performanceScore: 100
+        const response = await api.drivers.getAll(params);
+        setDrivers(response.data);
+        setPagination(response.pagination);
+      } catch (err: any) {
+        const httpStatus = err?.response?.status;
+        const serverMsg: string = err?.response?.data?.message || '';
+
+        if (httpStatus === 401) {
+          setError('Your session has expired. Please log in again.');
+        } else if (httpStatus === 403) {
+          // Backend returns 403 both for "Invalid or expired token" AND for owner-only block.
+          // Detect the token-failure case by checking the message from the server.
+          const isTokenError =
+            serverMsg.toLowerCase().includes('invalid') ||
+            serverMsg.toLowerCase().includes('expired') ||
+            serverMsg.toLowerCase().includes('token') ||
+            serverMsg.toLowerCase().includes('verification pending');
+          if (isTokenError) {
+            setError('Your session token is invalid or expired. Please log out and log in again.');
+          } else {
+            setError('You do not have permission to view drivers. Owner access is required.');
+          }
+        } else if (!err?.response) {
+          setError('Unable to load drivers. The server is unreachable. Please try again.');
+        } else {
+          setError(
+            err?.response?.data?.message || 'Failed to load drivers. Please try again.'
+          );
+        }
+        setDrivers([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // initial load
+  useEffect(() => {
+    fetchDrivers(searchTerm, filterStatus, 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // debounced search/filter re-fetch
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      fetchDrivers(searchTerm, filterStatus, 1);
+    }, 400);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     };
+  }, [searchTerm, filterStatus, fetchDrivers]);
 
-    setWorkers(prev => {
-      const updated = [newWorker, ...prev];
-      localStorage.setItem('smartops_workers', JSON.stringify(updated));
-      return updated;
-    });
-    setAddModalOpen(false);
-    playSound('Success');
-    triggerNotification('System Alert', 'Roster Updated', `Registered staff member ${newWorkerName} under branch: ${newWorkerBranch}`, 'Info');
-    addActivity('Staff Registered', `Added new team member: ${newWorkerName} (${newWorkerRole})`, 'attendance');
-
-    // Reset Form
-    setNewWorkerName('');
-    setNewWorkerEmail('');
-    setNewWorkerPhone('');
-  };
-
-  const handleDeleteWorker = (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to remove ${name} from the active personnel registry?`)) {
-      setWorkers(prev => {
-        const updated = prev.filter(w => w.id !== id);
-        localStorage.setItem('smartops_workers', JSON.stringify(updated));
-        return updated;
+  // ── add team member (real registration) ──────────────────────────────────
+  const handleAddDriver = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName || !newEmail || !newPassword) return;
+    setAddLoading(true);
+    setAddError(null);
+    try {
+      await api.drivers.register({
+        fullName: newName,
+        email: newEmail,
+        mobileNumber: newPhone || undefined,
+        password: newPassword,
+        vehicleNumber: newVehicleNumber || undefined,
+        licenseNumber: newLicenseNumber || undefined,
       });
-      playSound('Error');
-      triggerNotification('System Alert', 'Roster Removed', `Revoked access credentials for staff: ${name}`, 'Warning');
-      addActivity('Staff Suspended', `Removed team member: ${name}`, 'attendance');
+      setAddModalOpen(false);
+      playSound('Success');
+      triggerNotification(
+        'System Alert',
+        'Driver Registered',
+        `New driver ${newName} registered successfully.`,
+        'Info'
+      );
+      addActivity('Driver Registered', `Added new driver: ${newName}`, 'attendance');
+      // Reset form
+      setNewName('');
+      setNewEmail('');
+      setNewPhone('');
+      setNewPassword('');
+      setNewVehicleNumber('');
+      setNewLicenseNumber('');
+      // Refresh list from DB
+      fetchDrivers(searchTerm, filterStatus, 1);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Registration failed. Please check the details and try again.';
+      setAddError(msg);
+    } finally {
+      setAddLoading(false);
     }
   };
 
+  // ── deactivate driver (soft delete via PATCH /status) ────────────────────
+  const handleDeactivateDriver = async (driver: DriverRecord) => {
+    const action = driver.status === 'Active' ? 'deactivate' : 'reactivate';
+    const newStatus = driver.status === 'Active' ? 'inactive' : 'active';
+    if (
+      !window.confirm(
+        `Are you sure you want to ${action} ${driver.fullName}? This will ${
+          action === 'deactivate'
+            ? 'block their login access.'
+            : 'restore their login access.'
+        }`
+      )
+    )
+      return;
+
+    try {
+      await api.drivers.updateStatus(driver.id, newStatus);
+      playSound(action === 'deactivate' ? 'Warning' : 'Success');
+      triggerNotification(
+        'System Alert',
+        `Driver ${action === 'deactivate' ? 'Deactivated' : 'Reactivated'}`,
+        `${driver.fullName} has been ${action}d.`,
+        action === 'deactivate' ? 'Warning' : 'Info'
+      );
+      addActivity(
+        `Driver ${action === 'deactivate' ? 'Deactivated' : 'Reactivated'}`,
+        `${action === 'deactivate' ? 'Blocked' : 'Restored'} access for: ${driver.fullName}`,
+        'attendance'
+      );
+      // Refresh list
+      fetchDrivers(searchTerm, filterStatus, pagination.page);
+    } catch (err: any) {
+      playSound('Error');
+      alert(
+        err?.response?.data?.message ||
+          `Failed to ${action} driver. Please try again.`
+      );
+    }
+  };
+
+  // ── send message (existing behavior preserved) ────────────────────────────
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageText.trim() || !selectedWorker) return;
-
+    if (!messageText.trim() || !selectedDriver) return;
     playSound('Success');
     triggerNotification(
       'System Alert',
       'SMS Dispatch Initiated',
-      `Internal dispatch notification delivered to ${selectedWorker.name}: "${messageText.slice(0, 30)}..."`,
+      `Internal dispatch notification delivered to ${selectedDriver.fullName}: "${messageText.slice(0, 30)}..."`,
       'Info'
     );
     setMessageText('');
     setMessageModalOpen(false);
-    alert(`Message dispatched to ${selectedWorker.name} successfully.`);
+    alert(`Message dispatched to ${selectedDriver.fullName} successfully.`);
   };
 
-  // Filter Logic
-  const filteredWorkers = workers.filter(worker => {
-    const matchesSearch = worker.name.toLowerCase().includes(searchTerm.toLowerCase()) || worker.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'All' || worker.role.includes(filterRole);
-    const matchesStatus = filterStatus === 'All' || worker.status === filterStatus;
-    return matchesSearch && matchesRole && matchesStatus;
-  });
-
+  // ─── render ───────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto pb-16 animate-fade-in text-left">
       {/* Header */}
@@ -149,13 +263,24 @@ export const Workers: React.FC = () => {
             Track employee status registers, branch classifications, performance ratings, and dispatch alert messages.
           </p>
         </div>
-        <Button
-          onClick={() => setAddModalOpen(true)}
-          variant="primary"
-          className="w-full sm:w-auto text-xs py-2 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-teal-900/10"
-        >
-          <Plus className="h-4 w-4" /> Add Team Member
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Refresh button */}
+          <button
+            onClick={() => fetchDrivers(searchTerm, filterStatus, 1)}
+            disabled={loading}
+            title="Refresh driver list"
+            className="p-2 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#1E293B] text-slate-500 hover:text-[#006A6A] hover:border-[#006A6A]/30 transition-all shadow-sm disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          <Button
+            onClick={() => setAddModalOpen(true)}
+            variant="primary"
+            className="w-full sm:w-auto text-xs py-2 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-teal-900/10"
+          >
+            <Plus className="h-4 w-4" /> Add Team Member
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -172,23 +297,18 @@ export const Workers: React.FC = () => {
           />
         </div>
 
-        {/* Roles select */}
+        {/* Role (always Driver from DB — kept for UI consistency) */}
         <div className="flex items-center gap-2 w-full md:w-auto md:ml-auto">
           <SlidersHorizontal className="h-4 w-4 text-slate-400 shrink-0" />
           <select
-            value={filterRole}
-            onChange={e => setFilterRole(e.target.value)}
-            className="w-full md:w-44 px-4 h-11 text-xs border border-[#E5EEFF] dark:border-[#334155] rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-700 focus:outline-none cursor-pointer font-semibold"
+            disabled
+            className="w-full md:w-44 px-4 h-11 text-xs border border-[#E5EEFF] dark:border-[#334155] rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-700 focus:outline-none cursor-not-allowed font-semibold opacity-70"
           >
-            <option value="All">All Roles</option>
-            <option value="Driver">Drivers</option>
-            <option value="Supervisor">Supervisors</option>
-            <option value="Manager">Managers</option>
-            <option value="Clerk">Clerks / Techs</option>
+            <option value="Driver">Drivers Only</option>
           </select>
         </div>
 
-        {/* Status select */}
+        {/* Status filter */}
         <div className="flex items-center gap-2 w-full md:w-auto">
           <Filter className="h-4 w-4 text-slate-400 shrink-0" />
           <select
@@ -197,185 +317,304 @@ export const Workers: React.FC = () => {
             className="w-full md:w-44 px-4 h-11 text-xs border border-[#E5EEFF] dark:border-[#334155] rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-700 focus:outline-none cursor-pointer font-semibold"
           >
             <option value="All">All Statuses</option>
-            <option value="Active">?? Active (On Duty)</option>
-            <option value="On Break">?? On Break</option>
-            <option value="Off Duty">? Off Duty</option>
-            <option value="Absent">?? Absent</option>
+            <option value="Active">✅ Active</option>
+            <option value="Inactive">⛔ Inactive</option>
           </select>
         </div>
-      </div>
 
-      {/* Grid of Workers Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredWorkers.length > 0 ? (
-          filteredWorkers.map(worker => (
-            <div
-              key={worker.id}
-              className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1.5 transition-all duration-300 text-left flex flex-col justify-between"
-            >
-              {/* Profile Details */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={worker.avatar}
-                    alt={worker.name}
-                    className="w-12 h-12 rounded-xl border border-slate-50 dark:border-slate-800 bg-[#F8F9FF] shrink-0 shadow-sm"
-                  />
-                  <div className="min-w-0">
-                    <h4 className="text-[15px] font-semibold text-[#0B1C30] dark:text-white whitespace-normal break-words leading-tight">{worker.name}</h4>
-                    <p className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] font-bold uppercase mt-1 tracking-wider">{worker.role}</p>
-                  </div>
-                  <span className={`ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold border tracking-wide uppercase ${
-                    worker.status === 'Active' ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/15' :
-                    worker.status === 'On Break' ? 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/15' :
-                    worker.status === 'Absent' ? 'bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/15' :
-                    'bg-slate-100 text-[#6D7A79] border-slate-200 dark:bg-slate-800 dark:text-[#94A3B8]'
-                  }`}>
-                    {worker.status}
-                  </span>
-                </div>
-
-                <div className="space-y-2.5 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pt-4 text-[13px] text-[#6D7A79] dark:text-[#94A3B8] font-medium">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-slate-400 shrink-0" />
-                    <span className="whitespace-normal break-words leading-tight font-semibold">{worker.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-slate-400 shrink-0" />
-                    <span className="font-semibold">{worker.phone}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[11px] font-bold border-t border-dashed border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800/80 pt-3 mt-3">
-                    <span className="text-slate-400 uppercase tracking-wider">Location Hub</span>
-                    <span className="text-[#0B1C30] dark:text-[#CBD5E1]">{worker.branch}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[11px] font-bold">
-                    <span className="text-slate-400 uppercase tracking-wider">KPI Rating</span>
-                    <span className="text-[#006A6A] dark:text-[#14B8A6]">{worker.performanceScore}% Score</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Actions */}
-              <div className="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
-                <button
-                  onClick={() => {
-                    setSelectedWorker(worker);
-                    setMessageModalOpen(true);
-                  }}
-                  className="py-2 px-3 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] hover:bg-[#F8F9FF] dark:bg-[#0F172A] dark:hover:bg-slate-800 text-slate-700 dark:text-[#CBD5E1] font-semibold rounded-xl text-[11px] flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
-                >
-                  <Send className="h-3 w-3 text-[#006A6A]" /> Text Alert
-                </button>
-                <button
-                  onClick={() => {
-                    alert(`Details Editor for ${worker.name} requested!`);
-                  }}
-                  className="py-2 px-3 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] hover:bg-[#F8F9FF] dark:bg-[#0F172A] dark:hover:bg-slate-800 text-slate-700 dark:text-[#CBD5E1] font-semibold rounded-xl text-[11px] flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
-                >
-                  <Edit2 className="h-3 w-3 text-[#6D7A79]" /> Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteWorker(worker.id, worker.name)}
-                  className="py-2 px-3 bg-[#EF4444]/10 hover:bg-[#EF4444]/15 text-[#EF4444] font-semibold rounded-xl text-[11px] flex items-center justify-center gap-1 cursor-pointer transition-all border border-[#EF4444]/20 shadow-sm"
-                >
-                  <Trash2 className="h-3 w-3" /> Remove
-                </button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="col-span-full bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-[20px] p-16 text-center shadow-sm">
-            <Users className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto mb-3.5" />
-            <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC]">No personnel found</h4>
-            <p className="text-[13px] text-[#6D7A79] dark:text-[#6D7A79] mt-1 font-medium">Try modifying your query filter tags or register a new staff member.</p>
-          </div>
+        {/* Live count badge */}
+        {!loading && !error && (
+          <span className="ml-auto shrink-0 text-[11px] font-bold text-[#6D7A79] dark:text-[#94A3B8] whitespace-nowrap">
+            {pagination.total} driver{pagination.total !== 1 ? 's' : ''} found
+          </span>
         )}
       </div>
 
-      {/* MODAL 1: ADD TEAM MEMBER */}
-      <Modal isOpen={addModalOpen} onClose={() => setAddModalOpen(false)} title="Register Team Member">
-        <form onSubmit={handleAddWorker} className="space-y-4 text-left">
+      {/* ── Loading State ── */}
+      {loading && (
+        <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-[20px] p-16 text-center shadow-sm">
+          <Loader2 className="h-8 w-8 text-[#006A6A] dark:text-[#14B8A6] mx-auto mb-3 animate-spin" />
+          <p className="text-[14px] font-semibold text-[#0B1C30] dark:text-[#F8FAFC]">Loading drivers...</p>
+          <p className="text-[12px] text-[#6D7A79] dark:text-[#94A3B8] mt-1">Fetching from database, please wait.</p>
+        </div>
+      )}
+
+      {/* ── Error State ── */}
+      {!loading && error && (
+        <div className="bg-white dark:bg-[#1E293B] border border-[#EF4444]/30 rounded-[20px] p-16 text-center shadow-sm">
+          <AlertTriangle className="h-10 w-10 text-[#EF4444] mx-auto mb-3.5" />
+          <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC]">Failed to load drivers</h4>
+          <p className="text-[13px] text-[#EF4444] mt-1 font-medium max-w-md mx-auto">{error}</p>
+          <div className="flex items-center justify-center gap-3 mt-5 flex-wrap">
+            <button
+              onClick={() => fetchDrivers(searchTerm, filterStatus, 1)}
+              className="px-5 py-2 rounded-xl bg-[#006A6A] hover:bg-[#005555] text-white text-[12px] font-bold transition-colors"
+            >
+              Try Again
+            </button>
+            {(error.toLowerCase().includes('token') ||
+              error.toLowerCase().includes('expired') ||
+              error.toLowerCase().includes('log') ||
+              error.toLowerCase().includes('session')) && (
+              <button
+                onClick={() => {
+                  localStorage.removeItem('smartops_jwt');
+                  localStorage.removeItem('smartops_user');
+                  window.location.href = '/';
+                }}
+                className="px-5 py-2 rounded-xl bg-[#EF4444] hover:bg-red-600 text-white text-[12px] font-bold transition-colors"
+              >
+                Log Out & Log In Again
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+
+      {/* ── Driver Cards Grid ── */}
+      {!loading && !error && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {drivers.length > 0 ? (
+            drivers.map(driver => (
+              <div
+                key={driver.id}
+                className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1.5 transition-all duration-300 text-left flex flex-col justify-between"
+              >
+                {/* Profile Details */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={getAvatarUrl(driver.fullName)}
+                      alt={driver.fullName}
+                      className="w-12 h-12 rounded-xl border border-slate-50 dark:border-slate-800 bg-[#F8F9FF] shrink-0 shadow-sm"
+                    />
+                    <div className="min-w-0">
+                      <h4 className="text-[15px] font-semibold text-[#0B1C30] dark:text-white whitespace-normal break-words leading-tight">
+                        {driver.fullName}
+                      </h4>
+                      <p className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] font-bold uppercase mt-1 tracking-wider">
+                        {driver.role}
+                        {driver.driverId ? ` · ${driver.driverId}` : ''}
+                      </p>
+                    </div>
+                    <span
+                      className={`ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold border tracking-wide uppercase ${
+                        driver.status === 'Active'
+                          ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/15'
+                          : 'bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/20'
+                      }`}
+                    >
+                      {driver.status}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pt-4 text-[13px] text-[#6D7A79] dark:text-[#94A3B8] font-medium">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="whitespace-normal break-words leading-tight font-semibold">
+                        {driver.email}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="font-semibold">{driver.mobileNumber || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px] font-bold border-t border-dashed border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800/80 pt-3 mt-3">
+                      <span className="text-slate-400 uppercase tracking-wider">Vehicle</span>
+                      <span className="text-[#0B1C30] dark:text-[#CBD5E1]">
+                        {driver.vehicleNumber || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px] font-bold">
+                      <span className="text-slate-400 uppercase tracking-wider">License</span>
+                      <span className="text-[#0B1C30] dark:text-[#CBD5E1]">
+                        {driver.licenseNumber || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px] font-bold">
+                      <span className="text-slate-400 uppercase tracking-wider">Registered</span>
+                      <span className="text-[#006A6A] dark:text-[#14B8A6]">
+                        {formatDate(driver.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Actions */}
+                <div className="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
+                  <button
+                    onClick={() => {
+                      setSelectedDriver(driver);
+                      setMessageModalOpen(true);
+                    }}
+                    className="py-2 px-3 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] hover:bg-[#F8F9FF] dark:bg-[#0F172A] dark:hover:bg-slate-800 text-slate-700 dark:text-[#CBD5E1] font-semibold rounded-xl text-[11px] flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
+                  >
+                    <Send className="h-3 w-3 text-[#006A6A]" /> Text Alert
+                  </button>
+                  <button
+                    onClick={() => {
+                      alert(`Details editor for ${driver.fullName} — coming soon.`);
+                    }}
+                    className="py-2 px-3 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] hover:bg-[#F8F9FF] dark:bg-[#0F172A] dark:hover:bg-slate-800 text-slate-700 dark:text-[#CBD5E1] font-semibold rounded-xl text-[11px] flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
+                  >
+                    <Edit2 className="h-3 w-3 text-[#6D7A79]" /> Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeactivateDriver(driver)}
+                    className={`py-2 px-3 font-semibold rounded-xl text-[11px] flex items-center justify-center gap-1 cursor-pointer transition-all border shadow-sm ${
+                      driver.status === 'Active'
+                        ? 'bg-[#EF4444]/10 hover:bg-[#EF4444]/15 text-[#EF4444] border-[#EF4444]/20'
+                        : 'bg-[#10B981]/10 hover:bg-[#10B981]/15 text-[#10B981] border-[#10B981]/20'
+                    }`}
+                  >
+                    {driver.status === 'Active' ? (
+                      <><UserX className="h-3 w-3" /> Deactivate</>
+                    ) : (
+                      <><UserCheck className="h-3 w-3" /> Activate</>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            /* Empty state */
+            <div className="col-span-full bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-[20px] p-16 text-center shadow-sm">
+              <Users className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto mb-3.5" />
+              <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC]">No personnel found</h4>
+              <p className="text-[13px] text-[#6D7A79] dark:text-[#6D7A79] mt-1 font-medium">
+                {searchTerm || filterStatus !== 'All'
+                  ? 'Try modifying your search or filters.'
+                  : 'No registered drivers are available yet. Register a new driver using the button above.'}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && !error && pagination.pages > 1 && (
+        <div className="flex justify-center items-center gap-3 pt-2">
+          <button
+            onClick={() => fetchDrivers(searchTerm, filterStatus, pagination.page - 1)}
+            disabled={pagination.page <= 1}
+            className="px-4 py-2 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#1E293B] text-[12px] font-semibold text-slate-700 dark:text-[#CBD5E1] disabled:opacity-40 hover:border-[#006A6A]/40 transition-all"
+          >
+            ← Prev
+          </button>
+          <span className="text-[12px] font-bold text-[#6D7A79] dark:text-[#94A3B8]">
+            Page {pagination.page} of {pagination.pages}
+          </span>
+          <button
+            onClick={() => fetchDrivers(searchTerm, filterStatus, pagination.page + 1)}
+            disabled={pagination.page >= pagination.pages}
+            className="px-4 py-2 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#1E293B] text-[12px] font-semibold text-slate-700 dark:text-[#CBD5E1] disabled:opacity-40 hover:border-[#006A6A]/40 transition-all"
+          >
+            Next →
+          </button>
+        </div>
+      )}
+
+      {/* ─── MODAL 1: REGISTER DRIVER ─────────────────────────────────────── */}
+      <Modal isOpen={addModalOpen} onClose={() => { setAddModalOpen(false); setAddError(null); }} title="Register New Driver">
+        <form onSubmit={handleAddDriver} className="space-y-4 text-left">
+          {addError && (
+            <div className="p-3 rounded-xl bg-[#EF4444]/10 border border-[#EF4444]/20 text-[12px] font-semibold text-[#EF4444] flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              {addError}
+            </div>
+          )}
+
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Staff Full Name</label>
+            <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Full Name *</label>
             <input
               type="text"
               required
               placeholder="e.g. Harpreet Singh"
-              value={newWorkerName}
-              onChange={e => setNewWorkerName(e.target.value)}
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
               className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Assigned Role</label>
-              <select
-                value={newWorkerRole}
-                onChange={e => setNewWorkerRole(e.target.value)}
-                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
-              >
-                <option>Driver</option>
-                <option>Senior Driver</option>
-                <option>Warehouse Supervisor</option>
-                <option>Fleet Manager</option>
-                <option>Technician</option>
-                <option>Inventory Clerk</option>
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Location HQ Hub</label>
-              <select
-                value={newWorkerBranch}
-                onChange={e => setNewWorkerBranch(e.target.value)}
-                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
-              >
-                <option>Pune HQ</option>
-                <option>Mumbai Hub</option>
-                <option>Bangalore Whse</option>
-              </select>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Email Address</label>
+              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Email Address *</label>
               <input
                 type="email"
                 required
-                placeholder="name@smartops.com"
-                value={newWorkerEmail}
-                onChange={e => setNewWorkerEmail(e.target.value)}
+                placeholder="driver@smartops.com"
+                value={newEmail}
+                onChange={e => setNewEmail(e.target.value)}
                 className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
               />
             </div>
-
             <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Mobile Number</label>
               <input
                 type="text"
                 placeholder="+91 XXXXX XXXXX"
-                value={newWorkerPhone}
-                onChange={e => setNewWorkerPhone(e.target.value)}
+                value={newPhone}
+                onChange={e => setNewPhone(e.target.value)}
+                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Password * <span className="text-[11px] font-normal text-[#6D7A79] normal-case">(min. 6 characters)</span></label>
+            <input
+              type="password"
+              required
+              minLength={6}
+              placeholder="Set a secure password for the driver"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Vehicle Number</label>
+              <input
+                type="text"
+                placeholder="e.g. MH-12-QW-9874"
+                value={newVehicleNumber}
+                onChange={e => setNewVehicleNumber(e.target.value)}
+                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">License Number</label>
+              <input
+                type="text"
+                placeholder="e.g. DL-MH12-9988"
+                value={newLicenseNumber}
+                onChange={e => setNewLicenseNumber(e.target.value)}
                 className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
               />
             </div>
           </div>
 
           <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 mt-4">
-            <Button type="button" variant="outline" onClick={() => setAddModalOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => { setAddModalOpen(false); setAddError(null); }}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary">
-              Register Member
+            <Button type="submit" variant="primary" className="flex items-center gap-1.5" disabled={addLoading}>
+              {addLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {addLoading ? 'Registering...' : 'Register Driver'}
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* MODAL 2: DISPATCH SMS TEXT */}
-      <Modal isOpen={messageModalOpen} onClose={() => setMessageModalOpen(false)} title={`Dispatch SMS Alert: ${selectedWorker?.name}`}>
+      {/* ─── MODAL 2: DISPATCH SMS TEXT ───────────────────────────────────── */}
+      <Modal
+        isOpen={messageModalOpen}
+        onClose={() => setMessageModalOpen(false)}
+        title={`Dispatch SMS Alert: ${selectedDriver?.fullName}`}
+      >
         <form onSubmit={handleSendMessage} className="space-y-4 text-left">
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">SMS Text Notification Details</label>
@@ -388,7 +627,6 @@ export const Workers: React.FC = () => {
               className="w-full px-4 py-3 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium resize-none"
             />
           </div>
-
           <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
             <Button type="button" variant="outline" onClick={() => setMessageModalOpen(false)}>
               Cancel
@@ -402,5 +640,3 @@ export const Workers: React.FC = () => {
     </div>
   );
 };
-
-
