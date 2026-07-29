@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿import React from 'react';
+=======
+import React from 'react';
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { motion } from 'framer-motion';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

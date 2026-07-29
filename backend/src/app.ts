@@ -7,6 +7,11 @@ import salaryRoutes from './routes/salaryRoutes';
 import fleetRoutes from './routes/fleetRoutes';
 import tripRoutes from './routes/tripRoutes';
 import podRoutes from './routes/podRoutes';
+<<<<<<< HEAD
+=======
+import mapRoutes from './routes/mapRoutes';
+import userRoutes from './routes/userRoutes';
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
 const app = express();
 
@@ -27,6 +32,12 @@ app.use('/api/salary', salaryRoutes);
 app.use('/api/fleet', fleetRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/pod', podRoutes);
+<<<<<<< HEAD
+=======
+app.use('/api/maps', mapRoutes);
+app.use('/api/users', userRoutes);
+
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
 // Global Error Handler middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

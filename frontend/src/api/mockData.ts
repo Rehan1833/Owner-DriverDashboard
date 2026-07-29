@@ -1,5 +1,6 @@
 import { Vehicle, Trip, Task, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord, PODRecord } from '../types';
 
+<<<<<<< HEAD
 export const mockVehicles: Vehicle[] = [
   {
     id: 'v1',
@@ -222,3 +223,14 @@ export const mockPODs: PODRecord[] = [
     updatedAt: new Date().toISOString()
   }
 ];
+=======
+export const mockVehicles: Vehicle[] = [];
+export const mockTrips: Trip[] = [];
+export const mockTasks: Task[] = [];
+export const mockInventory: InventoryItem[] = [];
+export const mockPayroll: PayrollRecord[] = [];
+export const mockAttendance: AttendanceRecord[] = [];
+export const mockNotifications: SystemNotification[] = [];
+export const mockActivities: ActivityItem[] = [];
+export const mockPODs: PODRecord[] = [];
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a

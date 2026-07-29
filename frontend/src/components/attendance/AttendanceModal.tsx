@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿import React, { useState, useEffect } from 'react';
+=======
+import React, { useState, useEffect } from 'react';
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Clock, Calendar, Wifi, CheckCircle, AlertOctagon, LogOut, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { useOperations } from '../../store/OperationsContext';

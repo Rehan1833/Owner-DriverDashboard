@@ -6,6 +6,11 @@ export interface User {
   email: string;
   mobileNumber: string;
   role: UserRole;
+<<<<<<< HEAD
+=======
+  isEmailVerified?: boolean;
+  isPhoneVerified?: boolean;
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   companyName?: string;
   driverId?: string;
   vehicleNumber?: string;
@@ -13,6 +18,30 @@ export interface User {
   avatarUrl?: string;
 }
 
+<<<<<<< HEAD
+=======
+/**
+ * DriverRecord — shape returned by GET /api/users/drivers.
+ * Mirrors the backend DTO (no sensitive fields).
+ */
+export interface DriverRecord {
+  id: string;
+  fullName: string;
+  email: string;
+  mobileNumber: string;
+  role: 'Driver';
+  driverId: string | null;
+  vehicleNumber: string | null;
+  licenseNumber: string | null;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+  /** Derived by backend: 'Active' when isEmailVerified=true, 'Inactive' otherwise */
+  status: 'Active' | 'Inactive';
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 export interface Vehicle {
   id: string;
   vehicleNumber: string;
@@ -36,10 +65,32 @@ export interface Vehicle {
   insuranceExpiry?: string;
 }
 
+<<<<<<< HEAD
+=======
+export interface TripStop {
+  id?: string;
+  _id?: string;
+  sequence: number;
+  address: string;
+  latitude: number;
+  longitude: number;
+  status: 'Pending' | 'Arrived' | 'Completed' | 'Skipped';
+  arrivedAt?: string;
+  completedAt?: string;
+  stopReason?: string;
+  podId?: string;
+  notes?: string;
+}
+
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 export interface Trip {
   id: string;
   tripNumber: string;
   vehicleNumber: string;
+<<<<<<< HEAD
+=======
+  vehicleId?: string;
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   driverId: string;
   driverName: string;
   pickupLocation: string;
@@ -49,16 +100,52 @@ export interface Trip {
   material: string;
   weight: string;
   invoiceNumber: string;
+<<<<<<< HEAD
   status: 'Assigned' | 'Accepted' | 'Started' | 'Reached Pickup' | 'Loaded' | 'In Transit' | 'Reached Destination' | 'Delivered' | 'Completed' | 'Delayed';
+=======
+  priority?: 'Normal' | 'High' | 'Urgent';
+  cargo?: {
+    description?: string;
+    quantity?: number;
+    weight?: string;
+  };
+  stops?: TripStop[];
+  scheduledStart?: string;
+  expectedEnd?: string;
+  notes?: string;
+  status: 'Draft' | 'Assigned' | 'Accepted' | 'Started' | 'Reached Pickup' | 'Loaded' | 'In Transit' | 'At Stop' | 'Reached Destination' | 'Delivered' | 'Completed' | 'Cancelled' | 'Delayed' | 'Incident Reported';
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   eta: string;
   distanceRemaining: number;
   stopReason?: string;
   deliveryPhoto?: string[];
   signatureData?: string;
   timestamp: string;
+<<<<<<< HEAD
   vehicleId?: string;
 }
 
+=======
+  startedAt?: string;
+  completedAt?: string;
+  // Google Maps Telemetry Fields
+  currentLocation?: string;
+  currentAddress?: string;
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
+  speed?: number;
+  heading?: number;
+  lastGpsUpdate?: string;
+  gpsFreshnessStatus?: 'LIVE' | 'STALE' | 'OFFLINE';
+  gpsFreshnessMinutesAgo?: number;
+  pickupCoordinates?: { lat: number; lng: number };
+  dropCoordinates?: { lat: number; lng: number };
+  locationHistory?: Array<{ lat: number; lng: number; timestamp: string; address?: string; speed?: number; heading?: number; accuracy?: number }>;
+}
+
+
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 export interface Task {
   id: string;
   title: string;

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useOperations } from '../../store/OperationsContext';
@@ -11,6 +12,85 @@ export const Register: React.FC = () => {
   const [role, setRole] = useState<'Owner' | 'Driver'>('Owner');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+=======
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useOperations } from '../../store/OperationsContext';
+import { UserRole } from '../../types';
+import { motion } from 'framer-motion';
+import {
+  ShieldCheck,
+  Eye,
+  EyeOff,
+  Truck,
+  KeyRound,
+  ArrowRight,
+  Loader2,
+  AlertCircle,
+  Activity,
+  Package,
+  Mail,
+  CheckCircle,
+  RefreshCw,
+  ArrowLeft,
+  User as UserIcon,
+  Phone,
+  Building,
+  FileText
+} from 'lucide-react';
+import { GoogleAuthButton } from '../../components/auth/GoogleAuthButton';
+
+// ── Design tokens — exact values from SmartOps dashboard & Login page ────────
+const DS = {
+  bg:             '#F8F9FF',
+  card:           '#FFFFFF',
+  border:         '#E5EEFF',
+  primary:        '#006A6A',
+  primaryGrad:    'linear-gradient(135deg, #006A6A 0%, #00A3A3 100%)',
+  primaryShadow:  'rgba(0, 106, 106, 0.15)',
+  primaryFocus:   'rgba(0, 106, 106, 0.12)',
+  surfaceLow:     '#EFF4FF',
+  textPrimary:    '#0B1C30',
+  textSecondary:  '#545F73',
+  textMuted:      '#6D7A79',
+  textDisabled:   '#BCC9C8',
+  danger:         '#BA1A1A',
+  dangerBg:       'rgba(186, 26, 26, 0.08)',
+  dangerBorder:   'rgba(186, 26, 26, 0.15)',
+  shadowSm:       '0 1px 3px 0 rgba(11,28,48,0.03), 0 1px 2px -1px rgba(11,28,48,0.02)',
+  shadowMd:       '0 4px 12px -2px rgba(11,28,48,0.05), 0 2px 6px -2px rgba(11,28,48,0.03)',
+  shadowCard:     '0 1px 3px 0 rgba(11,28,48,0.03), 0 4px 12px -4px rgba(11,28,48,0.04)',
+  radius:         '18px',
+  radiusInput:    '12px',
+  radiusBtn:      '12px',
+};
+
+// ── Portal options ─────────────────────────────────────────────────────────────
+const PORTALS: { role: UserRole; label: string; Icon: React.FC<{ size?: number; strokeWidth?: number }> }[] = [
+  { role: 'Owner',  label: 'Owner Registration',  Icon: KeyRound },
+  { role: 'Driver', label: 'Driver Registration', Icon: Truck },
+];
+
+// ── Features bullets ──────────────────────────────────────────────────────────
+const FEATURES = [
+  { Icon: Activity, label: 'Production Monitoring' },
+  { Icon: Truck,    label: 'Fleet & Driver Management' },
+  { Icon: Package,  label: 'Inventory Tracking' },
+];
+
+export const Register: React.FC = () => {
+  const { register, verifyOTP, resendOTP, user } = useOperations();
+  const navigate = useNavigate();
+
+  const [step, setStep] = useState<'form' | 'otp' | 'success'>('form');
+  const [selectedRole, setSelectedRole] = useState<UserRole>('Owner');
+  const [verificationMethod, setVerificationMethod] = useState<'email' | 'mobile'>('email');
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
   // Form State
   const [formData, setFormData] = useState({
@@ -19,27 +99,88 @@ export const Register: React.FC = () => {
     mobileNumber: '',
     password: '',
     confirmPassword: '',
+<<<<<<< HEAD
+=======
+    securityQuestion: "What is your best friend's name?",
+    securityAnswer: '',
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
     companyName: '',
     driverId: '',
     vehicleNumber: '',
     licenseNumber: ''
   });
 
+<<<<<<< HEAD
+=======
+  // 6-Box OTP Inputs State
+  const [otpBoxes, setOtpBoxes] = useState<string[]>(['', '', '', '', '', '']);
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [cooldown, setCooldown] = useState(60);
+
+  const handleGoogleSuccess = (res: any) => {
+    if (res.user) {
+      navigate(res.user.role === 'Driver' ? '/driver' : '/owner');
+    }
+  };
+
+  const handleGoogleError = (error: string) => {
+    setErrorMsg(error);
+  };
+
+  useEffect(() => {
+    if (user) navigate(user.role === 'Driver' ? '/driver' : '/owner');
+  }, [user, navigate]);
+
+  useEffect(() => {
+    let timer: any;
+    if (step === 'otp' && cooldown > 0) {
+      timer = setInterval(() => {
+        setCooldown(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [step, cooldown]);
+
+  // Focus box 0 on OTP screen mount
+  useEffect(() => {
+    if (step === 'otp' && otpInputRefs.current[0]) {
+      otpInputRefs.current[0]?.focus();
+    }
+  }, [step]);
+
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+<<<<<<< HEAD
   const handleRegister = async (e: React.FormEvent) => {
+=======
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
     e.preventDefault();
     setErrorMsg('');
 
     if (formData.password !== formData.confirmPassword) {
+<<<<<<< HEAD
       setErrorMsg("Passwords do not match.");
+=======
+      setErrorMsg("Password and Confirm Password must match.");
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       return;
     }
 
     if (formData.password.length < 6) {
+<<<<<<< HEAD
       setErrorMsg("Password must be at least 6 characters.");
+=======
+      setErrorMsg("Password must be at least 6 characters long.");
+      return;
+    }
+
+    if (selectedRole === 'Owner' && formData.email.toLowerCase().trim() !== 'rehanchaudhari181133@gmail.com') {
+      setErrorMsg("Only rehanchaudhari181133@gmail.com is authorized to register as Owner account.");
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       return;
     }
 
@@ -49,18 +190,31 @@ export const Register: React.FC = () => {
         fullName: formData.fullName,
         email: formData.email,
         mobileNumber: formData.mobileNumber,
+<<<<<<< HEAD
         role,
         password: formData.password
       };
 
       if (role === 'Owner') {
         payload.companyName = formData.companyName || 'SmartOps Enterprise Ltd.';
+=======
+        role: selectedRole,
+        password: formData.password,
+        securityQuestion: formData.securityQuestion,
+        securityAnswer: formData.securityAnswer,
+        verificationMethod
+      };
+
+      if (selectedRole === 'Owner') {
+        payload.companyName = formData.companyName || `${formData.fullName}'s Enterprise`;
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       } else {
         payload.driverId = formData.driverId || `DRV-${Math.floor(Math.random() * 9000) + 1000}`;
         payload.vehicleNumber = formData.vehicleNumber;
         payload.licenseNumber = formData.licenseNumber;
       }
 
+<<<<<<< HEAD
       await register(payload);
       setLoading(false);
       navigate(role === 'Owner' ? '/owner' : '/driver');
@@ -284,3 +438,769 @@ export const Register: React.FC = () => {
   );
 };
 
+=======
+      const res = await register(payload);
+      setLoading(false);
+      if (res && res.success !== false) {
+        // BYPASSED GMAIL/MOBILE OTP VERIFICATION STEP AS REQUESTED
+        setStep('success');
+        setTimeout(() => {
+          navigate('/login');
+        }, 1800);
+      } else {
+        setErrorMsg(res?.message || 'Unable to register account. Please try again.');
+      }
+    } catch (err: any) {
+      setLoading(false);
+      setErrorMsg(err.response?.data?.message || 'Unable to send verification OTP code. Please verify your details.');
+    }
+  };
+
+  // 6-box OTP handlers (auto-advance, backspace, paste)
+  const handleOtpBoxChange = (index: number, value: string) => {
+    const char = value.slice(-1);
+    if (!/^\d*$/.test(char)) return; // numbers only
+
+    const newBoxes = [...otpBoxes];
+    newBoxes[index] = char;
+    setOtpBoxes(newBoxes);
+
+    if (char && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      if (!otpBoxes[index] && index > 0) {
+        otpInputRefs.current[index - 1]?.focus();
+      }
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').trim();
+    if (/^\d{6}$/.test(pasted)) {
+      const digits = pasted.split('');
+      setOtpBoxes(digits);
+      otpInputRefs.current[5]?.focus();
+    }
+  };
+
+  const handleOTPVerifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    const fullOtp = otpBoxes.join('');
+
+    if (fullOtp.length < 6) {
+      setErrorMsg("Please enter the complete 6-digit OTP verification code.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        email: formData.email,
+        mobileNumber: formData.mobileNumber,
+        channel: verificationMethod,
+        otpCode: fullOtp
+      };
+      await verifyOTP(payload);
+      setLoading(false);
+      setStep('success');
+      setTimeout(() => {
+        navigate('/login');
+      }, 2500);
+    } catch (err: any) {
+      setLoading(false);
+      setErrorMsg(err.response?.data?.message || 'Invalid OTP code or OTP expired.');
+    }
+  };
+
+  const handleResendOTP = async () => {
+    if (cooldown > 0) return;
+    setErrorMsg('');
+    setSuccessMsg('');
+    setLoading(true);
+    try {
+      const payload = {
+        email: formData.email,
+        mobileNumber: formData.mobileNumber,
+        channel: verificationMethod
+      };
+      const res = await resendOTP(payload);
+      setLoading(false);
+      if (res && res.success === false) {
+        setErrorMsg(res.message || 'Verification email could not be sent. Please try again.');
+      } else {
+        setCooldown(30);
+        setOtpBoxes(['', '', '', '', '', '']);
+        const dest = verificationMethod === 'mobile' ? formData.mobileNumber : formData.email;
+        setSuccessMsg(res?.message || `Fresh 6-digit OTP code sent to your ${verificationMethod === 'mobile' ? 'Mobile Number' : 'Gmail'} (${dest}).`);
+        otpInputRefs.current[0]?.focus();
+      }
+    } catch (err: any) {
+      setLoading(false);
+      setSuccessMsg('');
+      setErrorMsg(err.response?.data?.message || 'Verification email could not be sent. Please try again.');
+    }
+  };
+
+  // Input styling
+  const inputBase: React.CSSProperties = {
+    width: '100%',
+    height: 48,
+    borderRadius: DS.radiusInput,
+    border: `1px solid ${DS.border}`,
+    background: DS.card,
+    color: DS.textPrimary,
+    padding: '0 16px',
+    fontSize: 14,
+    fontWeight: 500,
+    fontFamily: 'inherit',
+    boxShadow: '0 1px 2px 0 rgba(11,28,48,0.02)',
+    outline: 'none',
+    boxSizing: 'border-box' as const,
+    transition: 'border-color 200ms ease, box-shadow 200ms ease',
+  };
+
+  const onFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.style.borderColor = DS.primary;
+    e.currentTarget.style.boxShadow   = `0 0 0 3px ${DS.primaryFocus}, 0 1px 2px 0 rgba(11,28,48,0.02)`;
+  };
+  const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.style.borderColor = DS.border;
+    e.currentTarget.style.boxShadow   = '0 1px 2px 0 rgba(11,28,48,0.02)';
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: 13,
+    fontWeight: 700,
+    color: DS.textSecondary,
+    marginBottom: 6,
+    letterSpacing: '0.02em',
+    textTransform: 'uppercase',
+  };
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      width: '100vw',
+      background: DS.bg,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '40px 24px',
+      position: 'relative',
+      overflow: 'hidden',
+      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+      boxSizing: 'border-box',
+    }}>
+      {/* Ambient background dot grid */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: `radial-gradient(${DS.border} 1px, transparent 1px)`,
+        backgroundSize: '24px 24px',
+        opacity: 0.7,
+        pointerEvents: 'none',
+      }} />
+
+      {/* Top-right soft teal glow */}
+      <div style={{
+        position: 'absolute', top: -100, right: -100,
+        width: 400, height: 400,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(0,106,106,0.07) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Bottom-left glow */}
+      <div style={{
+        position: 'absolute', bottom: -60, left: -60,
+        width: 320, height: 320,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(0,163,163,0.06) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Main split container */}
+      <div style={{
+        width: '100%',
+        maxWidth: 1100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 56,
+        position: 'relative',
+        zIndex: 1,
+      }}>
+
+        {/* LEFT PANEL: Brand identity */}
+        <motion.div
+          className="login-left-panel"
+          initial={{ opacity: 0, x: -24 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 400 / 1000, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            flex: '1 1 480px',
+            maxWidth: 480,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 32,
+          }}
+        >
+          {/* Logo badge */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 44, height: 44,
+              borderRadius: 14,
+              background: DS.primaryGrad,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: `0 4px 14px ${DS.primaryShadow}`,
+            }}>
+              <ShieldCheck size={22} color="#FFFFFF" strokeWidth={2.2} />
+            </div>
+            <div>
+              <span style={{ fontSize: 22, fontWeight: 800, color: DS.textPrimary, letterSpacing: '-0.03em' }}>
+                Smart<span style={{ color: DS.primary }}>Ops</span>
+              </span>
+              <span style={{
+                display: 'block', fontSize: 11, fontWeight: 700,
+                color: DS.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: -2,
+              }}>
+                Enterprise Control
+              </span>
+            </div>
+          </div>
+
+          {/* Heading */}
+          <div>
+            <h1 style={{
+              fontSize: 32, fontWeight: 800,
+              color: DS.textPrimary,
+              letterSpacing: '-0.03em', lineHeight: 1.2,
+              margin: '0 0 12px 0',
+            }}>
+              Create Your Enterprise Account
+            </h1>
+            <p style={{
+              fontSize: 15, fontWeight: 500,
+              color: DS.textSecondary,
+              lineHeight: 1.55, margin: 0,
+            }}>
+              Join SmartOps logistics & manufacturing control network. Single portal for operational management and real-time telemetry.
+            </p>
+          </div>
+
+          {/* Feature list */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {FEATURES.map(({ Icon, label }) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 32, height: 32,
+                  borderRadius: 10,
+                  background: DS.surfaceLow,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  <Icon size={16} color={DS.primary} strokeWidth={2} />
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 600, color: DS.textPrimary }}>
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Platform status indicator */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 14px',
+            background: DS.surfaceLow,
+            borderRadius: 10, width: 'fit-content',
+            border: `1px solid ${DS.border}`,
+          }}>
+            <span style={{
+              width: 8, height: 8, borderRadius: '50%',
+              background: '#10B981', display: 'inline-block',
+              boxShadow: '0 0 0 3px rgba(16,185,129,0.2)',
+            }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: DS.textSecondary }}>
+              SmartOps Gate: <strong style={{ color: DS.textPrimary }}>Operational (v4.1.2)</strong>
+            </span>
+          </div>
+        </motion.div>
+
+        {/* Divider line */}
+        <div
+          className="login-divider"
+          style={{ width: 1, height: 440, background: DS.border, flexShrink: 0 }}
+        />
+
+        {/* RIGHT PANEL: Card container */}
+        <div style={{ flex: '1 1 480px', maxWidth: 480, width: '100%' }}>
+          <motion.div
+            className="login-card"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 350 / 1000, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              background: DS.card,
+              borderRadius: DS.radius,
+              border: `1px solid ${DS.border}`,
+              boxShadow: DS.shadowCard,
+              padding: '36px 32px',
+              boxSizing: 'border-box',
+            }}
+          >
+            {/* STEP 1: FORM */}
+            {step === 'form' && (
+              <>
+                <div style={{ marginBottom: 24, textAlign: 'left' }}>
+                  <h2 style={{ fontSize: 22, fontWeight: 800, color: DS.textPrimary, margin: 0, letterSpacing: '-0.02em' }}>
+                    Register Account
+                  </h2>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: DS.textMuted, margin: '4px 0 0 0' }}>
+                    Enter credentials to initiate Email OTP verification.
+                  </p>
+                </div>
+
+                {/* Role Tabs */}
+                <div style={{
+                  display: 'grid', gridTemplateColumns: '1fr 1fr',
+                  background: DS.surfaceLow, borderRadius: DS.radiusInput,
+                  border: `1px solid ${DS.border}`, padding: 3, gap: 2, height: 44, marginBottom: 20,
+                }}>
+                  {PORTALS.map(({ role, label, Icon }) => {
+                    const active = selectedRole === role;
+                    return (
+                      <button
+                        key={role}
+                        type="button"
+                        onClick={() => setSelectedRole(role)}
+                        style={{
+                          borderRadius: 9,
+                          border: active ? `1px solid ${DS.border}` : 'none',
+                          cursor: 'pointer',
+                          background: active ? DS.card : 'transparent',
+                          color: active ? DS.primary : DS.textMuted,
+                          fontWeight: active ? 700 : 500,
+                          fontSize: 12, fontFamily: 'inherit',
+                          boxShadow: active ? DS.shadowSm : 'none',
+                          transition: 'all 200ms ease',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                        }}
+                      >
+                        <Icon size={14} strokeWidth={2.1} />
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Error Banner */}
+                {errorMsg && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                      background: DS.dangerBg, border: `1px solid ${DS.dangerBorder}`,
+                      borderRadius: DS.radiusInput, padding: '10px 14px', marginBottom: 20,
+                      display: 'flex', alignItems: 'center', gap: 10,
+                    }}
+                  >
+                    <AlertCircle size={16} color={DS.danger} style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: DS.danger }}>{errorMsg}</span>
+                  </motion.div>
+                )}
+
+                <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left' }}>
+                  {/* Full Name */}
+                  <div>
+                    <label htmlFor="reg-fullname" style={labelStyle}>Full Name</label>
+                    <input
+                      id="reg-fullname"
+                      type="text"
+                      name="fullName"
+                      required
+                      placeholder="e.g. John Doe"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                      style={inputBase}
+                      onFocus={onFocus}
+                      onBlur={onBlur}
+                    />
+                  </div>
+
+                  {/* Email & Mobile */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label htmlFor="reg-email" style={labelStyle}>Workspace Email</label>
+                      <input
+                        id="reg-email"
+                        type="email"
+                        name="email"
+                        required
+                        placeholder="john@company.com"
+                        value={formData.email}
+                        onChange={handleChange}
+                        style={inputBase}
+                        onFocus={onFocus}
+                        onBlur={onBlur}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="reg-mobile" style={labelStyle}>Mobile Contact</label>
+                      <input
+                        id="reg-mobile"
+                        type="text"
+                        name="mobileNumber"
+                        required
+                        placeholder="+91 99999 99999"
+                        value={formData.mobileNumber}
+                        onChange={handleChange}
+                        style={inputBase}
+                        onFocus={onFocus}
+                        onBlur={onBlur}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Security Question Section */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
+                    <div>
+                      <label htmlFor="reg-security-q" style={labelStyle}>Security Question</label>
+                      <select
+                        id="reg-security-q"
+                        name="securityQuestion"
+                        value={formData.securityQuestion}
+                        onChange={(e: any) => setFormData(prev => ({ ...prev, securityQuestion: e.target.value }))}
+                        style={{
+                          ...inputBase,
+                          appearance: 'none',
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 12px center',
+                          paddingRight: 36,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="What is your best friend's name?">What is your best friend's name?</option>
+                        <option value="What was the name of your first pet?">What was the name of your first pet?</option>
+                        <option value="In what city were you born?">In what city were you born?</option>
+                        <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="reg-security-a" style={labelStyle}>Security Secret Answer</label>
+                      <input
+                        id="reg-security-a"
+                        type="text"
+                        name="securityAnswer"
+                        required
+                        placeholder="Secret Answer (e.g. Rahul)"
+                        value={formData.securityAnswer}
+                        onChange={handleChange}
+                        style={inputBase}
+                        onFocus={onFocus}
+                        onBlur={onBlur}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Passwords */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
+                    <div>
+                      <label htmlFor="reg-pwd" style={labelStyle}>Password</label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          id="reg-pwd"
+                          type={showPwd ? 'text' : 'password'}
+                          name="password"
+                          required
+                          placeholder="••••••••"
+                          value={formData.password}
+                          onChange={handleChange}
+                          style={{ ...inputBase, paddingRight: 40 }}
+                          onFocus={onFocus}
+                          onBlur={onBlur}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPwd(!showPwd)}
+                          style={{
+                            position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                            background: 'none', border: 'none', cursor: 'pointer', color: DS.textMuted, padding: 0,
+                          }}
+                        >
+                          {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="reg-confirm-pwd" style={labelStyle}>Confirm Password</label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          id="reg-confirm-pwd"
+                          type={showConfirmPwd ? 'text' : 'password'}
+                          name="confirmPassword"
+                          required
+                          placeholder="••••••••"
+                          value={formData.confirmPassword}
+                          onChange={handleChange}
+                          style={{ ...inputBase, paddingRight: 40 }}
+                          onFocus={onFocus}
+                          onBlur={onBlur}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPwd(!showConfirmPwd)}
+                          style={{
+                            position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                            background: 'none', border: 'none', cursor: 'pointer', color: DS.textMuted, padding: 0,
+                          }}
+                        >
+                          {showConfirmPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                      width: '100%', height: 48,
+                      borderRadius: DS.radiusBtn, border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+                      background: DS.primaryGrad, color: '#FFFFFF',
+                      fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
+                      boxShadow: `0 4px 14px ${DS.primaryShadow}`,
+                      transition: 'transform 150ms ease, opacity 150ms ease',
+                      opacity: loading ? 0.75 : 1, marginTop: 16,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    }}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Creating Account...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Register Account</span>
+                        <ArrowRight size={16} />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 16px',
+                }}>
+                  <div style={{ flex: 1, height: 1, background: DS.border }} />
+                  <span style={{ fontSize: 12, color: DS.textDisabled }}>or</span>
+                  <div style={{ flex: 1, height: 1, background: DS.border }} />
+                </div>
+
+                <div style={{ marginBottom: 20 }}>
+                  <GoogleAuthButton
+                    role={selectedRole}
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    label="Sign up with Google"
+                  />
+                </div>
+
+                <p style={{ textAlign: 'center', margin: 0, fontSize: 13, fontWeight: 500, color: DS.textSecondary }}>
+                  Already have an account?{' '}
+                  <Link to="/login" style={{ color: DS.primary, fontWeight: 600, textDecoration: 'none' }}>
+                    Sign In
+                  </Link>
+                </p>
+              </>
+            )}
+
+            {/* STEP 2: OTP VERIFICATION SCREEN (COMMENTED OUT AS REQUESTED) */}
+            {/*
+            {step === 'otp' && (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: '50%',
+                  background: DS.surfaceLow, border: `1px solid ${DS.border}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 16px auto',
+                }}>
+                  {verificationMethod === 'mobile' ? (
+                    <Phone size={26} color={DS.primary} />
+                  ) : (
+                    <Mail size={26} color={DS.primary} />
+                  )}
+                </div>
+
+                <h2 style={{ fontSize: 22, fontWeight: 800, color: DS.textPrimary, margin: 0, letterSpacing: '-0.02em' }}>
+                  {verificationMethod === 'mobile' ? 'Verify Your Mobile Number' : 'Verify Your Gmail'}
+                </h2>
+                <p style={{ fontSize: 13, fontWeight: 500, color: DS.textSecondary, margin: '6px 0 20px 0', lineHeight: 1.4 }}>
+                  We've sent a 6-digit verification code to{' '}
+                  <strong style={{ color: DS.textPrimary }}>
+                    {verificationMethod === 'mobile' ? formData.mobileNumber : formData.email}
+                  </strong>.
+                </p>
+
+                {errorMsg && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                      background: DS.dangerBg, border: `1px solid ${DS.dangerBorder}`,
+                      borderRadius: DS.radiusInput, padding: '10px 14px', marginBottom: 20,
+                      display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+                    }}
+                  >
+                    <AlertCircle size={16} color={DS.danger} style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: DS.danger }}>{errorMsg}</span>
+                  </motion.div>
+                )}
+
+                {successMsg && !errorMsg && (
+                  <div style={{
+                    background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)',
+                    borderRadius: DS.radiusInput, padding: '10px 14px', marginBottom: 20,
+                    display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+                  }}>
+                    <CheckCircle size={16} color="#10B981" style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#10B981' }}>{successMsg}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleOTPVerifySubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
+                    {otpBoxes.map((digit, idx) => (
+                      <input
+                        key={idx}
+                        ref={el => { otpInputRefs.current[idx] = el; }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={e => handleOtpBoxChange(idx, e.target.value)}
+                        onKeyDown={e => handleOtpKeyDown(idx, e)}
+                        onPaste={handleOtpPaste}
+                        style={{
+                          width: 48, height: 56,
+                          borderRadius: DS.radiusInput,
+                          border: `2px solid ${digit ? DS.primary : DS.border}`,
+                          background: digit ? DS.surfaceLow : DS.card,
+                          color: DS.textPrimary,
+                          fontSize: 22, fontWeight: 800,
+                          textAlign: 'center', fontFamily: 'inherit',
+                          outline: 'none',
+                          boxShadow: digit ? `0 0 0 3px ${DS.primaryFocus}` : 'none',
+                          transition: 'all 200ms ease',
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                      width: '100%', height: 48,
+                      borderRadius: DS.radiusBtn, border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+                      background: DS.primaryGrad, color: '#FFFFFF',
+                      fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
+                      boxShadow: `0 4px 14px ${DS.primaryShadow}`,
+                      transition: 'transform 150ms ease, opacity 150ms ease',
+                      opacity: loading ? 0.75 : 1,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    }}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Verifying OTP...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Verify OTP & Activate</span>
+                        <ArrowRight size={16} />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                <div style={{
+                  display: 'flex', alignItems: 'center', justify: 'space-between',
+                  marginTop: 20, paddingTop: 16, borderTop: `1px solid ${DS.border}`,
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => { setStep('form'); setErrorMsg(''); }}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontSize: 12, fontWeight: 600, color: DS.textMuted,
+                      display: 'flex', alignItems: 'center', gap: 4,
+                    }}
+                  >
+                    <ArrowLeft size={14} /> Back
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleResendOTP}
+                    disabled={cooldown > 0 || loading}
+                    style={{
+                      background: 'none', border: 'none',
+                      cursor: cooldown > 0 ? 'not-allowed' : 'pointer',
+                      fontSize: 12, fontWeight: 700,
+                      color: cooldown > 0 ? DS.textDisabled : DS.primary,
+                      display: 'flex', alignItems: 'center', gap: 4,
+                    }}
+                  >
+                    <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+                    {cooldown > 0 ? `Resend OTP in ${cooldown}s` : 'Resend OTP'}
+                  </button>
+                </div>
+              </div>
+            )}
+            */}
+
+            {/* STEP 3: SUCCESS ANIMATION */}
+            {step === 'success' && (
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <div style={{
+                  width: 64, height: 64, borderRadius: '50%',
+                  background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 16px auto',
+                }}>
+                  <CheckCircle size={36} color="#10B981" className="animate-bounce" />
+                </div>
+                <h2 style={{ fontSize: 22, fontWeight: 800, color: DS.textPrimary, margin: 0, letterSpacing: '-0.02em' }}>
+                  Email Verified Successfully!
+                </h2>
+                <p style={{ fontSize: 13, fontWeight: 500, color: DS.textSecondary, margin: '8px 0 24px 0', lineHeight: 1.5 }}>
+                  Your <strong style={{ color: DS.primary }}>{selectedRole}</strong> account is activated. Redirecting to Login...
+                </p>
+                <Link to="/login" style={{ textDecoration: 'none' }}>
+                  <button style={{
+                    width: '100%', height: 48, borderRadius: DS.radiusBtn, border: 'none', cursor: 'pointer',
+                    background: DS.primaryGrad, color: '#FFFFFF', fontSize: 14, fontWeight: 700,
+                  }}>
+                    Proceed to Login
+                  </button>
+                </Link>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+};
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a

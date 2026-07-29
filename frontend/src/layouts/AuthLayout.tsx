@@ -1,8 +1,22 @@
+<<<<<<< HEAD
 ﻿import React from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import { useOperations } from '../store/OperationsContext';
 
+=======
+import React from 'react';
+import { Outlet, Navigate } from 'react-router-dom';
+import { useOperations } from '../store/OperationsContext';
+
+/**
+ * AuthLayout — transparent shell for all auth pages.
+ *
+ * The Login page (and other auth pages) are full-viewport components that
+ * manage their own layout.  This layout only handles the redirect-if-authed
+ * guard; it renders no wrapping chrome of its own.
+ */
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 export const AuthLayout: React.FC = () => {
   const { user } = useOperations();
 
@@ -11,6 +25,7 @@ export const AuthLayout: React.FC = () => {
     return <Navigate to={user.role === 'Driver' ? '/driver' : '/owner'} replace />;
   }
 
+<<<<<<< HEAD
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8F9FF] dark:bg-[#0F172A] p-6 text-[#0B1C30] dark:text-[#F8FAFC] transition-colors">
       <div className="max-w-md w-full bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-8 shadow-lg space-y-6 text-center">
@@ -35,3 +50,8 @@ export const AuthLayout: React.FC = () => {
   );
 };
 
+=======
+  // Render the matched child route directly — no centering wrapper
+  return <Outlet />;
+};
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a

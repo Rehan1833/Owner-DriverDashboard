@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿import React, { useState, useEffect } from 'react';
+=======
+import React, { useState, useEffect } from 'react';
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { Button } from '../../components/ui/Button';
 import { useOperations } from '../../store/OperationsContext';
 import { useTheme } from '../../store/ThemeContext';
@@ -47,7 +51,11 @@ interface OwnerSettingsState {
 }
 
 const DEFAULT_SETTINGS: OwnerSettingsState = {
+<<<<<<< HEAD
   companyName: 'SmartOps Logistics & Manufacturing Ltd.',
+=======
+  companyName: 'Enterprise Portal',
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   gstNumber: '27AAAAA1111A1Z1',
   address: 'Corporate Park, Sector V, Phase 2, Pune, MH, India',
   branchDetails: 'Pune Yard (HQ), Mumbai Transit Hub, Bangalore Warehouse',
@@ -92,6 +100,15 @@ export const Settings: React.FC = () => {
   );
 
   useEffect(() => {
+<<<<<<< HEAD
+=======
+    if (user?.companyName) {
+      setSettings(prev => ({ ...prev, companyName: user.companyName! }));
+    }
+  }, [user?.companyName]);
+
+  useEffect(() => {
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
     localStorage.setItem('smartops_owner_settings', JSON.stringify(settings));
   }, [settings]);
 

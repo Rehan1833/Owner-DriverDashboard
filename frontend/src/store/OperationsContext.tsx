@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+=======
+import React, { createContext, useContext, useState, useEffect } from 'react';
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { User, UserRole, Vehicle, Trip, Task, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord } from '../types';
 import { mockTasks, mockNotifications, mockActivities } from '../api/mockData';
 import { api } from '../api/client';
@@ -14,8 +18,16 @@ interface OperationsContextType {
   attendance: AttendanceRecord[];
   notifications: SystemNotification[];
   activities: ActivityItem[];
+<<<<<<< HEAD
   login: (email: string, role: UserRole) => Promise<void>;
   register: (payload: any) => Promise<void>;
+=======
+  login: (email: string, role: UserRole, password?: string) => Promise<void>;
+  googleAuth: (googleToken: string, role: UserRole) => Promise<any>;
+  register: (payload: any) => Promise<{ success?: boolean; message: string; otpCode?: string; token?: string; user?: User }>;
+  verifyOTP: (emailOrPayload: string | { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile'; otpCode: string }, code?: string) => Promise<{ message: string; token?: string; user?: User }>;
+  resendOTP: (emailOrPayload: string | { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile' }) => Promise<{ success?: boolean; message: string; channel?: string; cooldownSeconds?: number }>;
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   logout: () => void;
   // Inventory CRUD
   createInventory: (item: Omit<InventoryItem, 'id'>) => Promise<void>;
@@ -64,7 +76,14 @@ interface OperationsContextType {
   updateVehicle: (id: string, vehicle: Partial<Vehicle>) => Promise<void>;
   deleteVehicle: (id: string) => Promise<void>;
   // Trip actions
+<<<<<<< HEAD
   updateTripStatus: (tripId: string, status: Trip['status'], details?: { stopReason?: string; signatureData?: string; photo?: string; deliveryPhoto?: string[] }) => Promise<void>;
+=======
+  createTrip: (tripData: Partial<Trip>) => Promise<Trip>;
+  cancelTrip: (tripId: string) => Promise<void>;
+  updateTripStatus: (tripId: string, status: Trip['status'], details?: { stopReason?: string; signatureData?: string; photo?: string; deliveryPhoto?: string[] }) => Promise<void>;
+
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   // Dashboard compatibility helpers
   createTask: (task: Omit<Task, 'id' | 'status' | 'progress'>) => void;
   approvePayroll: (id: string) => Promise<void>;
@@ -84,12 +103,21 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
+<<<<<<< HEAD
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [payroll, setPayroll] = useState<PayrollRecord[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [notifications, setNotifications] = useState<SystemNotification[]>(mockNotifications);
   const [activities, setActivities] = useState<ActivityItem[]>(mockActivities);
+=======
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [payroll, setPayroll] = useState<PayrollRecord[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
   // Load Data on Mount & Auth State changes
   const refreshAllData = async () => {
@@ -184,18 +212,60 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
   }, [user]);
 
+<<<<<<< HEAD
   const login = async (email: string, role: UserRole) => {
     const res = await api.auth.login(email, role);
+=======
+  const login = async (email: string, role: UserRole, password?: string) => {
+    const res = await api.auth.login(email, role, password);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
     setUser(res.user);
     localStorage.setItem('smartops_user', JSON.stringify(res.user));
     triggerNotification('System Alert', 'Session Initialized', `Welcome back ${res.user.fullName}! JWT validated.`, 'Info');
   };
 
+<<<<<<< HEAD
   const register = async (payload: any) => {
     const res = await api.auth.register(payload);
     setUser(res.user);
     localStorage.setItem('smartops_user', JSON.stringify(res.user));
     triggerNotification('System Alert', 'Account Registered', `Welcome to SmartOps, ${res.user.fullName}!`, 'Info');
+=======
+  const googleAuth = async (_googleToken: string, _role: UserRole) => {
+    throw new Error('Google authentication is temporarily disabled.');
+    /*
+    // TEMPORARILY DISABLED GOOGLE OAUTH CONTEXT HANDLER
+    const res = await api.auth.googleAuth(_googleToken, _role);
+    setUser(res.user);
+    localStorage.setItem('smartops_user', JSON.stringify(res.user));
+    triggerNotification('System Alert', 'Google Session Initialized', `Welcome ${res.user.fullName}! Google OAuth authenticated.`, 'Info');
+    return res;
+    */
+  };
+
+  const register = async (payload: any) => {
+    const res = await api.auth.register(payload);
+    triggerNotification('System Alert', 'OTP Dispatched', res.message || `Verification OTP code sent to ${payload.email}.`, 'Info');
+    return res;
+  };
+
+  const verifyOTP = async (emailOrPayload: string | { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile'; otpCode: string }, code?: string) => {
+    const payload = typeof emailOrPayload === 'string' ? { email: emailOrPayload, otpCode: code || '' } : emailOrPayload;
+    const res = await api.auth.verifyOTP(payload);
+    if (res.user) {
+      setUser(res.user);
+      localStorage.setItem('smartops_user', JSON.stringify(res.user));
+      triggerNotification('System Alert', 'Account Verified', res.message || 'Identity verified successfully.', 'Info');
+    }
+    return res;
+  };
+
+  const resendOTP = async (emailOrPayload: string | { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile' }) => {
+    const payload = typeof emailOrPayload === 'string' ? { email: emailOrPayload } : emailOrPayload;
+    const res = await api.auth.resendOTP(payload);
+    triggerNotification('System Alert', 'OTP Resent', res.message || 'Fresh OTP code dispatched.', 'Info');
+    return res;
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   };
 
   const logout = () => {
@@ -364,6 +434,24 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     addActivity('Vehicle Removed', `De-registered vehicle ID: ${id}`, 'fleet');
   };
 
+<<<<<<< HEAD
+=======
+  const createTrip = async (tripData: Partial<Trip>): Promise<Trip> => {
+    const newTrip = await api.trips.create(tripData);
+    setTrips(prev => [newTrip, ...prev]);
+    addActivity('Trip Created', `Created and assigned trip ${newTrip.tripNumber} for driver ${newTrip.driverName}`, 'fleet');
+    triggerNotification('Trip Started', 'New Consignment Dispatched', `Trip ${newTrip.tripNumber} assigned to driver ${newTrip.driverName}.`, 'Info');
+    return newTrip;
+  };
+
+  const cancelTrip = async (tripId: string): Promise<void> => {
+    const cancelled = await api.trips.cancel(tripId);
+    setTrips(prev => prev.map(t => t.id === tripId ? cancelled : t));
+    addActivity('Trip Cancelled', `Trip ${cancelled.tripNumber} was cancelled`, 'fleet');
+    triggerNotification('Critical', 'Trip Assignment Cancelled', `Trip assignment ${cancelled.tripNumber} was cancelled by owner.`, 'Warning');
+  };
+
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   // Trip action triggers
   const updateTripStatus = async (
     tripId: string,
@@ -441,7 +529,14 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         notifications,
         activities,
         login,
+<<<<<<< HEAD
         register,
+=======
+        googleAuth,
+        register,
+        verifyOTP,
+        resendOTP,
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         logout,
         createInventory,
         updateInventory,
@@ -459,6 +554,11 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         createVehicle,
         updateVehicle,
         deleteVehicle,
+<<<<<<< HEAD
+=======
+        createTrip,
+        cancelTrip,
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         updateTripStatus,
         createTask,
         approvePayroll,

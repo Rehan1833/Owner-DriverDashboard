@@ -24,6 +24,7 @@ const server = http.createServer(app);
 // Initialize Socket.io telemetry handlers
 initSocket(server);
 
+<<<<<<< HEAD
 // Database Seeding Logic
 const seedMockDatabase = async () => {
   try {
@@ -180,7 +181,66 @@ const seedMockDatabase = async () => {
 // Bootstrap Server
 connectDB().then(() => {
   seedMockDatabase();
+=======
+// Database Seeding & Single Owner Enforcement Logic
+const seedMockDatabase = async () => {
+  try {
+    const TARGET_OWNER_EMAIL = 'rehanchaudhari181133@gmail.com';
+
+    // 1. Delete all other owner accounts except the designated target owner
+    const deletedOwners = await User.deleteMany({
+      role: 'Owner',
+      email: { $ne: TARGET_OWNER_EMAIL }
+    });
+    if (deletedOwners.deletedCount > 0) {
+      console.log(`🧹 Cleaned up ${deletedOwners.deletedCount} non-primary owner account(s).`);
+    }
+
+    // 2. Ensure single owner account exists in MongoDB
+    const ownerExists = await User.findOne({ email: TARGET_OWNER_EMAIL });
+    if (!ownerExists) {
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash('Password@123', salt);
+      await User.create({
+        fullName: 'Rehan Chaudhari',
+        email: TARGET_OWNER_EMAIL,
+        mobileNumber: '9999999999',
+        role: 'Owner',
+        passwordHash,
+        provider: 'local',
+        isEmailVerified: true,
+        isPhoneVerified: true,
+        verifiedAt: new Date(),
+        companyName: 'SmartOps Manufacturing'
+      });
+      console.log(`✅ Single Owner account (${TARGET_OWNER_EMAIL}) initialized successfully.`);
+    }
+
+    // 3. Clean mock data from database
+    await Vehicle.deleteMany({});
+    await Inventory.deleteMany({});
+    await Trip.deleteMany({});
+    await Salary.deleteMany({});
+    await Attendance.deleteMany({});
+    console.log('✅ Cleaned all mock data (Vehicles, Inventory, Trips, Salaries, Attendance) from MongoDB.');
+
+  } catch (err: any) {
+    console.error('Database single owner enforcement warning:', err.message);
+  }
+};
+
+import { validateEmailEnvironment } from './utils/otpService';
+
+// Bootstrap Server
+connectDB().then(() => {
+  seedMockDatabase();
+  validateEmailEnvironment();
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   server.listen(PORT, () => {
     console.log(`SmartOps Express Server listening on port ${PORT}`);
   });
 });
+<<<<<<< HEAD
+=======
+
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a

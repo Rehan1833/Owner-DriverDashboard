@@ -1,4 +1,5 @@
 import axios from 'axios';
+<<<<<<< HEAD
 import { User, Vehicle, Trip, Task, InventoryItem, PayrollRecord, AttendanceRecord, PODRecord } from '../types';
 import { mockVehicles, mockTrips, mockTasks, mockInventory, mockPayroll, mockAttendance } from './mockData';
 
@@ -14,11 +15,56 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use((config: any) => {
   const token = localStorage.getItem('smartops_jwt');
   if (token) {
+=======
+import { User, Vehicle, Trip, Task, InventoryItem, PayrollRecord, AttendanceRecord, PODRecord, DriverRecord } from '../types';
+import { mockVehicles, mockTrips, mockTasks, mockInventory, mockPayroll, mockAttendance } from './mockData';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+// Axios Instance — higher timeout for DB-backed operations
+const axiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 15000  // 15 seconds: accommodates MongoDB Atlas cold starts and slow connections
+});
+
+// ── REQUEST INTERCEPTOR: attach Bearer token ──────────────────────────────────
+axiosInstance.interceptors.request.use((config: any) => {
+  const token = localStorage.getItem('smartops_jwt');
+  // Only attach token if it is a real JWT (not empty, not the legacy mock string)
+  if (token && token !== 'mock_jwt_token_payload' && token.trim() !== '') {
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 }, (error: any) => Promise.reject(error));
 
+<<<<<<< HEAD
+=======
+// ── RESPONSE INTERCEPTOR: global 401 / session-expired handler ───────────────
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token is invalid or expired — clear session and redirect to login
+      const currentToken = localStorage.getItem('smartops_jwt');
+      // Only auto-redirect if there was actually a token (avoid redirect loops on login page)
+      if (currentToken) {
+        console.warn('[SmartOps Auth] Session expired (401). Clearing token and redirecting to login.');
+        localStorage.removeItem('smartops_jwt');
+        localStorage.removeItem('smartops_user');
+        // Dispatch a custom event so React components can react (e.g., reset user state)
+        window.dispatchEvent(new CustomEvent('smartops:session-expired'));
+        // Redirect to login if not already there
+        if (!window.location.pathname.startsWith('/login') && window.location.pathname !== '/') {
+          window.location.href = '/';
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 // LocalStorage Fallback Helper class
 class LocalStorageFallback {
   private static initKey<T>(key: string, defaultData: T[]) {
@@ -44,6 +90,7 @@ class LocalStorageFallback {
 export const api = {
   // 1. AUTH API
   auth: {
+<<<<<<< HEAD
     login: async (email: string, role: string): Promise<{ token: string; user: User }> => {
       try {
         const res = await axiosInstance.post('/auth/login', { email, password: 'password123' });
@@ -74,6 +121,60 @@ export const api = {
         localStorage.setItem('smartops_jwt', res.data.token);
         return res.data;
       } catch (err) {
+=======
+    login: async (email: string, role: string, password?: string): Promise<{ token: string; user: User }> => {
+      try {
+        const res = await axiosInstance.post('/auth/login', { email, password: password || '' });
+        // Validate the token is a real JWT before storing
+        const receivedToken: string = res.data.token || '';
+        if (receivedToken && receivedToken !== 'mock_jwt_token_payload') {
+          localStorage.setItem('smartops_jwt', receivedToken);
+        }
+        return res.data;
+      } catch (err: any) {
+        // If the backend returned an HTTP error response (400, 401, 404, 500, etc.),
+        // always propagate it — NEVER fall back to mock. Only the catch block for
+        // network-level failures (no response at all) may use offline mode.
+        if (err.response) {
+          throw err;
+        }
+        // Network-level failure only (no response = backend truly unreachable)
+        console.warn('[SmartOps Auth] Backend unreachable. Offline mode activated.');
+        const isOwner = role === 'Owner';
+        const mockUser: User = {
+          id: isOwner ? 'u-owner-rehan' : 'u-driver',
+          fullName: isOwner ? 'Rehan Chaudhari' : email.split('@')[0],
+          email: isOwner ? 'rehanchaudhari181133@gmail.com' : email,
+          mobileNumber: '9999999999',
+          role: role as any,
+          companyName: isOwner ? 'SmartOps Manufacturing Ltd.' : undefined,
+          driverId: role === 'Driver' ? `DRV-${Date.now().toString().slice(-4)}` : undefined,
+          vehicleNumber: role === 'Driver' ? 'MH-12-QW-9874' : undefined,
+          licenseNumber: role === 'Driver' ? 'DL-MH12-9988' : undefined,
+          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(isOwner ? 'Rehan Chaudhari' : email)}&backgroundColor=2563EB`
+        };
+        // IMPORTANT: Do NOT store 'mock_jwt_token_payload' — store empty string so
+        // authenticated endpoints get a clean 401 rather than a confusing 403.
+        // The offline session still works for non-authenticated features.
+        localStorage.removeItem('smartops_jwt');
+        return { token: '', user: mockUser };
+      }
+    },
+    register: async (payload: any): Promise<{ success?: boolean; message: string; otpCode?: string; token?: string; user?: User }> => {
+      if (payload.role === 'Owner' && payload.email.toLowerCase().trim() !== 'rehanchaudhari181133@gmail.com') {
+        throw { response: { data: { message: 'Only rehanchaudhari181133@gmail.com is authorized as Owner. Additional owner accounts are disabled.' } } };
+      }
+      try {
+        const res = await axiosInstance.post('/auth/register', payload);
+        if (res.data.token) {
+          localStorage.setItem('smartops_jwt', res.data.token);
+        }
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         console.warn('Backend Auth Offline. Registering user in local session.');
         const mockUser: User = {
           id: `u-${Date.now()}`,
@@ -88,8 +189,71 @@ export const api = {
           avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(payload.fullName)}`
         };
         localStorage.setItem('smartops_jwt', 'mock_jwt_token_payload');
+<<<<<<< HEAD
         return { token: 'mock_jwt_token_payload', user: mockUser };
       }
+=======
+        return { message: 'Registration initiated.', token: 'mock_jwt_token_payload', user: mockUser };
+      }
+    },
+    verifyOTP: async (payload: { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile'; otpCode: string }): Promise<{ message: string; token?: string; user?: User }> => {
+      try {
+        const res = await axiosInstance.post('/auth/verify-otp', payload);
+        if (res.data.token) {
+          localStorage.setItem('smartops_jwt', res.data.token);
+        }
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        return { message: 'Account verified successfully.' };
+      }
+    },
+    resendOTP: async (payload: { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile' }): Promise<{ success?: boolean; message: string; channel?: string; cooldownSeconds?: number }> => {
+      try {
+        const res = await axiosInstance.post('/auth/send-otp', payload);
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        return { message: 'New OTP sent.' };
+      }
+    },
+    forgotPassword: async (email: string): Promise<{ message: string; otpCode?: string }> => {
+      try {
+        const res = await axiosInstance.post('/auth/forgot-password', { email });
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        return { message: `Password reset OTP dispatched to ${email}.` };
+      }
+    },
+    resetPassword: async (payload: { email: string; otpCode: string; newPassword: string }): Promise<{ message: string }> => {
+      try {
+        const res = await axiosInstance.post('/auth/reset-password', payload);
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        return { message: 'Password has been updated successfully.' };
+      }
+    },
+    googleAuth: async (_googleToken: string, _role: string): Promise<{ token: string; user: User }> => {
+      throw new Error('Google authentication is temporarily disabled.');
+      /*
+      // TEMPORARILY DISABLED GOOGLE OAUTH API CALL
+      const res = await axiosInstance.post('/auth/google', { idToken: _googleToken, googleToken: _googleToken, role: _role });
+      if (res.data.token) {
+        localStorage.setItem('smartops_jwt', res.data.token);
+      }
+      return res.data;
+      */
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
     }
   },
 
@@ -98,9 +262,16 @@ export const api = {
     getAll: async (): Promise<InventoryItem[]> => {
       try {
         const res = await axiosInstance.get('/inventory');
+<<<<<<< HEAD
         return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
         return LocalStorageFallback.get<InventoryItem>('local_inventory', mockInventory);
+=======
+        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
+      } catch (err) {
+        return LocalStorageFallback.get<InventoryItem>('smartops_inventory', mockInventory);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       }
     },
     create: async (item: Omit<InventoryItem, 'id'>): Promise<InventoryItem> => {
@@ -108,10 +279,17 @@ export const api = {
         const res = await axiosInstance.post('/inventory', item);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<InventoryItem>('local_inventory', mockInventory);
         const newItem = { ...item, id: `i-${Date.now()}` };
         local.push(newItem);
         LocalStorageFallback.set('local_inventory', local);
+=======
+        const local = LocalStorageFallback.get<InventoryItem>('smartops_inventory', mockInventory);
+        const newItem = { ...item, id: `i-${Date.now()}` };
+        local.push(newItem);
+        LocalStorageFallback.set('smartops_inventory', local);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return newItem;
       }
     },
@@ -120,9 +298,15 @@ export const api = {
         const res = await axiosInstance.put(`/inventory/${id}`, item);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<InventoryItem>('local_inventory', mockInventory);
         const updated = local.map(i => i.id === id ? { ...i, ...item } : i);
         LocalStorageFallback.set('local_inventory', updated);
+=======
+        const local = LocalStorageFallback.get<InventoryItem>('smartops_inventory', mockInventory);
+        const updated = local.map(i => i.id === id ? { ...i, ...item } : i);
+        LocalStorageFallback.set('smartops_inventory', updated);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return updated.find(i => i.id === id) as InventoryItem;
       }
     },
@@ -130,9 +314,15 @@ export const api = {
       try {
         await axiosInstance.delete(`/inventory/${id}`);
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<InventoryItem>('local_inventory', mockInventory);
         const filtered = local.filter(i => i.id !== id);
         LocalStorageFallback.set('local_inventory', filtered);
+=======
+        const local = LocalStorageFallback.get<InventoryItem>('smartops_inventory', mockInventory);
+        const filtered = local.filter(i => i.id !== id);
+        LocalStorageFallback.set('smartops_inventory', filtered);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       }
     }
   },
@@ -142,9 +332,16 @@ export const api = {
     getAll: async (): Promise<AttendanceRecord[]> => {
       try {
         const res = await axiosInstance.get('/attendance');
+<<<<<<< HEAD
         return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
         return LocalStorageFallback.get<AttendanceRecord>('local_attendance', mockAttendance);
+=======
+        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
+      } catch (err) {
+        return LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       }
     },
     getHistory: async (): Promise<AttendanceRecord[]> => {
@@ -152,7 +349,11 @@ export const api = {
         const res = await axiosInstance.get('/attendance/history');
         return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
+<<<<<<< HEAD
         return LocalStorageFallback.get<AttendanceRecord>('local_attendance', mockAttendance).sort((a, b) => b.date.localeCompare(a.date));
+=======
+        return LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance).sort((a, b) => b.date.localeCompare(a.date));
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       }
     },
     getLive: async (): Promise<AttendanceRecord[]> => {
@@ -160,7 +361,11 @@ export const api = {
         const res = await axiosInstance.get('/attendance/live');
         return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<AttendanceRecord>('local_attendance', mockAttendance);
+=======
+        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return local.filter(a => a.currentStatus && a.currentStatus !== 'Off Duty');
       }
     },
@@ -169,7 +374,11 @@ export const api = {
         const res = await axiosInstance.get('/attendance/analytics');
         return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
+<<<<<<< HEAD
         return LocalStorageFallback.get<AttendanceRecord>('local_attendance', mockAttendance);
+=======
+        return LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       }
     },
     getByDriverId: async (driverId: string): Promise<AttendanceRecord[]> => {
@@ -177,7 +386,11 @@ export const api = {
         const res = await axiosInstance.get(`/attendance/${driverId}`);
         return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<AttendanceRecord>('local_attendance', mockAttendance);
+=======
+        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return local.filter(a => a.driverId === driverId);
       }
     },
@@ -201,7 +414,11 @@ export const api = {
         const res = await axiosInstance.post('/attendance/start-duty', payload);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<AttendanceRecord>('local_attendance', mockAttendance);
+=======
+        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         const todayStr = new Date().toISOString().split('T')[0];
         
         // Remove existing record for today if present (force overwrite for testing simplicity)
@@ -253,7 +470,11 @@ export const api = {
         };
 
         filtered.push(newRecord);
+<<<<<<< HEAD
         LocalStorageFallback.set('local_attendance', filtered);
+=======
+        LocalStorageFallback.set('smartops_attendance', filtered);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return newRecord;
       }
     },
@@ -262,7 +483,11 @@ export const api = {
         const res = await axiosInstance.post('/attendance/start-break', payload);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<AttendanceRecord>('local_attendance', mockAttendance);
+=======
+        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         const todayStr = new Date().toISOString().split('T')[0];
         const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
@@ -293,7 +518,11 @@ export const api = {
           return a;
         });
 
+<<<<<<< HEAD
         LocalStorageFallback.set('local_attendance', updated);
+=======
+        LocalStorageFallback.set('smartops_attendance', updated);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return updated.find(a => a.driverId === payload.driverId && a.date === todayStr) as AttendanceRecord;
       }
     },
@@ -302,7 +531,11 @@ export const api = {
         const res = await axiosInstance.post('/attendance/end-break', payload);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<AttendanceRecord>('local_attendance', mockAttendance);
+=======
+        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         const todayStr = new Date().toISOString().split('T')[0];
         const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
@@ -349,7 +582,11 @@ export const api = {
           return a;
         });
 
+<<<<<<< HEAD
         LocalStorageFallback.set('local_attendance', updated);
+=======
+        LocalStorageFallback.set('smartops_attendance', updated);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return updated.find(a => a.driverId === payload.driverId && a.date === todayStr) as AttendanceRecord;
       }
     },
@@ -368,7 +605,11 @@ export const api = {
         const res = await axiosInstance.post('/attendance/end-duty', payload);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<AttendanceRecord>('local_attendance', mockAttendance);
+=======
+        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         const todayStr = new Date().toISOString().split('T')[0];
         const finalCheckOutTime = payload.checkOutTime || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
@@ -423,7 +664,11 @@ export const api = {
           return a;
         });
 
+<<<<<<< HEAD
         LocalStorageFallback.set('local_attendance', updated);
+=======
+        LocalStorageFallback.set('smartops_attendance', updated);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return updated.find(a => a.driverId === payload.driverId && a.date === todayStr) as AttendanceRecord;
       }
     },
@@ -432,10 +677,17 @@ export const api = {
         const res = await axiosInstance.post('/attendance', record);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<AttendanceRecord>('local_attendance', mockAttendance);
         const newRecord = { ...record, id: `a-${Date.now()}` };
         local.push(newRecord);
         LocalStorageFallback.set('local_attendance', local);
+=======
+        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
+        const newRecord = { ...record, id: `a-${Date.now()}` };
+        local.push(newRecord);
+        LocalStorageFallback.set('smartops_attendance', local);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return newRecord;
       }
     },
@@ -444,9 +696,15 @@ export const api = {
         const res = await axiosInstance.put(`/attendance/${id}`, record);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<AttendanceRecord>('local_attendance', mockAttendance);
         const updated = local.map(a => a.id === id ? { ...a, ...record } : a);
         LocalStorageFallback.set('local_attendance', updated);
+=======
+        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
+        const updated = local.map(a => a.id === id ? { ...a, ...record } : a);
+        LocalStorageFallback.set('smartops_attendance', updated);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return updated.find(a => a.id === id) as AttendanceRecord;
       }
     },
@@ -454,9 +712,15 @@ export const api = {
       try {
         await axiosInstance.delete(`/attendance/${id}`);
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<AttendanceRecord>('local_attendance', mockAttendance);
         const filtered = local.filter(a => a.id !== id);
         LocalStorageFallback.set('local_attendance', filtered);
+=======
+        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
+        const filtered = local.filter(a => a.id !== id);
+        LocalStorageFallback.set('smartops_attendance', filtered);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       }
     }
   },
@@ -466,9 +730,16 @@ export const api = {
     getAll: async (): Promise<PayrollRecord[]> => {
       try {
         const res = await axiosInstance.get('/salary');
+<<<<<<< HEAD
         return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
         return LocalStorageFallback.get<PayrollRecord>('local_salary', mockPayroll);
+=======
+        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
+      } catch (err) {
+        return LocalStorageFallback.get<PayrollRecord>('smartops_salary', mockPayroll);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       }
     },
     create: async (pay: Omit<PayrollRecord, 'id'>): Promise<PayrollRecord> => {
@@ -476,10 +747,17 @@ export const api = {
         const res = await axiosInstance.post('/salary', pay);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<PayrollRecord>('local_salary', mockPayroll);
         const newPay = { ...pay, id: `p-${Date.now()}` };
         local.push(newPay);
         LocalStorageFallback.set('local_salary', local);
+=======
+        const local = LocalStorageFallback.get<PayrollRecord>('smartops_salary', mockPayroll);
+        const newPay = { ...pay, id: `p-${Date.now()}` };
+        local.push(newPay);
+        LocalStorageFallback.set('smartops_salary', local);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return newPay;
       }
     },
@@ -488,9 +766,15 @@ export const api = {
         const res = await axiosInstance.put(`/salary/${id}`, pay);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<PayrollRecord>('local_salary', mockPayroll);
         const updated = local.map(p => p.id === id ? { ...p, ...pay } : p);
         LocalStorageFallback.set('local_salary', updated);
+=======
+        const local = LocalStorageFallback.get<PayrollRecord>('smartops_salary', mockPayroll);
+        const updated = local.map(p => p.id === id ? { ...p, ...pay } : p);
+        LocalStorageFallback.set('smartops_salary', updated);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return updated.find(p => p.id === id) as PayrollRecord;
       }
     },
@@ -498,9 +782,15 @@ export const api = {
       try {
         await axiosInstance.delete(`/salary/${id}`);
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<PayrollRecord>('local_salary', mockPayroll);
         const filtered = local.filter(p => p.id !== id);
         LocalStorageFallback.set('local_salary', filtered);
+=======
+        const local = LocalStorageFallback.get<PayrollRecord>('smartops_salary', mockPayroll);
+        const filtered = local.filter(p => p.id !== id);
+        LocalStorageFallback.set('smartops_salary', filtered);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       }
     }
   },
@@ -510,9 +800,16 @@ export const api = {
     getAll: async (): Promise<Vehicle[]> => {
       try {
         const res = await axiosInstance.get('/fleet');
+<<<<<<< HEAD
         return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
         return LocalStorageFallback.get<Vehicle>('local_fleet', mockVehicles);
+=======
+        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
+      } catch (err) {
+        return LocalStorageFallback.get<Vehicle>('smartops_fleet', mockVehicles);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       }
     },
     create: async (vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle> => {
@@ -520,10 +817,17 @@ export const api = {
         const res = await axiosInstance.post('/fleet', vehicle);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<Vehicle>('local_fleet', mockVehicles);
         const newVehicle = { ...vehicle, id: `v-${Date.now()}` };
         local.push(newVehicle);
         LocalStorageFallback.set('local_fleet', local);
+=======
+        const local = LocalStorageFallback.get<Vehicle>('smartops_fleet', mockVehicles);
+        const newVehicle = { ...vehicle, id: `v-${Date.now()}` };
+        local.push(newVehicle);
+        LocalStorageFallback.set('smartops_fleet', local);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return newVehicle;
       }
     },
@@ -532,9 +836,15 @@ export const api = {
         const res = await axiosInstance.put(`/fleet/${id}`, vehicle);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<Vehicle>('local_fleet', mockVehicles);
         const updated = local.map(v => v.id === id ? { ...v, ...vehicle } : v);
         LocalStorageFallback.set('local_fleet', updated);
+=======
+        const local = LocalStorageFallback.get<Vehicle>('smartops_fleet', mockVehicles);
+        const updated = local.map(v => v.id === id ? { ...v, ...vehicle } : v);
+        LocalStorageFallback.set('smartops_fleet', updated);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return updated.find(v => v.id === id) as Vehicle;
       }
     },
@@ -542,9 +852,15 @@ export const api = {
       try {
         await axiosInstance.delete(`/fleet/${id}`);
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<Vehicle>('local_fleet', mockVehicles);
         const filtered = local.filter(v => v.id !== id);
         LocalStorageFallback.set('local_fleet', filtered);
+=======
+        const local = LocalStorageFallback.get<Vehicle>('smartops_fleet', mockVehicles);
+        const filtered = local.filter(v => v.id !== id);
+        LocalStorageFallback.set('smartops_fleet', filtered);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       }
     }
   },
@@ -554,9 +870,16 @@ export const api = {
     getAll: async (): Promise<Trip[]> => {
       try {
         const res = await axiosInstance.get('/trips');
+<<<<<<< HEAD
         return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
         return LocalStorageFallback.get<Trip>('local_trips', mockTrips);
+=======
+        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
+      } catch (err) {
+        return LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       }
     },
     getActive: async (): Promise<Trip | null> => {
@@ -564,7 +887,11 @@ export const api = {
         const res = await axiosInstance.get('/trips/active');
         return res.data ? { ...res.data, id: res.data._id || res.data.id } : null;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<Trip>('local_trips', mockTrips);
+=======
+        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         const active = local.find(t => t.status !== 'Completed' && (t as any).status !== 'Cancelled');
         return active || local[0] || null;
       }
@@ -574,7 +901,11 @@ export const api = {
         const res = await axiosInstance.get(`/trips/${id}`);
         return { ...res.data, id: res.data._id || res.data.id };
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<Trip>('local_trips', mockTrips);
+=======
+        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         const trip = local.find(t => t.id === id);
         if (!trip) throw new Error('Trip not found');
         return trip;
@@ -588,22 +919,43 @@ export const api = {
         return api.trips.updateStatus(id, 'In Transit');
       }
     },
+<<<<<<< HEAD
     updateLocation: async (payload: { id: string; latitude?: number; longitude?: number; distanceRemaining?: number; eta?: string }): Promise<Trip> => {
       try {
         const res = await axiosInstance.put('/trips/update-location', payload);
         return { ...res.data, id: res.data._id || res.data.id };
       } catch (err) {
         const local = LocalStorageFallback.get<Trip>('local_trips', mockTrips);
+=======
+    updateLocation: async (payload: { id: string; latitude?: number; longitude?: number; accuracy?: number; speed?: number; heading?: number; distanceRemaining?: number; eta?: string; timestamp?: string }): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${payload.id}/location`, payload);
+        const data = res.data?.data?.trip || res.data;
+        return { ...data, id: data._id || data.id };
+      } catch (err) {
+        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         const updated = local.map(t => {
           if (t.id === payload.id) {
             return {
               ...t,
+<<<<<<< HEAD
               ...(payload.distanceRemaining !== undefined ? { distanceRemaining: payload.distanceRemaining } : {}),
               ...(payload.eta ? { eta: payload.eta } : {})
+=======
+              ...(payload.latitude && payload.longitude ? { currentLocation: `${payload.latitude}, ${payload.longitude}`, latitude: payload.latitude, longitude: payload.longitude } : {}),
+              ...(payload.accuracy !== undefined ? { accuracy: payload.accuracy } : {}),
+              ...(payload.speed !== undefined ? { speed: payload.speed } : {}),
+              ...(payload.heading !== undefined ? { heading: payload.heading } : {}),
+              ...(payload.distanceRemaining !== undefined ? { distanceRemaining: payload.distanceRemaining } : {}),
+              ...(payload.eta ? { eta: payload.eta } : {}),
+              lastGpsUpdate: new Date()
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             };
           }
           return t;
         });
+<<<<<<< HEAD
         LocalStorageFallback.set('local_trips', updated);
         return updated.find(t => t.id === payload.id) as Trip;
       }
@@ -611,6 +963,153 @@ export const api = {
     complete: async (id: string, details?: { signatureData?: string; photo?: string }): Promise<Trip> => {
       try {
         const res = await axiosInstance.put('/trips/complete', { id, ...details });
+=======
+        LocalStorageFallback.set('smartops_trips', updated);
+        return updated.find(t => t.id === payload.id) as Trip;
+      }
+    },
+    getLocationHistory: async (tripId: string, filters?: { driverId?: string; startDate?: string; endDate?: string }): Promise<any[]> => {
+      try {
+        const res = await axiosInstance.get(`/trips/${tripId}/location-history`, { params: filters });
+        return Array.isArray(res.data) ? res.data : [];
+      } catch (err) {
+        return [];
+      }
+    },
+    getLiveTracking: async (tripId: string): Promise<any> => {
+      try {
+        const res = await axiosInstance.get(`/trips/${tripId}/live-tracking`);
+        return res.data;
+      } catch (err) {
+        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
+        const trip = local.find(t => t.id === tripId) || local[0];
+        return {
+          tripId: trip?.id || tripId,
+          tripNumber: trip?.tripNumber || '',
+          driverName: trip?.driverName || '',
+          driverId: trip?.driverId || '',
+          vehicleNumber: trip?.vehicleNumber || '',
+          status: trip?.status || 'In Transit',
+          currentLocation: trip?.currentLocation || '',
+          currentAddress: trip?.currentAddress || '',
+          latitude: trip?.latitude || 0,
+          longitude: trip?.longitude || 0,
+          speed: 0,
+          heading: 0,
+          distanceRemaining: trip?.distanceRemaining || 0,
+          eta: trip?.eta || 'N/A',
+          pickupLocation: trip?.pickupLocation || '',
+          pickupCoordinates: trip?.pickupCoordinates || { lat: 0, lng: 0 },
+          dropLocation: trip?.dropLocation || '',
+          dropCoordinates: trip?.dropCoordinates || { lat: 0, lng: 0 },
+          locationHistory: [],
+          googleNavUrl: ''
+        };
+      }
+    },
+
+    create: async (tripData: Partial<Trip>): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post('/trips', tripData);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err: any) {
+        if (err.response?.data?.message) {
+          throw new Error(err.response.data.message);
+        }
+        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
+        const newTrip: Trip = {
+          id: `trp-${Date.now()}`,
+          tripNumber: tripData.tripNumber || `TRP-${Date.now().toString().slice(-6)}`,
+          vehicleNumber: tripData.vehicleNumber || '',
+          driverId: tripData.driverId || '',
+          driverName: tripData.driverName || '',
+          pickupLocation: tripData.pickupLocation || '',
+          dropLocation: tripData.dropLocation || '',
+          customerName: tripData.customerName || '',
+          customerPhone: tripData.customerPhone || '',
+          material: tripData.material || '',
+          weight: tripData.weight || '',
+          invoiceNumber: tripData.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
+          priority: tripData.priority || 'Normal',
+          cargo: tripData.cargo,
+          stops: tripData.stops || [],
+          scheduledStart: tripData.scheduledStart,
+          expectedEnd: tripData.expectedEnd,
+          notes: tripData.notes,
+          status: 'Assigned',
+          eta: '30 Mins',
+          distanceRemaining: 15.0,
+          timestamp: new Date().toISOString()
+        };
+        local.unshift(newTrip);
+        LocalStorageFallback.set('smartops_trips', local);
+        return newTrip;
+      }
+    },
+
+    assign: async (id: string, payload: { driverId: string; driverName: string; vehicleNumber?: string }): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${id}/assign`, payload);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'Assigned', payload);
+      }
+    },
+    accept: async (id: string): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${id}/accept`);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'Accepted');
+      }
+    },
+    arriveStop: async (id: string, stopId: string, coords?: { latitude?: number; longitude?: number }): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${id}/stops/${stopId}/arrive`, coords);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err: any) {
+        if (err.response?.data?.message) {
+          throw new Error(err.response.data.message);
+        }
+        return api.trips.updateStatus(id, 'At Stop');
+      }
+    },
+    completeStop: async (id: string, stopId: string, details?: { podId?: string; stopReason?: string; notes?: string }): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${id}/stops/${stopId}/complete`, details);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'In Transit');
+      }
+    },
+    reportDelay: async (id: string, reason: string, note?: string): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${id}/delay`, { reason, note });
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'Delayed', { stopReason: reason });
+      }
+    },
+    reportIncident: async (id: string, incidentType: string, description: string): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${id}/incident`, { incidentType, description });
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'Incident Reported', { stopReason: `${incidentType}: ${description}` });
+      }
+    },
+    cancel: async (id: string): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.put(`/trips/${id}/cancel`);
+        return { ...res.data, id: res.data._id || res.data.id };
+      } catch (err) {
+        return api.trips.updateStatus(id, 'Cancelled');
+      }
+    },
+    complete: async (id: string, details?: { signatureData?: string; photo?: string }): Promise<Trip> => {
+      try {
+        const res = await axiosInstance.post(`/trips/${id}/end`, details);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return { ...res.data, id: res.data._id || res.data.id };
       } catch (err) {
         return api.trips.updateStatus(id, 'Completed', details);
@@ -621,7 +1120,11 @@ export const api = {
         const res = await axiosInstance.put(`/trips/${id}`, { status, ...details });
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<Trip>('local_trips', mockTrips);
+=======
+        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         const updated = local.map(t => {
           if (t.id === id) {
             const up: any = { ...t, status };
@@ -636,12 +1139,20 @@ export const api = {
           }
           return t;
         });
+<<<<<<< HEAD
         LocalStorageFallback.set('local_trips', updated);
+=======
+        LocalStorageFallback.set('smartops_trips', updated);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return updated.find(t => t.id === id) as Trip;
       }
     }
   },
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   // 7. PROOF OF DELIVERY (POD) API
   pod: {
     getAll: async (params?: { status?: string; driver?: string; vehicle?: string; customer?: string; orderNumber?: string; date?: string }): Promise<PODRecord[]> => {
@@ -649,7 +1160,11 @@ export const api = {
         const res = await axiosInstance.get('/pod', { params });
         return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
+<<<<<<< HEAD
         let local = LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
+=======
+        let local = LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         if (params) {
           if (params.status) local = local.filter(p => p.status === params.status);
           if (params.driver) local = local.filter(p => p.driverName.toLowerCase().includes(params.driver!.toLowerCase()));
@@ -666,7 +1181,11 @@ export const api = {
         const res = await axiosInstance.get('/pod/driver');
         return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
       } catch (err) {
+<<<<<<< HEAD
         return LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
+=======
+        return LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       }
     },
     getById: async (id: string): Promise<PODRecord> => {
@@ -674,7 +1193,11 @@ export const api = {
         const res = await axiosInstance.get(`/pod/${id}`);
         return { ...res.data, id: res.data._id || res.data.id };
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
+=======
+        const local = LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         const item = local.find(p => p.id === id || p.podId === id);
         if (!item) throw new Error('POD record not found');
         return item;
@@ -695,7 +1218,11 @@ export const api = {
         const res = await axiosInstance.post('/pod/upload', payload);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
+=======
+        const local = LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         
         // Prevent duplicate
         const duplicate = local.find(p => p.orderNumber === payload.orderNumber);
@@ -704,12 +1231,22 @@ export const api = {
         }
 
         const podId = `POD-2026-${String(local.length + 8801).padStart(4, '0')}`;
+<<<<<<< HEAD
         
         const newRecord: PODRecord = {
           id: `pod-${Date.now()}`,
           podId,
           driverId: 'u-driver',
           driverName: 'Rajesh Kumar',
+=======
+        // Read the real logged-in driver from localStorage (set during login)
+        const storedUser = (() => { try { return JSON.parse(localStorage.getItem('smartops_user') || '{}'); } catch { return {}; } })();
+        const newRecord: PODRecord = {
+          id: `pod-${Date.now()}`,
+          podId,
+          driverId: storedUser.id || storedUser.driverId || '',
+          driverName: storedUser.fullName || '',
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
           vehicleNumber: payload.vehicleNumber,
           orderNumber: payload.orderNumber,
           customerName: payload.customerName,
@@ -725,7 +1262,11 @@ export const api = {
         };
         
         local.unshift(newRecord);
+<<<<<<< HEAD
         LocalStorageFallback.set('local_pods', local);
+=======
+        LocalStorageFallback.set('smartops_pods', local);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return newRecord;
       }
     },
@@ -734,6 +1275,7 @@ export const api = {
         const res = await axiosInstance.put(`/pod/approve/${id}`);
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
         const updated = local.map(p => p.id === id || p.podId === id ? { 
           ...p, 
@@ -746,12 +1288,32 @@ export const api = {
         return updated.find(p => p.id === id || p.podId === id) as PODRecord;
       }
     },
+=======
+        const local = LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
+        const approver = (() => { try { return JSON.parse(localStorage.getItem('smartops_user') || '{}'); } catch { return {}; } })();
+        const updated = local.map(p => p.id === id || p.podId === id ? { 
+          ...p, 
+          status: 'Approved' as const, 
+          approvedBy: approver.fullName || 'Owner',
+          approvedAt: new Date().toISOString(),
+          rejectedReason: undefined
+        } : p);
+        LocalStorageFallback.set('smartops_pods', updated);
+        return updated.find(p => p.id === id || p.podId === id) as PODRecord;
+      }
+    },
+
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
     reject: async (id: string, rejectedReason: string): Promise<PODRecord> => {
       try {
         const res = await axiosInstance.put(`/pod/reject/${id}`, { rejectedReason });
         return res.data;
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
+=======
+        const local = LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         const updated = local.map(p => p.id === id || p.podId === id ? { 
           ...p, 
           status: 'Rejected' as const, 
@@ -759,7 +1321,11 @@ export const api = {
           approvedBy: undefined,
           approvedAt: undefined
         } : p);
+<<<<<<< HEAD
         LocalStorageFallback.set('local_pods', updated);
+=======
+        LocalStorageFallback.set('smartops_pods', updated);
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         return updated.find(p => p.id === id || p.podId === id) as PODRecord;
       }
     },
@@ -767,6 +1333,7 @@ export const api = {
       try {
         await axiosInstance.delete(`/pod/${id}`);
       } catch (err) {
+<<<<<<< HEAD
         const local = LocalStorageFallback.get<PODRecord>('local_pods', mockPODs);
         const filtered = local.filter(p => p.id !== id && p.podId !== id);
         LocalStorageFallback.set('local_pods', filtered);
@@ -775,4 +1342,111 @@ export const api = {
   }
 };
 
+=======
+        const local = LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
+        const filtered = local.filter(p => p.id !== id && p.podId !== id);
+        LocalStorageFallback.set('smartops_pods', filtered);
+      }
+    }
+  },
+
+  // 8. GOOGLE MAPS & GEOLOCATION PROXY API
+  maps: {
+    geocode: async (address: string): Promise<{ lat: number; lng: number }> => {
+      try {
+        const res = await axiosInstance.get('/maps/geocode', { params: { address } });
+        return res.data;
+      } catch (err) {
+        return { lat: 18.5204, lng: 73.8567 };
+      }
+    },
+    reverseGeocode: async (lat: number, lng: number): Promise<{ formattedAddress: string; city?: string; state?: string; country?: string }> => {
+      try {
+        const res = await axiosInstance.get('/maps/reverse-geocode', { params: { lat, lng } });
+        return res.data;
+      } catch (err) {
+        return { formattedAddress: `Location: (${lat.toFixed(4)}, ${lng.toFixed(4)})` };
+      }
+    },
+    getDistanceETA: async (origin: string, destination: string, speed?: number): Promise<{ distanceRemainingKm: number; distanceText: string; durationText: string; durationSeconds: number; etaString: string }> => {
+      try {
+        const res = await axiosInstance.get('/maps/distance-eta', { params: { origin, destination, speed } });
+        return res.data;
+      } catch (err) {
+        return {
+          distanceRemainingKm: 18.4,
+          distanceText: '18.4 km',
+          durationText: '25 mins',
+          durationSeconds: 1500,
+          etaString: '25 Mins'
+        };
+      }
+    },
+    getDirections: async (origin: string, destination: string, waypoints?: string[]): Promise<any> => {
+      try {
+        const res = await axiosInstance.get('/maps/directions', {
+          params: { origin, destination, waypoints: waypoints ? waypoints.join('|') : undefined }
+        });
+        return res.data;
+      } catch (err) {
+        return { status: 'ZERO_RESULTS', routes: [] };
+      }
+    }
+  },
+
+  // 9. DRIVERS API — Owner-only, database-driven (NO localStorage fallback)
+  drivers: {
+    /**
+     * Fetch all registered Driver accounts from MongoDB.
+     * Throws on any error so the caller can render the proper error state.
+     *
+     * @param params.search  - partial match on name, email, mobile
+     * @param params.status  - 'Active' | 'Inactive' | 'All'
+     * @param params.page    - page number (default 1)
+     * @param params.limit   - page size (default 20)
+     */
+    getAll: async (params?: {
+      search?: string;
+      status?: string;
+      page?: number;
+      limit?: number;
+    }): Promise<{ data: DriverRecord[]; pagination: { page: number; limit: number; total: number; pages: number } }> => {
+      const res = await axiosInstance.get('/users/drivers', { params });
+      return res.data;
+    },
+
+    /**
+     * Soft-deactivate or reactivate a driver.
+     * Sets isEmailVerified to true (active) or false (inactive) in MongoDB.
+     */
+    updateStatus: async (id: string, status: 'active' | 'inactive'): Promise<DriverRecord> => {
+      const res = await axiosInstance.patch(`/users/drivers/${id}/status`, { status });
+      return res.data.data as DriverRecord;
+    },
+
+    /**
+     * Register a new driver via the existing auth endpoint.
+     * Delegates to POST /api/auth/register with role=Driver.
+     * On success the driver will immediately be visible in getAll().
+     */
+    register: async (payload: {
+      fullName: string;
+      email: string;
+      mobileNumber?: string;
+      password: string;
+      driverId?: string;
+      vehicleNumber?: string;
+      licenseNumber?: string;
+    }): Promise<{ success?: boolean; message: string; user?: User }> => {
+      const res = await axiosInstance.post('/auth/register', {
+        ...payload,
+        role: 'Driver',
+      });
+      return res.data;
+    },
+  },
+};
+
+
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { mockPODs } from './mockData';

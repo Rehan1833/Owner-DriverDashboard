@@ -5,6 +5,7 @@
 
 :root {
   /* ── Surfaces ── */
+<<<<<<< HEAD
   --color-bg: #F8F9FF;
   --color-card: #FFFFFF;
   --color-sidebar: #FFFFFF;
@@ -15,6 +16,18 @@
   --color-surface-highest: #D3E4FE;
   --color-surface-dim: #CBDBF5;
   --color-surface-variant: #D3E4FE;
+=======
+  --color-bg: #FFFFFF;
+  --color-card: #FFFFFF;
+  --color-sidebar: #FFFFFF;
+  --color-navbar: #FFFFFF;
+  --color-surface-container: #F3F4F6;
+  --color-surface-low: #F9FAFB;
+  --color-surface-lowest: #FFFFFF;
+  --color-surface-highest: #E5E7EB;
+  --color-surface-dim: #F3F4F6;
+  --color-surface-variant: #F3F4F6;
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
   /* ── Primary ── */
   --color-primary: #006A6A;
@@ -24,15 +37,22 @@
   --color-on-primary-container: #003131;
 
   /* ── Secondary ── */
+<<<<<<< HEAD
   --color-secondary: #545F73;
   --color-secondary-container: #D5E0F8;
   --color-secondary-fixed-dim: #BCC7DE;
+=======
+  --color-secondary: #4B5563;
+  --color-secondary-container: #E5E7EB;
+  --color-secondary-fixed-dim: #9CA3AF;
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
   /* ── Tertiary ── */
   --color-tertiary: #00687A;
   --color-tertiary-container: #00A0BB;
 
   /* ── Text ── */
+<<<<<<< HEAD
   --color-text-primary: #0B1C30;
   --color-text-secondary: #545F73;
   --color-text-muted: #6D7A79;
@@ -42,6 +62,17 @@
   --color-outline: #6D7A79;
   --color-outline-variant: #BCC9C8;
   --color-border: #E5EEFF;
+=======
+  --color-text-primary: #111827;
+  --color-text-secondary: #4B5563;
+  --color-text-muted: #6B7280;
+  --color-text-disabled: #9CA3AF;
+
+  /* ── Outline & Borders ── */
+  --color-outline: #6B7280;
+  --color-outline-variant: #D1D5DB;
+  --color-border: #E5E7EB;
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
   /* ── Semantic Status ── */
   --color-success: #10B981;
@@ -98,10 +129,17 @@
   --color-tertiary-container: #00687A;
 
   /* ── Text ── */
+<<<<<<< HEAD
   --color-text-primary: #F8FAFC;
   --color-text-secondary: #CBD5E1;
   --color-text-muted: #94A3B8;
   --color-text-disabled: #475569;
+=======
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #FFFFFF;
+  --color-text-muted: #FFFFFF;
+  --color-text-disabled: #64748B;
+>>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
   /* ── Outline & Borders ── */
   --color-outline: #94A3B8;
