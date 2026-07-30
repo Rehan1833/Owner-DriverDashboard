@@ -3,6 +3,7 @@ import { User, UserRole, Vehicle, Trip, Task, InventoryItem, PayrollRecord, Syst
 import { mockTasks, mockNotifications, mockActivities } from '../api/mockData';
 import { api } from '../api/client';
 import { io } from 'socket.io-client';
+import { LogoutConfirmationModal } from '../components/common/LogoutConfirmationModal';
 
 interface OperationsContextType {
   user: User | null;
@@ -20,6 +21,10 @@ interface OperationsContextType {
   register: (payload: any) => Promise<{ success?: boolean; message: string; otpCode?: string; token?: string; user?: User }>;
   verifyOTP: (emailOrPayload: string | { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile'; otpCode: string }, code?: string) => Promise<{ message: string; token?: string; user?: User }>;
   resendOTP: (emailOrPayload: string | { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile' }) => Promise<{ success?: boolean; message: string; channel?: string; cooldownSeconds?: number }>;
+  isLogoutModalOpen: boolean;
+  isLoggingOut: boolean;
+  cancelLogout: () => void;
+  performLogout: () => void;
   logout: () => void;
   // Inventory CRUD
   createInventory: (item: Omit<InventoryItem, 'id'>) => Promise<void>;
@@ -98,6 +103,8 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [company, setCompany] = useState<Company | null>(null);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Load Data on Mount & Auth State changes
   const refreshAllData = async () => {
@@ -244,10 +251,49 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const logout = () => {
-    setUser(null);
-    setCompany(null);
-    localStorage.removeItem('smartops_user');
-    localStorage.removeItem('smartops_jwt');
+    setIsLogoutModalOpen(true);
+  };
+
+  const cancelLogout = () => {
+    if (!isLoggingOut) {
+      setIsLogoutModalOpen(false);
+    }
+  };
+
+  const performLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      // Clear React context states
+      setUser(null);
+      setCompany(null);
+      setVehicles([]);
+      setTrips([]);
+      setTasks([]);
+      setInventory([]);
+      setPayroll([]);
+      setAttendance([]);
+
+      // Clear tokens & storage
+      localStorage.removeItem('smartops_user');
+      localStorage.removeItem('smartops_jwt');
+      localStorage.removeItem('smartops_token');
+      localStorage.removeItem('smartops_owner_settings');
+      sessionStorage.clear();
+
+      // Clear cookies if applicable
+      if (document.cookie) {
+        document.cookie.split(";").forEach((c) => {
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+      }
+    } catch {
+      // Silent fallback
+    } finally {
+      setIsLoggingOut(false);
+      setIsLogoutModalOpen(false);
+      // Hard replace location to purge back button history access
+      window.location.replace('/login');
+    }
   };
 
   const triggerNotification = (
@@ -507,6 +553,10 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         register,
         verifyOTP,
         resendOTP,
+        isLogoutModalOpen,
+        isLoggingOut,
+        cancelLogout,
+        performLogout,
         logout,
         createInventory,
         updateInventory,
@@ -535,6 +585,7 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }}
     >
       {children}
+      <LogoutConfirmationModal />
     </OperationsContext.Provider>
   );
 };

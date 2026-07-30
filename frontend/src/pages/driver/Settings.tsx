@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../store/ThemeContext';
+import { useOperations } from '../../store/OperationsContext';
 import {
   Settings as SettingsIcon, Sun, Moon, Volume2, MapPin, Camera, Database,
   Shield, Info, LogOut, ToggleLeft, ToggleRight
@@ -39,8 +40,10 @@ export const Settings: React.FC = () => {
     }
   }, []);
 
+  const { logout } = useOperations();
+
   const handleLogout = () => {
-    navigate('/login');
+    logout();
   };
 
   const handleClearCache = () => {

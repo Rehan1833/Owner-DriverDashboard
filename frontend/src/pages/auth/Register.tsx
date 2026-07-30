@@ -398,13 +398,13 @@ export const Register: React.FC = () => {
   // Input styling
   const inputBase: React.CSSProperties = {
     width: '100%',
-    height: 48,
+    height: 50,
     borderRadius: DS.radiusInput,
     border: `1px solid ${DS.border}`,
     background: DS.card,
     color: DS.textPrimary,
     padding: '0 16px',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 500,
     fontFamily: 'inherit',
     boxShadow: '0 1px 2px 0 rgba(11,28,48,0.02)',
@@ -428,23 +428,129 @@ export const Register: React.FC = () => {
     fontWeight: 700,
     color: DS.textSecondary,
     marginBottom: 6,
-    letterSpacing: '0.02em',
-    textTransform: 'uppercase',
+    letterSpacing: '0.01em',
   };
 
   return (
-    <div style={{
-      height: '100vh',
-      width: '100vw',
-      background: DS.bg,
-      display: 'flex',
-      alignItems: 'stretch',
-      justifyContent: 'center',
-      position: 'relative',
-      overflow: 'hidden',
-      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-      boxSizing: 'border-box',
-    }}>
+    <div className="login-page-wrapper">
+      <style>{`
+        .login-page-wrapper {
+          min-height: 100vh;
+          width: 100vw;
+          background: ${DS.bg};
+          display: flex;
+          align-items: stretch;
+          justify-content: center;
+          position: relative;
+          overflow-x: hidden;
+          font-family: 'Inter', system-ui, -apple-system, sans-serif;
+          box-sizing: border-box;
+        }
+        .login-split-container {
+          width: 100%;
+          max-width: 1200px;
+          height: 100vh;
+          display: flex;
+          align-items: stretch;
+          justify-content: center;
+          gap: 40px;
+          position: relative;
+          z-index: 1;
+          padding: 24px;
+          margin: 0 auto;
+          box-sizing: border-box;
+        }
+        .login-left-panel {
+          flex: 0 0 38%;
+          max-width: 440px;
+          display: flex;
+          flex-direction: column;
+          gap: 28px;
+          align-self: center;
+          flex-shrink: 0;
+          padding: 20px 0;
+        }
+        .login-right-panel {
+          flex: 1 1 62%;
+          max-width: 560px;
+          width: 100%;
+          align-self: stretch;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+          padding: 20px 0;
+          box-sizing: border-box;
+          overflow-y: auto;
+        }
+        .login-card-box {
+          background: ${DS.card};
+          border-radius: ${DS.radius};
+          border: 1px solid ${DS.border};
+          box-shadow: ${DS.shadowCard};
+          padding: 32px;
+          box-sizing: border-box;
+          flex-shrink: 0;
+          margin: auto 0;
+          width: 100%;
+        }
+        .register-form {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          text-align: left;
+        }
+        .btn-hover-effect {
+          transition: transform 200ms ease, box-shadow 200ms ease, opacity 200ms ease;
+        }
+        .btn-hover-effect:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 18px ${DS.primaryShadow};
+        }
+
+        @media (max-width: 1024px) {
+          .login-left-panel {
+            flex: 0 0 45%;
+            max-width: 420px;
+          }
+          .login-right-panel {
+            flex: 1 1 55%;
+          }
+          .login-card-box {
+            padding: 24px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .login-split-container {
+            height: auto;
+            min-height: 100vh;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            padding: 20px 16px;
+          }
+          .login-left-panel {
+            flex: 1 1 100%;
+            max-width: 100%;
+            align-self: flex-start;
+            padding: 10px 0;
+          }
+          .login-right-panel {
+            flex: 1 1 100%;
+            max-width: 100%;
+            overflow-y: visible;
+            padding: 0;
+          }
+          .login-card-box {
+            padding: 20px;
+            margin: 0;
+          }
+          .login-divider {
+            display: none;
+          }
+        }
+      `}</style>
+
       {/* Ambient background dot grid */}
       <div style={{
         position: 'absolute', inset: 0,
@@ -473,35 +579,20 @@ export const Register: React.FC = () => {
       }} />
 
       {/* Main split container */}
-      <div style={{
-        width: '100%',
-        maxWidth: 1100,
-        height: '100%',
-        display: 'flex',
-        alignItems: 'stretch',
-        justifyContent: 'center',
-        gap: 56,
-        position: 'relative',
-        zIndex: 1,
-        padding: '0 24px',
-        margin: '0 auto',
-        boxSizing: 'border-box',
-      }}>
+      <div className="login-split-container">
 
-        {/* LEFT PANEL: Brand identity — fixed, does not scroll */}
+        {/* LEFT PANEL: Brand identity — fixed vertically centered */}
         <motion.div
           className="login-left-panel"
           initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 400 / 1000, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            flex: '1 1 400px',
-            maxWidth: 440,
             display: 'flex',
             flexDirection: 'column',
-            gap: 32,
+            gap: 28,
             alignSelf: 'center',
-            flexShrink: 0,
+            width: '100%',
           }}
         >
           {/* Logo badge */}
@@ -531,7 +622,7 @@ export const Register: React.FC = () => {
           {/* Heading */}
           <div>
             <h1 style={{
-              fontSize: 32, fontWeight: 800,
+              fontSize: 36, fontWeight: 800,
               color: DS.textPrimary,
               letterSpacing: '-0.03em', lineHeight: 1.2,
               margin: '0 0 12px 0',
@@ -539,7 +630,7 @@ export const Register: React.FC = () => {
               Create Your Enterprise Account
             </h1>
             <p style={{
-              fontSize: 15, fontWeight: 500,
+              fontSize: 16, fontWeight: 500,
               color: DS.textSecondary,
               lineHeight: 1.55, margin: 0,
             }}>
@@ -560,7 +651,7 @@ export const Register: React.FC = () => {
                 }}>
                   <Icon size={16} color={DS.primary} strokeWidth={2} />
                 </div>
-                <span style={{ fontSize: 14, fontWeight: 600, color: DS.textPrimary }}>
+                <span style={{ fontSize: 15, fontWeight: 600, color: DS.textPrimary }}>
                   {label}
                 </span>
               </div>
@@ -592,51 +683,31 @@ export const Register: React.FC = () => {
           style={{ width: 1, alignSelf: 'stretch', background: DS.border, flexShrink: 0, minHeight: 400 }}
         />
 
-        {/* RIGHT PANEL: scrollable card only */}
-        <div style={{
-          flex: '1 1 460px',
-          maxWidth: 480,
-          width: '100%',
-          alignSelf: 'stretch',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          padding: '24px 0',
-          boxSizing: 'border-box',
-          overflowY: 'auto',
-        }}>
+        {/* RIGHT PANEL: scrollable registration column */}
+        <div className="login-right-panel">
           <motion.div
-            className="login-card"
+            className="login-card-box"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 350 / 1000, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              background: DS.card,
-              borderRadius: DS.radius,
-              border: `1px solid ${DS.border}`,
-              boxShadow: DS.shadowCard,
-              padding: '36px 32px',
-              boxSizing: 'border-box',
-              flexShrink: 0,
-            }}
           >
             {/* STEP 1: FORM */}
             {step === 'form' && (
               <>
-                <div style={{ marginBottom: 24, textAlign: 'left' }}>
-                  <h2 style={{ fontSize: 22, fontWeight: 800, color: DS.textPrimary, margin: 0, letterSpacing: '-0.02em' }}>
+                <div style={{ marginBottom: 20, textAlign: 'left' }}>
+                  <h2 style={{ fontSize: 24, fontWeight: 800, color: DS.textPrimary, margin: 0, letterSpacing: '-0.02em' }}>
                     Register Account
                   </h2>
-                  <p style={{ fontSize: 13, fontWeight: 500, color: DS.textMuted, margin: '4px 0 0 0' }}>
-                    Enter credentials to initiate Email OTP verification.
+                  <p style={{ fontSize: 14, fontWeight: 500, color: DS.textMuted, margin: '4px 0 0 0' }}>
+                    Enter credentials to create your SmartOps enterprise account.
                   </p>
                 </div>
 
-                {/* Role Tabs */}
+                {/* 1. Role / Portal Toggle */}
                 <div style={{
                   display: 'grid', gridTemplateColumns: '1fr 1fr',
                   background: DS.surfaceLow, borderRadius: DS.radiusInput,
-                  border: `1px solid ${DS.border}`, padding: 3, gap: 2, height: 44, marginBottom: 20,
+                  border: `1px solid ${DS.border}`, padding: 4, gap: 4, height: 48, marginBottom: 24,
                 }}>
                   {PORTALS.map(({ role, label, Icon }) => {
                     const active = selectedRole === role;
@@ -652,13 +723,13 @@ export const Register: React.FC = () => {
                           background: active ? DS.card : 'transparent',
                           color: active ? DS.primary : DS.textMuted,
                           fontWeight: active ? 700 : 500,
-                          fontSize: 12, fontFamily: 'inherit',
+                          fontSize: 13, fontFamily: 'inherit',
                           boxShadow: active ? DS.shadowSm : 'none',
                           transition: 'all 200ms ease',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                         }}
                       >
-                        <Icon size={14} strokeWidth={2.1} />
+                        <Icon size={16} strokeWidth={2.1} />
                         {label}
                       </button>
                     );
@@ -672,52 +743,301 @@ export const Register: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     style={{
                       background: DS.dangerBg, border: `1px solid ${DS.dangerBorder}`,
-                      borderRadius: DS.radiusInput, padding: '10px 14px', marginBottom: 20,
+                      borderRadius: DS.radiusInput, padding: '12px 16px', marginBottom: 20,
                       display: 'flex', alignItems: 'center', gap: 10,
                     }}
                   >
-                    <AlertCircle size={16} color={DS.danger} style={{ flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: DS.danger }}>{errorMsg}</span>
+                    <AlertCircle size={18} color={DS.danger} style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: 14, fontWeight: 600, color: DS.danger }}>{errorMsg}</span>
                   </motion.div>
                 )}
 
-                <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left' }}>
+                <form onSubmit={handleRegisterSubmit} className="register-form">
 
-                  {/* ── COMPANY INFORMATION SECTION (Owner Only) ─────────── */}
-                  {selectedRole === 'Owner' && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                      style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+                  {/* 2. Full Name */}
+                  <div>
+                    <label htmlFor="reg-fullname" style={labelStyle}>Full Name <span style={{ color: DS.danger }}>*</span></label>
+                    <input
+                      id="reg-fullname"
+                      type="text"
+                      name="fullName"
+                      required
+                      placeholder="e.g. John Doe"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                      style={inputBase}
+                      onFocus={onFocus}
+                      onBlur={onBlur}
+                    />
+                  </div>
+
+                  {/* 3. Workspace Email & 4. Mobile Contact */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                    <div>
+                      <label htmlFor="reg-email" style={labelStyle}>Workspace Email <span style={{ color: DS.danger }}>*</span></label>
+                      <input
+                        id="reg-email"
+                        type="email"
+                        name="email"
+                        required
+                        placeholder="john@company.com"
+                        value={formData.email}
+                        onChange={handleChange}
+                        style={inputBase}
+                        onFocus={onFocus}
+                        onBlur={onBlur}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="reg-mobile" style={labelStyle}>Mobile Contact <span style={{ color: DS.danger }}>*</span></label>
+                      <input
+                        id="reg-mobile"
+                        type="text"
+                        name="mobileNumber"
+                        required
+                        placeholder="+91 99999 99999"
+                        value={formData.mobileNumber}
+                        onChange={handleChange}
+                        style={inputBase}
+                        onFocus={onFocus}
+                        onBlur={onBlur}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 5. Security Question */}
+                  <div>
+                    <label htmlFor="reg-security-q" style={labelStyle}>Security Question <span style={{ color: DS.danger }}>*</span></label>
+                    <select
+                      id="reg-security-q"
+                      name="securityQuestion"
+                      value={formData.securityQuestion}
+                      onChange={(e: any) => setFormData(prev => ({ ...prev, securityQuestion: e.target.value }))}
+                      style={{
+                        ...inputBase,
+                        appearance: 'none',
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 14px center',
+                        paddingRight: 40,
+                        cursor: 'pointer',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                      }}
                     >
-                      {/* Section Header */}
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '10px 14px',
-                        background: `linear-gradient(135deg, rgba(0,106,106,0.06) 0%, rgba(0,163,163,0.04) 100%)`,
+                      <option value="What is your best friend's name?">What is your best friend's name?</option>
+                      <option value="What was the name of your first pet?">What was the name of your first pet?</option>
+                      <option value="In what city were you born?">In what city were you born?</option>
+                      <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                    </select>
+                  </div>
+
+                  {/* 6. Security Answer */}
+                  <div>
+                    <label htmlFor="reg-security-a" style={labelStyle}>Security Secret Answer <span style={{ color: DS.danger }}>*</span></label>
+                    <input
+                      id="reg-security-a"
+                      type="text"
+                      name="securityAnswer"
+                      required
+                      placeholder="Secret Answer (e.g. Rahul)"
+                      value={formData.securityAnswer}
+                      onChange={handleChange}
+                      style={inputBase}
+                      onFocus={onFocus}
+                      onBlur={onBlur}
+                    />
+                  </div>
+
+                  {/* 7. Password & 8. Confirm Password */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                    <div>
+                      <label htmlFor="reg-pwd" style={labelStyle}>Password <span style={{ color: DS.danger }}>*</span></label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          id="reg-pwd"
+                          type={showPwd ? 'text' : 'password'}
+                          name="password"
+                          required
+                          placeholder="••••••••"
+                          value={formData.password}
+                          onChange={handleChange}
+                          style={{ ...inputBase, paddingRight: 44 }}
+                          onFocus={onFocus}
+                          onBlur={onBlur}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPwd(!showPwd)}
+                          style={{
+                            position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                            background: 'none', border: 'none', cursor: 'pointer', color: DS.textMuted, padding: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}
+                        >
+                          {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="reg-confirm-pwd" style={labelStyle}>Confirm Password <span style={{ color: DS.danger }}>*</span></label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          id="reg-confirm-pwd"
+                          type={showConfirmPwd ? 'text' : 'password'}
+                          name="confirmPassword"
+                          required
+                          placeholder="••••••••"
+                          value={formData.confirmPassword}
+                          onChange={handleChange}
+                          style={{ ...inputBase, paddingRight: 44 }}
+                          onFocus={onFocus}
+                          onBlur={onBlur}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPwd(!showConfirmPwd)}
+                          style={{
+                            position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                            background: 'none', border: 'none', cursor: 'pointer', color: DS.textMuted, padding: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}
+                        >
+                          {showConfirmPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 9. Company Assignment Card (Driver Registration) */}
+                  {selectedRole === 'Driver' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                      style={{
+                        background: DS.surfaceLow,
                         borderRadius: DS.radiusInput,
-                        border: `1px solid rgba(0,106,106,0.14)`,
-                      }}>
-                        <div style={{
-                          width: 28, height: 28, borderRadius: 8,
-                          background: DS.primaryGrad,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                        }}>
-                          <Building size={14} color="#fff" strokeWidth={2.2} />
-                        </div>
-                        <div>
-                          <span style={{ fontSize: 12, fontWeight: 800, color: DS.primary, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                            Company Information
+                        border: `1px solid ${DS.border}`,
+                        boxShadow: DS.shadowSm,
+                        padding: '18px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 16,
+                      }}
+                    >
+                      {/* Integrated Header */}
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Building size={16} color={DS.primary} strokeWidth={2.2} />
+                          <span style={{ fontSize: 14, fontWeight: 800, color: DS.primary, letterSpacing: '0.02em' }}>
+                            Company Assignment
                           </span>
-                          <span style={{ display: 'block', fontSize: 11, color: DS.textMuted, fontWeight: 500, marginTop: 1 }}>
-                            Your company becomes the root entity for all SmartOps data
-                          </span>
                         </div>
+                        <p style={{ fontSize: 13, color: DS.textMuted, fontWeight: 500, margin: '6px 0 0 0', lineHeight: 1.4 }}>
+                          Enter your employer's company name to link your account
+                        </p>
                       </div>
 
-                      {/* Company Name (Required) */}
+                      {/* Input Field */}
+                      <div>
+                        <label htmlFor="reg-driver-company" style={labelStyle}>
+                          Company Name <span style={{ color: DS.danger }}>*</span>
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            id="reg-driver-company"
+                            type="text"
+                            required={selectedRole === 'Driver'}
+                            placeholder="Enter registered company name"
+                            value={driverCompanyName}
+                            onChange={e => {
+                              setDriverCompanyName(e.target.value);
+                              setDriverCompanyError('');
+                              setDriverCompanyFound(false);
+                            }}
+                            onBlur={handleDriverCompanyBlur}
+                            style={{
+                              ...inputBase,
+                              borderColor: driverCompanyError ? DS.danger : (driverCompanyFound ? '#10B981' : DS.border),
+                              boxShadow: driverCompanyError
+                                ? `0 0 0 3px rgba(186,26,26,0.1), 0 1px 2px 0 rgba(11,28,48,0.02)`
+                                : driverCompanyFound
+                                  ? `0 0 0 3px rgba(16,185,129,0.12), 0 1px 2px 0 rgba(11,28,48,0.02)`
+                                  : '0 1px 2px 0 rgba(11,28,48,0.02)',
+                              paddingRight: 44,
+                            }}
+                            onFocus={onFocus}
+                          />
+                          <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                            {driverCompanyChecking ? (
+                              <Loader2 size={16} color={DS.textMuted} className="animate-spin" />
+                            ) : driverCompanyError ? (
+                              <AlertCircle size={16} color={DS.danger} />
+                            ) : driverCompanyFound ? (
+                              <CheckCircle size={16} color="#10B981" />
+                            ) : null}
+                          </div>
+                        </div>
+                        {driverCompanyError ? (
+                          <motion.p
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            style={{ fontSize: 13, fontWeight: 600, color: DS.danger, margin: '6px 0 0 2px' }}
+                          >
+                            {driverCompanyError}
+                          </motion.p>
+                        ) : driverCompanyFound ? (
+                          <motion.p
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            style={{ fontSize: 13, fontWeight: 600, color: '#10B981', margin: '6px 0 0 2px' }}
+                          >
+                            ✓ Company found — your account will be linked on registration.
+                          </motion.p>
+                        ) : (
+                          <p style={{ fontSize: 13, fontWeight: 500, color: DS.textMuted, margin: '6px 0 0 2px' }}>
+                            Your account will automatically connect with your company's owner.
+                          </p>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Company Information Section (Owner Registration) */}
+                  {selectedRole === 'Owner' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                      style={{
+                        background: DS.surfaceLow,
+                        borderRadius: DS.radiusInput,
+                        border: `1px solid ${DS.border}`,
+                        boxShadow: DS.shadowSm,
+                        padding: '18px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 16,
+                      }}
+                    >
+                      {/* Section Header */}
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Building size={16} color={DS.primary} strokeWidth={2.2} />
+                          <span style={{ fontSize: 14, fontWeight: 800, color: DS.primary, letterSpacing: '0.02em' }}>
+                            Company Registration
+                          </span>
+                        </div>
+                        <p style={{ fontSize: 13, color: DS.textMuted, fontWeight: 500, margin: '6px 0 0 0', lineHeight: 1.4 }}>
+                          Your company becomes the root entity for all SmartOps data
+                        </p>
+                      </div>
+
+                      {/* Company Name */}
                       <div>
                         <label htmlFor="reg-company-name" style={labelStyle}>
                           Company Name <span style={{ color: DS.danger }}>*</span>
@@ -742,18 +1062,17 @@ export const Register: React.FC = () => {
                                 : (formData.companyName.trim().length >= 3 && !companyNameError
                                   ? `0 0 0 3px rgba(16,185,129,0.12), 0 1px 2px 0 rgba(11,28,48,0.02)`
                                   : '0 1px 2px 0 rgba(11,28,48,0.02)'),
-                              paddingRight: 36,
+                              paddingRight: 44,
                             }}
                             onFocus={onFocus}
                           />
-                          {/* Status icon */}
-                          <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                          <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
                             {companyNameChecking ? (
-                              <Loader2 size={14} color={DS.textMuted} className="animate-spin" />
+                              <Loader2 size={16} color={DS.textMuted} className="animate-spin" />
                             ) : companyNameError ? (
-                              <AlertCircle size={14} color={DS.danger} />
+                              <AlertCircle size={16} color={DS.danger} />
                             ) : formData.companyName.trim().length >= 3 ? (
-                              <CheckCircle size={14} color="#10B981" />
+                              <CheckCircle size={16} color="#10B981" />
                             ) : null}
                           </div>
                         </div>
@@ -761,14 +1080,14 @@ export const Register: React.FC = () => {
                           <motion.p
                             initial={{ opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
-                            style={{ fontSize: 12, fontWeight: 600, color: DS.danger, margin: '5px 0 0 2px' }}
+                            style={{ fontSize: 13, fontWeight: 600, color: DS.danger, margin: '6px 0 0 2px' }}
                           >
                             {companyNameError}
                           </motion.p>
                         )}
                       </div>
 
-                      {/* Company Type (Required) */}
+                      {/* Company Type */}
                       <div>
                         <label htmlFor="reg-company-type" style={labelStyle}>
                           Company Type <span style={{ color: DS.danger }}>*</span>
@@ -784,8 +1103,8 @@ export const Register: React.FC = () => {
                             appearance: 'none',
                             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
                             backgroundRepeat: 'no-repeat',
-                            backgroundPosition: 'right 12px center',
-                            paddingRight: 36,
+                            backgroundPosition: 'right 14px center',
+                            paddingRight: 40,
                             cursor: 'pointer',
                           }}
                         >
@@ -797,8 +1116,8 @@ export const Register: React.FC = () => {
                         </select>
                       </div>
 
-                      {/* Company Email & Company Phone */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      {/* Company Email & Phone */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                         <div>
                           <label htmlFor="reg-company-email" style={labelStyle}>Company Email</label>
                           <input
@@ -845,10 +1164,10 @@ export const Register: React.FC = () => {
                         />
                       </div>
 
-                      {/* GST Number (Optional) */}
+                      {/* GST Number */}
                       <div>
                         <label htmlFor="reg-gst" style={labelStyle}>
-                          GST Number <span style={{ fontSize: 11, fontWeight: 500, color: DS.textDisabled, textTransform: 'none', letterSpacing: 0 }}>(Optional)</span>
+                          GST Number <span style={{ fontSize: 12, fontWeight: 500, color: DS.textMuted }}>(Optional)</span>
                         </label>
                         <input
                           id="reg-gst"
@@ -862,298 +1181,44 @@ export const Register: React.FC = () => {
                           onBlur={onBlur}
                         />
                       </div>
-
-                      {/* Section divider */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '2px 0' }}>
-                        <div style={{ flex: 1, height: 1, background: DS.border }} />
-                        <span style={{ fontSize: 11, fontWeight: 700, color: DS.textDisabled, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                          Personal Information
-                        </span>
-                        <div style={{ flex: 1, height: 1, background: DS.border }} />
-                      </div>
                     </motion.div>
                   )}
 
-                  {/* Full Name */}
-                  <div>
-                    <label htmlFor="reg-fullname" style={labelStyle}>Full Name</label>
-                    <input
-                      id="reg-fullname"
-                      type="text"
-                      name="fullName"
-                      required
-                      placeholder="e.g. John Doe"
-                      value={formData.fullName}
-                      onChange={handleChange}
-                      style={inputBase}
-                      onFocus={onFocus}
-                      onBlur={onBlur}
-                    />
-                  </div>
-
-                  {/* Email & Mobile */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div>
-                      <label htmlFor="reg-email" style={labelStyle}>Workspace Email</label>
-                      <input
-                        id="reg-email"
-                        type="email"
-                        name="email"
-                        required
-                        placeholder="john@company.com"
-                        value={formData.email}
-                        onChange={handleChange}
-                        style={inputBase}
-                        onFocus={onFocus}
-                        onBlur={onBlur}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="reg-mobile" style={labelStyle}>Mobile Contact</label>
-                      <input
-                        id="reg-mobile"
-                        type="text"
-                        name="mobileNumber"
-                        required
-                        placeholder="+91 99999 99999"
-                        value={formData.mobileNumber}
-                        onChange={handleChange}
-                        style={inputBase}
-                        onFocus={onFocus}
-                        onBlur={onBlur}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Security Question Section */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-                    <div>
-                      <label htmlFor="reg-security-q" style={labelStyle}>Security Question</label>
-                      <select
-                        id="reg-security-q"
-                        name="securityQuestion"
-                        value={formData.securityQuestion}
-                        onChange={(e: any) => setFormData(prev => ({ ...prev, securityQuestion: e.target.value }))}
-                        style={{
-                          ...inputBase,
-                          appearance: 'none',
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'right 12px center',
-                          paddingRight: 36,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <option value="What is your best friend's name?">What is your best friend's name?</option>
-                        <option value="What was the name of your first pet?">What was the name of your first pet?</option>
-                        <option value="In what city were you born?">In what city were you born?</option>
-                        <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label htmlFor="reg-security-a" style={labelStyle}>Security Secret Answer</label>
-                      <input
-                        id="reg-security-a"
-                        type="text"
-                        name="securityAnswer"
-                        required
-                        placeholder="Secret Answer (e.g. Rahul)"
-                        value={formData.securityAnswer}
-                        onChange={handleChange}
-                        style={inputBase}
-                        onFocus={onFocus}
-                        onBlur={onBlur}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Passwords */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-                    <div>
-                      <label htmlFor="reg-pwd" style={labelStyle}>Password</label>
-                      <div style={{ position: 'relative' }}>
-                        <input
-                          id="reg-pwd"
-                          type={showPwd ? 'text' : 'password'}
-                          name="password"
-                          required
-                          placeholder="••••••••"
-                          value={formData.password}
-                          onChange={handleChange}
-                          style={{ ...inputBase, paddingRight: 40 }}
-                          onFocus={onFocus}
-                          onBlur={onBlur}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPwd(!showPwd)}
-                          style={{
-                            position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                            background: 'none', border: 'none', cursor: 'pointer', color: DS.textMuted, padding: 0,
-                          }}
-                        >
-                          {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="reg-confirm-pwd" style={labelStyle}>Confirm Password</label>
-                      <div style={{ position: 'relative' }}>
-                        <input
-                          id="reg-confirm-pwd"
-                          type={showConfirmPwd ? 'text' : 'password'}
-                          name="confirmPassword"
-                          required
-                          placeholder="••••••••"
-                          value={formData.confirmPassword}
-                          onChange={handleChange}
-                          style={{ ...inputBase, paddingRight: 40 }}
-                          onFocus={onFocus}
-                          onBlur={onBlur}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPwd(!showConfirmPwd)}
-                          style={{
-                            position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                            background: 'none', border: 'none', cursor: 'pointer', color: DS.textMuted, padding: 0,
-                          }}
-                        >
-                          {showConfirmPwd ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ── DRIVER COMPANY FIELD (Driver Only) ───────────────── */}
-                  {selectedRole === 'Driver' && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                    >
-                      {/* Section header */}
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '10px 14px', marginBottom: 14,
-                        background: `linear-gradient(135deg, rgba(0,106,106,0.06) 0%, rgba(0,163,163,0.04) 100%)`,
-                        borderRadius: DS.radiusInput,
-                        border: `1px solid rgba(0,106,106,0.14)`,
-                      }}>
-                        <div style={{
-                          width: 28, height: 28, borderRadius: 8,
-                          background: DS.primaryGrad,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                        }}>
-                          <Building size={14} color="#fff" strokeWidth={2.2} />
-                        </div>
-                        <div>
-                          <span style={{ fontSize: 12, fontWeight: 800, color: DS.primary, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                            Company Assignment
-                          </span>
-                          <span style={{ display: 'block', fontSize: 11, color: DS.textMuted, fontWeight: 500, marginTop: 1 }}>
-                            Enter your employer's company name to link your account
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Company Name lookup */}
-                      <div>
-                        <label htmlFor="reg-driver-company" style={labelStyle}>
-                          Company Name <span style={{ color: DS.danger }}>*</span>
-                        </label>
-                        <div style={{ position: 'relative' }}>
-                          <input
-                            id="reg-driver-company"
-                            type="text"
-                            required={selectedRole === 'Driver'}
-                            placeholder="Enter your registered company name"
-                            value={driverCompanyName}
-                            onChange={e => {
-                              setDriverCompanyName(e.target.value);
-                              setDriverCompanyError('');
-                              setDriverCompanyFound(false);
-                            }}
-                            onBlur={handleDriverCompanyBlur}
-                            style={{
-                              ...inputBase,
-                              borderColor: driverCompanyError ? DS.danger : (driverCompanyFound ? '#10B981' : DS.border),
-                              boxShadow: driverCompanyError
-                                ? `0 0 0 3px rgba(186,26,26,0.1), 0 1px 2px 0 rgba(11,28,48,0.02)`
-                                : driverCompanyFound
-                                  ? `0 0 0 3px rgba(16,185,129,0.12), 0 1px 2px 0 rgba(11,28,48,0.02)`
-                                  : '0 1px 2px 0 rgba(11,28,48,0.02)',
-                              paddingRight: 36,
-                            }}
-                            onFocus={onFocus}
-                          />
-                          <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-                            {driverCompanyChecking ? (
-                              <Loader2 size={14} color={DS.textMuted} className="animate-spin" />
-                            ) : driverCompanyError ? (
-                              <AlertCircle size={14} color={DS.danger} />
-                            ) : driverCompanyFound ? (
-                              <CheckCircle size={14} color="#10B981" />
-                            ) : null}
-                          </div>
-                        </div>
-                        {driverCompanyError && (
-                          <motion.p
-                            initial={{ opacity: 0, y: -4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            style={{ fontSize: 12, fontWeight: 600, color: DS.danger, margin: '5px 0 0 2px' }}
-                          >
-                            {driverCompanyError}
-                          </motion.p>
-                        )}
-                        {driverCompanyFound && (
-                          <motion.p
-                            initial={{ opacity: 0, y: -4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            style={{ fontSize: 12, fontWeight: 600, color: '#10B981', margin: '5px 0 0 2px' }}
-                          >
-                            ✓ Company found — your account will be linked on registration.
-                          </motion.p>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* Submit Button */}
+                  {/* 10. Register Button */}
                   <button
                     type="submit"
                     disabled={loading}
+                    className="btn-hover-effect"
                     style={{
-                      width: '100%', height: 48,
-                      borderRadius: DS.radiusBtn, border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+                      width: '100%', height: 52,
+                      borderRadius: '14px', border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
                       background: DS.primaryGrad, color: '#FFFFFF',
-                      fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
+                      fontSize: 16, fontWeight: 700, fontFamily: 'inherit',
                       boxShadow: `0 4px 14px ${DS.primaryShadow}`,
-                      transition: 'transform 150ms ease, opacity 150ms ease',
-                      opacity: loading ? 0.75 : 1, marginTop: 16,
+                      opacity: loading ? 0.75 : 1, marginTop: 24,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                     }}
                   >
                     {loading ? (
                       <>
-                        <Loader2 size={16} className="animate-spin" />
+                        <Loader2 size={18} className="animate-spin" />
                         <span>Creating Account...</span>
                       </>
                     ) : (
                       <>
                         <span>Register Account</span>
-                        <ArrowRight size={16} />
+                        <ArrowRight size={18} />
                       </>
                     )}
                   </button>
                 </form>
 
+                {/* 11. Google Login Divider & Button */}
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 16px',
                 }}>
                   <div style={{ flex: 1, height: 1, background: DS.border }} />
-                  <span style={{ fontSize: 12, color: DS.textDisabled }}>or</span>
+                  <span style={{ fontSize: 13, color: DS.textDisabled, fontWeight: 500 }}>or</span>
                   <div style={{ flex: 1, height: 1, background: DS.border }} />
                 </div>
 
@@ -1166,9 +1231,10 @@ export const Register: React.FC = () => {
                   />
                 </div>
 
-                <p style={{ textAlign: 'center', margin: 0, fontSize: 13, fontWeight: 500, color: DS.textSecondary }}>
+                {/* 12. Already Have Account */}
+                <p style={{ textAlign: 'center', margin: 0, fontSize: 14, fontWeight: 500, color: DS.textSecondary }}>
                   Already have an account?{' '}
-                  <Link to="/login" style={{ color: DS.primary, fontWeight: 600, textDecoration: 'none' }}>
+                  <Link to="/login" style={{ color: DS.primary, fontWeight: 700, textDecoration: 'none' }}>
                     Sign In
                   </Link>
                 </p>

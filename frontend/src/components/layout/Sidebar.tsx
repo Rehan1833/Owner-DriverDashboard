@@ -94,7 +94,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
   };
 
   return (
