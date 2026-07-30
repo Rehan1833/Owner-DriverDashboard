@@ -1,4 +1,36 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import User from '../models/User';
+
+const seedDefaultOwner = async () => {
+  try {
+    const ownerEmail = 'rehanchaudhari181133@gmail.com';
+    const existing = await User.findOne({ email: ownerEmail });
+    if (!existing) {
+      console.log('Seeding default Owner account...');
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash('123456', salt);
+      const owner = new User({
+        fullName: 'Rehan Chaudhari',
+        email: ownerEmail,
+        mobileNumber: '9876543210',
+        role: 'Owner',
+        passwordHash,
+        provider: 'local',
+        isEmailVerified: true,
+        isPhoneVerified: true,
+        verifiedAt: new Date(),
+        securityQuestion: "What is your best friend's name?",
+        securityAnswerHash: await bcrypt.hash('friend', 10),
+        companyName: 'SmartOps Logistics'
+      });
+      await owner.save();
+      console.log('Default Owner account seeded successfully!');
+    }
+  } catch (err: any) {
+    console.error('Error seeding default Owner:', err.message);
+  }
+};
 
 export const connectDB = async () => {
   try {
@@ -28,5 +60,20 @@ export const connectDB = async () => {
   } catch (err: any) {
     console.error(`MongoDB connection warning: ${err.message}`);
     console.log('Backend will operate in simulated in-memory state fallback if connection fails.');
+    
+    try {
+      console.log('Starting MongoMemoryServer for simulated in-memory fallback...');
+      const { MongoMemoryServer } = await import('mongodb-memory-server');
+      const mongoServer = await MongoMemoryServer.create();
+      const mongoUri = mongoServer.getUri();
+      console.log(`In-memory MongoDB instance started. Connecting Mongoose to: ${mongoUri}...`);
+      
+      const conn = await mongoose.connect(mongoUri);
+      console.log('Connected successfully to in-memory MongoDB!');
+      
+      await seedDefaultOwner();
+    } catch (fallbackErr: any) {
+      console.error(`In-memory database startup failed: ${fallbackErr.message}`);
+    }
   }
 };

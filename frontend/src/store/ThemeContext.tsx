@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'light' | 'dark';
 
@@ -25,10 +25,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const root = window.document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
+      root.style.colorScheme = 'only dark';
     } else {
       root.classList.remove('dark');
+      root.style.colorScheme = 'only light';
     }
     localStorage.setItem('smartops_theme', theme);
+
+    // Dynamically update or create the meta tag for browser-level forced dark mode prevention
+    let meta = document.querySelector('meta[name="color-scheme"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'color-scheme');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', theme === 'dark' ? 'only dark' : 'only light');
   }, [theme]);
 
   const toggleTheme = () => {

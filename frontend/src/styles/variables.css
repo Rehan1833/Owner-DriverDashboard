@@ -4,6 +4,7 @@
    ================================================================ */
 
 :root {
+  color-scheme: light dark;
   /* ── Surfaces ── */
   --color-bg: #FFFFFF;
   --color-card: #FFFFFF;
@@ -69,6 +70,7 @@
    DARK MODE
    ================================================================ */
 .dark {
+  color-scheme: dark;
   /* ── Surfaces ── */
   --color-bg: #0F172A;
   --color-card: #1E293B;
@@ -99,8 +101,8 @@
 
   /* ── Text ── */
   --color-text-primary: #FFFFFF;
-  --color-text-secondary: #FFFFFF;
-  --color-text-muted: #FFFFFF;
+  --color-text-secondary: #D1D5DB;
+  --color-text-muted: #9CA3AF;
   --color-text-disabled: #64748B;
 
   /* ── Outline & Borders ── */

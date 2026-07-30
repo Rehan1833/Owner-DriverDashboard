@@ -264,13 +264,12 @@ input[type="checkbox"] {
   outline-color: #7DF5F5;
 }
 
-/* ── Fallback Text Readability & Dynamic Contrast Rules ── */
-/* 1. Force white/light text to black when on white/light backgrounds (excluding buttons & badges) */
+/* 1a. Force white/important text to black when on white/light backgrounds (excluding buttons & badges) */
 :is(
   body:not(.dark),
   main:not(.dark),
   [class*="bg-white"],
-  [class*="bg-slate-50"],
+  [class*="bg-slate-55"],
   [class*="bg-slate-100"],
   [class*="bg-slate-200"],
   [class*="bg-slate-300"],
@@ -278,12 +277,7 @@ input[type="checkbox"] {
   [class*="bg-[#ffffff]"]
 ) :is(
   .text-white,
-  .text-slate-100,
-  .text-slate-200,
-  .text-slate-300,
-  .text-\[\#F8FAFC\],
-  .text-\[\#cbd5e1\],
-  .text-\[\#CBD5E1\]
+  .text-\[\#F8FAFC\]
 ):not(
   .btn-primary,
   .btn-primary *,
@@ -309,7 +303,76 @@ input[type="checkbox"] {
   color: #000000 !important;
 }
 
-/* 2. Force dark text to white when on black/dark backgrounds (excluding inputs/dropdowns/textareas) */
+/* 1b. Force light grey/normal text to dark grey when on white/light backgrounds (excluding buttons & badges) */
+:is(
+  body:not(.dark),
+  main:not(.dark),
+  [class*="bg-white"],
+  [class*="bg-slate-50"],
+  [class*="bg-slate-100"],
+  [class*="bg-slate-200"],
+  [class*="bg-slate-300"],
+  [class*="bg-[#FFFFFF]"],
+  [class*="bg-[#ffffff]"]
+) :is(
+  .text-slate-100,
+  .text-slate-200,
+  .text-slate-300,
+  .text-\[\#cbd5e1\],
+  .text-\[\#CBD5E1\]
+):not(
+  .btn-primary,
+  .btn-primary *,
+  button,
+  button *,
+  [class*="bg-[#006A6A]"],
+  [class*="bg-[#006A6A]"] *,
+  [class*="bg-teal"],
+  [class*="bg-teal"] *,
+  [class*="bg-emerald"],
+  [class*="bg-emerald"] *,
+  [class*="bg-red"],
+  [class*="bg-red"] *,
+  [class*="bg-rose"],
+  [class*="bg-rose"] *,
+  [class*="bg-blue"],
+  [class*="bg-blue"] *,
+  [class*="bg-success"],
+  [class*="bg-success"] *,
+  [class*="bg-danger"],
+  [class*="bg-danger"] *
+) {
+  color: #4B5563 !important;
+}
+
+/* 2a. Force important/primary text to white when on black/dark backgrounds (excluding inputs/dropdowns/textareas) */
+:is(
+  .dark,
+  [class*="bg-slate-9"],
+  [class*="bg-slate-950"],
+  [class*="bg-[#0B1C30]"],
+  [class*="bg-[#0b1c30]"],
+  [class*="bg-black"],
+  [class*="bg-slate-8"],
+  [class*="from-slate-9"],
+  [class*="from-slate-8"],
+  [class*="from-[#0B1C30]"],
+  [class*="from-[#0b1c30]"]
+) :is(
+  .text-slate-700,
+  .text-slate-800,
+  .text-slate-900,
+  .text-slate-950,
+  .text-black,
+  .text-\[\#0B1C30\],
+  .text-\[\#0b1c30\],
+  .text-\[\#111827\],
+  .dark\:text-\[\#F8FAFC\]
+):not(input, textarea, select) {
+  color: #FFFFFF !important;
+}
+
+/* 2b. Force normal/muted text to light grey when on black/dark backgrounds (excluding inputs/dropdowns/textareas) */
 :is(
   .dark,
   [class*="bg-slate-9"],
@@ -327,10 +390,6 @@ input[type="checkbox"] {
   .text-slate-400,
   .text-slate-500,
   .text-slate-600,
-  .text-slate-700,
-  .text-slate-800,
-  .text-slate-900,
-  .text-slate-950,
   .text-gray-555,
   .text-gray-655,
   .text-gray-755,
@@ -344,16 +403,12 @@ input[type="checkbox"] {
   .text-\[\#6d7a79\],
   .text-\[\#545F73\],
   .text-\[\#545f73\],
-  .text-\[\#0B1C30\],
-  .text-\[\#0b1c30\],
-  .text-\[\#111827\],
   .dark\:text-slate-300,
   .dark\:text-slate-400,
   .dark\:text-slate-555,
-  .dark\:text-slate-655,
-  .dark\:text-\[\#F8FAFC\]
+  .dark\:text-slate-655
 ):not(input, textarea, select) {
-  color: #FFFFFF !important;
+  color: #D1D5DB !important;
 }
 
 /* ── Navbar Search Input Overrides ── */
@@ -406,4 +461,45 @@ input.navbar-search-input:focus {
   color: #7DF5F5 !important;
   filter: drop-shadow(0 0 4px rgba(125, 245, 245, 0.8)) !important;
 }
+
+/* ── KPI Card & Header Text Contrast Overrides ── */
+body:not(.dark) .text-\[\#0B1C30\],
+body:not(.dark) .text-\[\#0b1c30\] {
+  color: #0B1C30 !important;
+}
+
+.dark .text-\[\#0B1C30\],
+.dark .text-\[\#0b1c30\],
+.dark .dark\:text-white {
+  color: #FFFFFF !important;
+}
+
+/* ── Sidebar Text Contrast Overrides (Prevent Light Theme Darkening) ── */
+aside.bg-\[\#0F172A\] .text-\[\#999999\] {
+  color: #999999 !important;
+}
+
+aside.bg-\[\#0F172A\] .text-\[\#64748B\],
+aside.bg-\[\#0F172A\] .text-\[\#64748b\] {
+  color: #94A3B8 !important;
+}
+
+aside.bg-\[\#0F172A\] .text-white {
+  color: #FFFFFF !important;
+}
+
+aside.bg-\[\#0F172A\] a:hover .text-\[\#999999\],
+aside.bg-\[\#0F172A\] a:hover span,
+aside.bg-\[\#0F172A\] a:hover svg {
+  color: #FFFFFF !important;
+}
+
+/* Force spans inside Sidebar links/buttons to inherit parent color instead of tag defaults */
+aside.bg-\[\#0F172A\] a span,
+aside.bg-\[\#0F172A\] button span {
+  color: inherit !important;
+}
+
+
+
 

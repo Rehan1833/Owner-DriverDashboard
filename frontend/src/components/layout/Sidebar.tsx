@@ -113,7 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.15 }}
-              className="font-black text-[17px] text-[#F8FAFC] tracking-tight whitespace-nowrap"
+              className="font-black text-[17px] text-[#FFFFFF] tracking-tight whitespace-nowrap"
             >
               Smart<span className="text-[#7DF5F5]">Ops</span>
             </motion.span>
@@ -156,7 +156,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
                     className={`relative flex items-center gap-3 px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 group cursor-pointer ${
                       isActive
                         ? 'text-white bg-[#006A6A] shadow-sm font-bold'
-                        : 'text-[#CBD5E1] hover:text-[#F8FAFC] hover:bg-[#1E293B]'
+                        : 'text-[#999999] hover:text-[#F8FAFC] hover:bg-[#1E293B]'
                     } ${isCollapsed ? 'justify-center' : ''}`}
                   >
                     {/* Active left bar indicator */}
@@ -167,7 +167,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
                       className={`h-4 w-4 shrink-0 ${
                         isActive
                           ? 'text-white'
-                          : 'text-[#94A3B8] group-hover:text-[#F8FAFC] transition-colors'
+                          : 'text-[#999999] group-hover:text-[#F8FAFC] transition-colors'
                       }`}
                     />
                     {!isCollapsed && (
@@ -190,13 +190,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
 
       {/* Footer Profile & Logout */}
       <div className="p-3 border-t border-[#1E293B] shrink-0 space-y-1">
-        <div className={`flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#1E293B] transition-colors overflow-hidden ${isCollapsed ? 'justify-center' : ''}`}>
-          <img
-            src={user?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.fullName || 'SmartOps'}&backgroundColor=006A6A`}
-            alt="Avatar"
-            className="w-8 h-8 rounded-full bg-[#1E293B] shrink-0 border border-[#334155]"
-          />
-          {!isCollapsed && (
+        {!isCollapsed && (
+          <div className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#1E293B] transition-colors overflow-hidden">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -206,8 +201,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
               <p className="text-xs font-bold text-[#F8FAFC] truncate leading-tight">{user?.fullName || 'User'}</p>
               <p className="text-[10px] font-semibold text-[#94A3B8] truncate leading-tight mt-0.5">{user?.role || 'Driver'}</p>
             </motion.div>
-          )}
-        </div>
+          </div>
+        )}
         <button
           onClick={handleLogout}
           title={isCollapsed ? 'Logout' : undefined}

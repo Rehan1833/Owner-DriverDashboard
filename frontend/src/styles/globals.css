@@ -115,6 +115,38 @@
     line-height: 1.6;
   }
 
+  /* Ensure all text-bearing and interactive elements have explicit colors based on actual CSS variables */
+  h1, h2, h3, h4, h5, h6,
+  body, p, span, label, li, a,
+  input, select, textarea, button,
+  table, th, td {
+    color: var(--color-text-primary);
+  }
+
+  /* Specific color hierarchy overrides */
+  p, .body-text, span, label, li, td {
+    color: var(--color-text-secondary);
+  }
+
+  .caption-text, .small-text, th, .table-header {
+    color: var(--color-text-muted);
+  }
+
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color 200ms ease;
+  }
+
+  a:hover {
+    color: var(--color-primary-container);
+  }
+
+  /* Prevent inherit behavior on interactive elements that could get overridden by browser defaults */
+  button, input, select, textarea {
+    color: var(--color-text-primary);
+  }
+
   /* ── Typography Scale ── */
   h1, .page-heading {
     font-size: 40px;

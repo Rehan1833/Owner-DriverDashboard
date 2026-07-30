@@ -17,62 +17,104 @@ import {
 } from 'recharts';
 import { AttendanceRecord, Trip, Vehicle, PayrollRecord } from '../../types';
 
-// Helper component for KPI Cards with mini sparkline graphs
+// Circular Progress Ring Component
+const ProgressRing: React.FC<{
+  progress: number;
+  color: string;
+  size?: number;
+  strokeWidth?: number;
+}> = ({ progress, color, size = 38, strokeWidth = 3.5 }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (Math.min(Math.max(progress, 0), 100) / 100) * circumference;
+
+  const isClassColor = color.startsWith('text-');
+
+  return (
+    <div className="relative flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        {/* Track circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          className="stroke-slate-100/50 dark:stroke-slate-800/40"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+        />
+        {/* Progress circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={isClassColor ? undefined : color}
+          className={`transition-all duration-500 ease-out ${isClassColor ? color.replace('text-', 'stroke-') : ''}`}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+        />
+      </svg>
+      {/* Percentage label in the center - uses matching dynamic color */}
+      <span 
+        className={`absolute text-[8px] font-extrabold ${isClassColor ? color : ''}`}
+        style={{ color: isClassColor ? undefined : color }}
+      >
+        {Math.round(progress)}%
+      </span>
+    </div>
+  );
+};
+
+// Helper component for KPI Cards with circular progress rings
 const MetricCard: React.FC<{
   title: string;
   value: string | number;
   change: string;
   isPositive: boolean;
   icon: React.ComponentType<any>;
-  sparklineData: number[];
+  progress: number;
   color: string;
   bgColor: string;
-}> = ({ title, value, change, isPositive, icon: Icon, sparklineData, color, bgColor }) => {
-  const width = 80;
-  const height = 30;
-  const min = Math.min(...sparklineData);
-  const max = Math.max(...sparklineData);
-  const range = max - min;
-  const points = sparklineData
-    .map((val, idx) => {
-      const x = (idx / (sparklineData.length - 1)) * width;
-      const y = height - ((val - min) / (range || 1)) * height + 2;
-      return `${x},${y}`;
-    })
-    .join(' ');
-
+}> = ({ title, value, change, isPositive, icon: Icon, progress, color, bgColor }) => {
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex justify-between items-center group transition-all duration-300"
+      className="bg-white dark:bg-[#1E293B] rounded-2xl p-5 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex flex-col justify-between items-stretch gap-4 group transition-all duration-300 min-h-[160px] w-full overflow-hidden text-left"
     >
-      <div className="space-y-2">
-        <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">{title}</span>
-        <h4 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-slate-100 leading-none">{value}</h4>
-        <div className="flex items-center gap-1 mt-1">
-          {isPositive ? (
-            <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-          ) : (
-            <ArrowDownRight className="h-3.5 w-3.5 text-red-500" />
-          )}
-          <span className={`text-xs font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>{change}</span>
+      {/* Top Row: Title & Icon */}
+      <div className="flex justify-between items-start gap-2 min-w-0">
+        <span className="text-[12px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase whitespace-normal break-words leading-tight flex-1">
+          {title}
+        </span>
+        <div className={`p-2 rounded-lg transition-all duration-300 shrink-0 ${bgColor} ${color}`}>
+          <Icon className="h-4.5 w-4.5 group-hover:scale-105 transition-transform duration-200" />
         </div>
       </div>
-      <div className="flex flex-col items-end gap-3 shrink-0">
-        <div className={`p-3.5 rounded-xl ${bgColor} ${color} group-hover:scale-105 transition-transform duration-200`}>
-          <Icon className="h-5 w-5" />
+
+      {/* Middle Row: Value */}
+      <div className="min-w-0 py-0.5">
+        <h4 className="text-2xl sm:text-3xl font-black text-[#0B1C30] dark:text-slate-100 leading-none tracking-tight truncate w-full" title={String(value)}>
+          {value}
+        </h4>
+      </div>
+
+      {/* Bottom Row: Trend & Progress Ring */}
+      <div className="flex items-end justify-between gap-2 pt-1 mt-auto">
+        <div className="flex items-center gap-1 min-w-0">
+          {isPositive ? (
+            <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          ) : (
+            <ArrowDownRight className="h-4 w-4 text-red-500 shrink-0" />
+          )}
+          <span className={`text-[12px] font-bold truncate ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+            {change}
+          </span>
         </div>
-        <svg width={width} height={height} className="overflow-visible mt-1.5 opacity-80">
-          <polyline
-            fill="none"
-            stroke="currentColor"
-            className={color}
-            strokeWidth="2"
-            points={points}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <div className="shrink-0 pl-1">
+          <ProgressRing progress={progress} color={color} size={38} strokeWidth={3.5} />
+        </div>
       </div>
     </motion.div>
   );
@@ -105,6 +147,37 @@ export const Attendance: React.FC = () => {
   const overtimeCount = attendance.filter(a => a.overtime && a.overtime > 0).length;
   const activeTripsCount = trips.filter(t => t.status !== 'Completed').length;
   const completedTripsCount = trips.filter(t => t.status === 'Completed').length;
+
+  // Calculate dynamic progress percentages for circular rings in Attendance
+  const presentDriversProgress = useMemo(() => {
+    return totalDriversCount > 0 ? Math.round((presentDriversCount / totalDriversCount) * 100) : 0;
+  }, [presentDriversCount, totalDriversCount]);
+
+  const absentDriversProgress = useMemo(() => {
+    return totalDriversCount > 0 ? Math.round((absentDriversCount / totalDriversCount) * 100) : 0;
+  }, [absentDriversCount, totalDriversCount]);
+
+  const lateDriversProgress = useMemo(() => {
+    return presentDriversCount > 0 ? Math.round((lateCheckInCount / presentDriversCount) * 100) : 0;
+  }, [lateCheckInCount, presentDriversCount]);
+
+  const checkedOutDriversProgress = useMemo(() => {
+    return presentDriversCount > 0 ? Math.round((checkedOutDriversCount / presentDriversCount) * 100) : 0;
+  }, [checkedOutDriversCount, presentDriversCount]);
+
+  const overtimeProgress = useMemo(() => {
+    return presentDriversCount > 0 ? Math.round((overtimeCount / presentDriversCount) * 100) : 0;
+  }, [overtimeCount, presentDriversCount]);
+
+  const activeTransitProgress = useMemo(() => {
+    return totalDriversCount > 0 ? Math.round((activeTripsCount / totalDriversCount) * 100) : 0;
+  }, [activeTripsCount, totalDriversCount]);
+
+  const completedDeliveryProgress = useMemo(() => {
+    const totalRuns = activeTripsCount + completedTripsCount;
+    return totalRuns > 0 ? Math.round((completedTripsCount / totalRuns) * 100) : 0;
+  }, [activeTripsCount, completedTripsCount]);
+
 
   // Mock Notifications for alerts strip
   const systemAlerts = useMemo(() => {
@@ -237,7 +310,7 @@ export const Attendance: React.FC = () => {
           change="Daily presence logs"
           isPositive={true}
           icon={UserCheck}
-          sparklineData={[0, 0, 0, 0, 0, 0, presentDriversCount]}
+          progress={presentDriversProgress}
           color="text-blue-600"
           bgColor="bg-blue-50 dark:bg-blue-950/20"
         />
@@ -247,7 +320,7 @@ export const Attendance: React.FC = () => {
           change="Awaiting clock-in"
           isPositive={false}
           icon={UserX}
-          sparklineData={[0, 0, 0, 0, 0, 0, absentDriversCount]}
+          progress={absentDriversProgress}
           color="text-[#6D7A79]"
           bgColor="bg-[#F8F9FF] dark:bg-[#0F172A]/20"
         />
@@ -257,7 +330,7 @@ export const Attendance: React.FC = () => {
           change="Checked-in after 08:30"
           isPositive={false}
           icon={AlertTriangle}
-          sparklineData={[0, 0, 0, 0, 0, 0, lateCheckInCount]}
+          progress={lateDriversProgress}
           color="text-amber-500"
           bgColor="bg-amber-50 dark:bg-amber-950/20"
         />
@@ -267,7 +340,7 @@ export const Attendance: React.FC = () => {
           change="Shift completed"
           isPositive={true}
           icon={CheckCircle2}
-          sparklineData={[0, 0, 0, 0, 0, 0, checkedOutDriversCount]}
+          progress={checkedOutDriversProgress}
           color="text-emerald-600"
           bgColor="bg-emerald-50 dark:bg-emerald-950/20"
         />
@@ -277,7 +350,7 @@ export const Attendance: React.FC = () => {
           change="Operators rostered"
           isPositive={true}
           icon={Users}
-          sparklineData={[0, 0, 0, 0, 0, 0, totalDriversCount]}
+          progress={100}
           color="text-violet-600"
           bgColor="bg-violet-50 dark:bg-violet-950/20"
         />
@@ -287,7 +360,7 @@ export const Attendance: React.FC = () => {
           change="Shift overtime logs"
           isPositive={true}
           icon={Clock}
-          sparklineData={[0, 0, 0, 0, 0, 0, overtimeCount]}
+          progress={overtimeProgress}
           color="text-rose-600"
           bgColor="bg-rose-50 dark:bg-rose-950/20"
         />
@@ -297,7 +370,7 @@ export const Attendance: React.FC = () => {
           change="Live consignments"
           isPositive={true}
           icon={Truck}
-          sparklineData={[0, 0, 0, 0, 0, 0, activeTripsCount]}
+          progress={activeTransitProgress}
           color="text-sky-600"
           bgColor="bg-sky-50 dark:bg-sky-950/20"
         />
@@ -307,7 +380,7 @@ export const Attendance: React.FC = () => {
           change="SLA target tracking"
           isPositive={true}
           icon={TrendingUp}
-          sparklineData={[0, 0, 0, 0, 0, 0, completedTripsCount]}
+          progress={completedDeliveryProgress}
           color="text-indigo-600"
           bgColor="bg-indigo-50 dark:bg-indigo-950/20"
         />
