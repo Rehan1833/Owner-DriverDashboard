@@ -33,19 +33,10 @@
   --color-border-custom: var(--color-border);
   --color-outline: var(--color-outline);
   
-  /* Tailwind color overrides → mapped to design tokens */
-  --color-white: #FFFFFF;
-  --color-slate-50: var(--color-bg);
-  --color-slate-100: var(--color-surface-low);
-  --color-slate-200: var(--color-surface-dim);
-  --color-slate-300: var(--color-outline-variant);
-  --color-slate-400: var(--color-text-muted);
-  --color-slate-500: var(--color-text-secondary);
-  --color-slate-600: var(--color-text-secondary);
-  --color-slate-700: var(--color-text-primary);
-  --color-slate-800: var(--color-text-primary);
-  --color-slate-900: #0F172A;
-  --color-slate-950: #090D16;
+  /* Custom brand color tokens */
+  --color-brand-primary: #006A6A;
+  --color-brand-primary-hover: #005555;
+  --color-navy-dark: #0B1C30;
   
   --color-gray-50: var(--color-surface-low);
   --color-gray-100: var(--color-border);

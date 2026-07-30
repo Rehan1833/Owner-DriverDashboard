@@ -35,62 +35,59 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
 
   const sections = isDriver
     ? [
-        {
-          title: 'Operations',
-          items: [
-            { name: 'Dashboard', path: '/driver', icon: LayoutDashboard },
-            { name: 'My Trips', path: '/driver/trips', icon: Truck },
-            { name: 'Active Trip', path: '/driver/active-trip', icon: Activity },
-            { name: 'Proof of Delivery', path: '/driver/pod', icon: FileText },
-          ],
-        },
-        {
-          title: 'Console & Settings',
-          items: [
-            { name: 'Vehicle Info', path: '/driver/fleet', icon: Warehouse },
-            { name: 'Notifications', path: '/driver/notifications', icon: Bell },
-            { name: 'Profile', path: '/driver/profile', icon: Users },
-            { name: 'Settings', path: '/driver/settings', icon: Settings },
-          ],
-        },
-      ]
+      {
+        title: 'Operations',
+        items: [
+          { name: 'Dashboard', path: '/driver', icon: LayoutDashboard },
+          { name: 'My Trips', path: '/driver/trips', icon: Truck },
+          { name: 'Active Trip', path: '/driver/active-trip', icon: Activity },
+          { name: 'Proof of Delivery', path: '/driver/pod', icon: FileText },
+        ],
+      },
+      {
+        title: 'Console & Settings',
+        items: [
+          { name: 'Vehicle Info', path: '/driver/fleet', icon: Warehouse },
+          { name: 'Profile', path: '/driver/profile', icon: Users },
+          { name: 'Settings', path: '/driver/settings', icon: Settings },
+        ],
+      },
+    ]
     : [
-        {
-          title: 'Operations',
-          items: [
-            { name: 'Dashboard', path: '/owner', icon: LayoutDashboard },
-            { name: 'Trips & Dispatch', path: '/owner/trips', icon: Truck },
-            { name: 'Operations Log', path: '/owner/operations', icon: Activity },
-            { name: 'Fleet Tracker', path: '/owner/fleet', icon: Truck },
-            { name: 'Attendance Status', path: '/owner/attendance', icon: Users },
-            { name: 'Workers Directory', path: '/owner/workers', icon: Users },
-            { name: 'Proof of Delivery', path: '/owner/pod', icon: FileText },
-          ],
-        },
-        {
-          title: 'Management',
-          items: [
-            { name: 'Inventory Logs', path: '/owner/inventory', icon: Warehouse },
-            { name: 'Task Board', path: '/owner/tasks', icon: CheckSquare },
-            { name: 'Payroll & Salary', path: '/owner/payroll', icon: CreditCard },
-          ],
-        },
-        {
-          title: 'Analytics & Alerts',
-          items: [
-            { name: 'Reports Desk', path: '/owner/reports', icon: FileText },
-            { name: 'Business Analytics', path: '/owner/analytics', icon: LineChart },
-            { name: 'Notifications Log', path: '/owner/notifications', icon: Bell },
-          ],
-        },
-        {
-          title: 'Account Settings',
-          items: [
-            { name: 'Profile Settings', path: '/owner/profile', icon: User },
-            { name: 'System Settings', path: '/owner/settings', icon: Settings },
-          ],
-        },
-      ];
+      {
+        title: 'Operations',
+        items: [
+          { name: 'Dashboard', path: '/owner', icon: LayoutDashboard },
+          { name: 'Trips & Dispatch', path: '/owner/trips', icon: Truck },
+          { name: 'Operations Log', path: '/owner/operations', icon: Activity },
+          { name: 'Fleet Tracker', path: '/owner/fleet', icon: Truck },
+          { name: 'Attendance Status', path: '/owner/attendance', icon: Users },
+          { name: 'Workers Directory', path: '/owner/workers', icon: Users },
+          { name: 'Proof of Delivery', path: '/owner/pod', icon: FileText },
+        ],
+      },
+      {
+        title: 'Management',
+        items: [
+          { name: 'Inventory Logs', path: '/owner/inventory', icon: Warehouse },
+          { name: 'Payroll & Salary', path: '/owner/payroll', icon: CreditCard },
+        ],
+      },
+      {
+        title: 'Analytics & Alerts',
+        items: [
+          { name: 'Reports Desk', path: '/owner/reports', icon: FileText },
+          { name: 'Business Analytics', path: '/owner/analytics', icon: LineChart },
+        ],
+      },
+      {
+        title: 'Account Settings',
+        items: [
+          { name: 'Profile Settings', path: '/owner/profile', icon: User },
+          { name: 'System Settings', path: '/owner/settings', icon: Settings },
+        ],
+      },
+    ];
 
   const handleLogout = () => {
     logout();
@@ -153,22 +150,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
                     to={item.path}
                     title={isCollapsed ? item.name : undefined}
                     aria-label={item.name}
-                    className={`relative flex items-center gap-3 px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 group cursor-pointer ${
-                      isActive
+                    className={`relative flex items-center gap-3 px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 group cursor-pointer ${isActive
                         ? 'text-white bg-[#006A6A] shadow-sm font-bold'
                         : 'text-[#999999] hover:text-[#F8FAFC] hover:bg-[#1E293B]'
-                    } ${isCollapsed ? 'justify-center' : ''}`}
+                      } ${isCollapsed ? 'justify-center' : ''}`}
                   >
                     {/* Active left bar indicator */}
                     {isActive && !isCollapsed && (
                       <span className="absolute left-0 top-2 bottom-2 w-[3px] bg-white/70 rounded-r-full" />
                     )}
                     <Icon
-                      className={`h-4 w-4 shrink-0 ${
-                        isActive
+                      className={`h-4 w-4 shrink-0 ${isActive
                           ? 'text-white'
                           : 'text-[#999999] group-hover:text-[#F8FAFC] transition-colors'
-                      }`}
+                        }`}
                     />
                     {!isCollapsed && (
                       <motion.span
@@ -188,35 +183,40 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
         ))}
       </nav>
 
-      {/* Footer Profile & Logout */}
+      {/* Footer Logout */}
       <div className="p-3 border-t border-[#1E293B] shrink-0 space-y-1">
-        {!isCollapsed && (
-          <div className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#1E293B] transition-colors overflow-hidden">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.12 }}
-              className="flex-1 min-w-0"
-            >
-              <p className="text-xs font-bold text-[#F8FAFC] truncate leading-tight">{user?.fullName || 'User'}</p>
-              <p className="text-[10px] font-semibold text-[#94A3B8] truncate leading-tight mt-0.5">{user?.role || 'Driver'}</p>
-            </motion.div>
-          </div>
-        )}
-        <button
-          onClick={handleLogout}
-          title={isCollapsed ? 'Logout' : undefined}
-          aria-label="Logout"
-          className={`flex items-center gap-3 w-full px-3 py-2.5 text-xs text-[#FCA5A5] hover:bg-red-500/10 rounded-xl transition-all font-semibold group cursor-pointer ${isCollapsed ? 'justify-center' : ''}`}
+<<<<<<< HEAD
+  {
+    !isCollapsed && (
+      <div className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#1E293B] transition-colors overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.12 }}
+          className="flex-1 min-w-0"
         >
-          <LogOut className="h-4 w-4 shrink-0 group-hover:opacity-80" />
-          {!isCollapsed && (
-            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12 }}>
-              Logout
-            </motion.span>
-          )}
-        </button>
+          <p className="text-xs font-bold text-[#F8FAFC] truncate leading-tight">{user?.fullName || 'User'}</p>
+          <p className="text-[10px] font-semibold text-[#94A3B8] truncate leading-tight mt-0.5">{user?.role || 'Driver'}</p>
+        </motion.div>
       </div>
-    </motion.aside>
+    )
+  }
+=======
+>>>>>>> 09f0cb6 (Remove useless pages)
+  <button
+    onClick={handleLogout}
+    title={isCollapsed ? 'Logout' : undefined}
+    aria-label="Logout"
+    className={`flex items-center gap-3 w-full px-3 py-2.5 text-xs text-[#FCA5A5] hover:bg-red-500/10 rounded-xl transition-all font-semibold group cursor-pointer ${isCollapsed ? 'justify-center' : ''}`}
+  >
+    <LogOut className="h-4 w-4 shrink-0 group-hover:opacity-80" />
+    {!isCollapsed && (
+      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12 }}>
+        Logout
+      </motion.span>
+    )}
+  </button>
+      </div >
+    </motion.aside >
   );
 };

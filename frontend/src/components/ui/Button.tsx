@@ -19,12 +19,12 @@ export const Button: React.FC<ButtonProps> = ({
   
   const variants = {
     primary: 'bg-gradient-to-r from-[#006A6A] to-[#00A3A3] text-white hover:opacity-95 shadow-md shadow-[#006A6A]/10 focus:ring-[#006A6A] border border-transparent',
-    secondary: 'bg-white dark:bg-[#1E293B] text-[#545F73] dark:text-[#CBD5E1] hover:bg-[#F8F9FF] dark:hover:bg-[#111827] border border-[#E5EEFF] dark:border-[#334155] shadow-sm hover:shadow focus:ring-[#006A6A]',
-    success: 'bg-[#10B981] text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/10 focus:ring-emerald-500 border border-transparent',
-    warning: 'bg-[#F59E0B] text-white hover:bg-amber-600 shadow-md shadow-amber-500/10 focus:ring-amber-500 border border-transparent',
-    danger: 'bg-[#BA1A1A] text-white hover:opacity-95 shadow-md shadow-[#BA1A1A]/10 focus:ring-[#BA1A1A] border border-transparent',
-    outline: 'border border-[#E5EEFF] dark:border-[#334155] text-[#545F73] dark:text-[#CBD5E1] bg-white dark:bg-[#1E293B] hover:bg-[#F8F9FF] dark:hover:bg-[#111827] focus:ring-[#006A6A]',
-    ghost: 'text-[#545F73] dark:text-[#CBD5E1] hover:bg-[#EFF4FF] dark:hover:bg-[#1E293B] hover:text-[#0B1C30] dark:hover:text-white border border-transparent focus:ring-[#006A6A]',
+    secondary: 'bg-white dark:bg-slate-800 text-[#334155] dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 shadow-sm focus:ring-slate-400',
+    success: 'bg-[#10B981] text-white hover:bg-emerald-600 shadow-md focus:ring-emerald-500 border border-transparent',
+    warning: 'bg-[#F59E0B] text-white hover:bg-amber-600 shadow-md focus:ring-amber-500 border border-transparent',
+    danger: 'bg-[#BA1A1A] text-white hover:bg-[#A01616] shadow-md shadow-red-900/20 focus:ring-red-500 border border-transparent',
+    outline: 'border border-slate-300 dark:border-slate-700 text-[#334155] dark:text-[#CBD5E1] bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 focus:ring-slate-400',
+    ghost: 'text-[#334155] dark:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#0B1C30] dark:hover:text-white border border-transparent focus:ring-slate-400',
   };
 
   const sizes = {

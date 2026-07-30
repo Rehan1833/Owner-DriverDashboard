@@ -609,16 +609,18 @@ export const POD: React.FC = () => {
         {showRejectModal && selectedPod && (
           <div className="fixed inset-0 bg-[#0B1C30]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <motion.div
+              role="dialog"
+              aria-modal="true"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-5 text-left"
+              className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-5 text-left modal-container"
             >
-              <div className="flex items-center gap-2 text-rose-600">
-                <AlertOctagon className="h-5 w-5" />
-                <h3 className="text-base font-bold text-[#0B1C30] dark:text-slate-100">Specify Rejection Discrepancy</h3>
+              <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+                <AlertOctagon className="h-5 w-5 shrink-0" />
+                <h3 className="text-xl font-bold text-[#0B1C30] dark:text-[#F8FAFC] modal-title">Specify Rejection Discrepancy</h3>
               </div>
-              <p className="text-xs text-[#6D7A79] leading-relaxed font-semibold">
+              <p className="text-[15px] text-[#334155] dark:text-[#CBD5E1] leading-relaxed font-medium modal-description">
                 Please write a clear correction advice description. The driver Rajesh Kumar will review this advice inside their console and re-upload correct proofs.
               </p>
               
@@ -627,17 +629,17 @@ export const POD: React.FC = () => {
                 onChange={e => setRejectReason(e.target.value)}
                 placeholder="e.g. signature is blurry, wrong invoice paper snapshot uploaded..."
                 rows={3}
-                className="w-full px-4 py-3 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] dark:bg-[#0F172A] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] font-medium resize-none text-slate-700 dark:text-[#F8FAFC]"
+                className="w-full px-4 py-3 text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] font-medium resize-none text-slate-800 dark:text-[#F8FAFC]"
               />
 
-              <div className="flex justify-end gap-2.5 pt-2 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
+              <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <Button
                   onClick={() => {
                     setShowRejectModal(false);
                     setRejectReason('');
                   }}
                   variant="outline"
-                  className="border border-[#E5EEFF] dark:border-[#334155] text-[#6D7A79] text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer"
+                  className="border border-slate-300 dark:border-slate-700 text-[#334155] dark:text-[#CBD5E1] text-[15px] font-semibold px-4 py-2.5 rounded-xl cursor-pointer"
                 >
                   Cancel
                 </Button>

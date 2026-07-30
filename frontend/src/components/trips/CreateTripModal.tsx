@@ -369,21 +369,21 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
         {/* Cargo & Priority */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="sm:col-span-2">
-            <label className="block text-[#6D7A79] font-bold mb-1">Cargo Description</label>
+            <label className="block text-[#334155] dark:text-[#CBD5E1] font-bold mb-1">Cargo Description</label>
             <input
               type="text"
               value={cargoDesc}
               onChange={e => setCargoDesc(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A]"
+              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] text-slate-800 dark:text-slate-200"
             />
           </div>
 
           <div>
-            <label className="block text-[#6D7A79] font-bold mb-1">Priority</label>
+            <label className="block text-[#334155] dark:text-[#CBD5E1] font-bold mb-1">Priority</label>
             <select
               value={priority}
               onChange={e => setPriority(e.target.value as any)}
-              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] font-bold"
+              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] font-bold text-slate-800 dark:text-slate-200"
             >
               <option value="Normal">Normal</option>
               <option value="High">High 🔥</option>
@@ -395,50 +395,50 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
         {/* Schedule */}
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-[#6D7A79] font-bold mb-1 flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-[#006A6A]" /> Date
+            <label className="block text-[#334155] dark:text-[#CBD5E1] font-bold mb-1 flex items-center gap-1">
+              <Calendar className="w-3 h-3 text-[#006A6A] dark:text-[#7DF5F5]" /> Date
             </label>
             <input
               type="date"
               value={scheduleDate}
               onChange={e => setScheduleDate(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A]"
+              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] text-slate-800 dark:text-slate-200"
             />
           </div>
 
           <div>
-            <label className="block text-[#6D7A79] font-bold mb-1 flex items-center gap-1">
-              <Clock className="w-3 h-3 text-[#006A6A]" /> Start Time
+            <label className="block text-[#334155] dark:text-[#CBD5E1] font-bold mb-1 flex items-center gap-1">
+              <Clock className="w-3 h-3 text-[#006A6A] dark:text-[#7DF5F5]" /> Start Time
             </label>
             <input
               type="text"
               value={startTime}
               onChange={e => setStartTime(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A]"
+              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] text-slate-800 dark:text-slate-200"
             />
           </div>
 
           <div>
-            <label className="block text-[#6D7A79] font-bold mb-1 flex items-center gap-1">
-              <Clock className="w-3 h-3 text-[#006A6A]" /> Expected End
+            <label className="block text-[#334155] dark:text-[#CBD5E1] font-bold mb-1 flex items-center gap-1">
+              <Clock className="w-3 h-3 text-[#006A6A] dark:text-[#7DF5F5]" /> Expected End
             </label>
             <input
               type="text"
               value={expectedEndTime}
               onChange={e => setExpectedEndTime(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A]"
+              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] text-slate-800 dark:text-slate-200"
             />
           </div>
         </div>
 
         {/* Instructions */}
         <div>
-          <label className="block text-[#6D7A79] font-bold mb-1">Special Driver Instructions</label>
+          <label className="block text-[#334155] dark:text-[#CBD5E1] font-bold mb-1">Special Driver Instructions</label>
           <textarea
             rows={2}
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A]"
+            className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] text-slate-800 dark:text-slate-200"
           />
         </div>
 
