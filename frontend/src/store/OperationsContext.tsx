@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole, Vehicle, Trip, Task, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord } from '../types';
+import { User, UserRole, Vehicle, Trip, Task, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord, Company } from '../types';
 import { mockTasks, mockNotifications, mockActivities } from '../api/mockData';
 import { api } from '../api/client';
 import { io } from 'socket.io-client';
 
 interface OperationsContextType {
   user: User | null;
+  company: Company | null;
   vehicles: Vehicle[];
   trips: Trip[];
   tasks: Task[];
@@ -96,6 +97,7 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [company, setCompany] = useState<Company | null>(null);
 
   // Load Data on Mount & Auth State changes
   const refreshAllData = async () => {
@@ -112,6 +114,14 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setPayroll(salData);
       setVehicles(fltData);
       setTrips(trpData);
+
+      // Fetch company for Owner users
+      const savedUser = localStorage.getItem('smartops_user');
+      const currentUser: User | null = savedUser ? JSON.parse(savedUser) : null;
+      if (currentUser?.role === 'Owner') {
+        const companyData = await api.company.getMyCompany();
+        if (companyData) setCompany(companyData);
+      }
     } catch (err) {
       console.error('Data refreshing error:', err);
     }
@@ -235,6 +245,7 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const logout = () => {
     setUser(null);
+    setCompany(null);
     localStorage.removeItem('smartops_user');
     localStorage.removeItem('smartops_jwt');
   };
@@ -482,6 +493,7 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     <OperationsContext.Provider
       value={{
         user,
+        company,
         vehicles,
         trips,
         tasks,

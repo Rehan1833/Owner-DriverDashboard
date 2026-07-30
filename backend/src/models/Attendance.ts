@@ -48,6 +48,9 @@ export interface IAttendance extends Document {
   latitude?: number;
   longitude?: number;
   address?: string;
+  // Multi-tenant isolation
+  companyId?: string;
+  ownerId?: string;
 }
 
 const BreakSchema = new Schema<IBreak>({
@@ -97,7 +100,10 @@ const AttendanceSchema = new Schema<IAttendance>({
   checkOutTime: { type: String },
   latitude: { type: Number },
   longitude: { type: Number },
-  address: { type: String }
+  address: { type: String },
+  // Multi-tenant isolation
+  companyId: { type: String, index: true, sparse: true },
+  ownerId: { type: String, index: true, sparse: true }
 }, {
   timestamps: true
 });

@@ -16,6 +16,8 @@ export interface IUser extends Document {
   verifiedAt?: Date;
   securityQuestion?: string;
   securityAnswerHash?: string;
+  // Company Reference — root entity for data isolation
+  companyId?: string;
   // Owner Fields
   companyName?: string;
   // Driver Fields
@@ -41,6 +43,7 @@ const UserSchema = new Schema<IUser>({
   verifiedAt: { type: Date },
   securityQuestion: { type: String },
   securityAnswerHash: { type: String },
+  companyId: { type: String, index: true, sparse: true },
   companyName: { type: String },
   driverId: { type: String, unique: true, sparse: true },
   vehicleNumber: { type: String },

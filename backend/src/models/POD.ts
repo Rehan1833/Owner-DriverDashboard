@@ -19,6 +19,9 @@ export interface IPOD extends Document {
   rejectedReason?: string;
   createdAt: Date;
   updatedAt: Date;
+  // Multi-tenant isolation
+  companyId?: string;
+  ownerId?: string;
 }
 
 const PODSchema = new Schema<IPOD>({
@@ -37,7 +40,10 @@ const PODSchema = new Schema<IPOD>({
   status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending', index: true },
   approvedBy: { type: String },
   approvedAt: { type: Date },
-  rejectedReason: { type: String }
+  rejectedReason: { type: String },
+  // Multi-tenant isolation
+  companyId: { type: String, index: true, sparse: true },
+  ownerId: { type: String, index: true, sparse: true }
 }, {
   timestamps: true
 });

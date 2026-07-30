@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
+import Company, { generateCompanyId } from '../models/Company';
 import VerificationCode from '../models/VerificationCode';
 import { sendMobileOTP } from '../utils/otpService';
 
@@ -159,7 +160,11 @@ export const verifyOTP = async (req: Request, res: Response) => {
     user.otpExpiresAt = undefined;
     await user.save();
 
-    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '12h' });
+    const token = jwt.sign(
+      { id: user._id, role: user.role, companyId: user.companyId || null },
+      JWT_SECRET,
+      { expiresIn: '12h' }
+    );
 
     res.json({
       success: true,
@@ -171,6 +176,7 @@ export const verifyOTP = async (req: Request, res: Response) => {
         email: user.email,
         mobileNumber: user.mobileNumber,
         role: user.role,
+        companyId: user.companyId,
         isEmailVerified: user.isEmailVerified,
         isPhoneVerified: user.isPhoneVerified,
         companyName: user.companyName,
@@ -211,7 +217,15 @@ export const register = async (req: Request, res: Response) => {
       password,
       securityQuestion,
       securityAnswer,
+      // Company fields (required for Owner)
       companyName,
+      companyType,
+      companyEmail,
+      companyPhone,
+      companyAddress,
+      gstNumber,
+      // Driver fields
+      driverCompanyName,  // Driver enters this to link to their owner's company
       driverId,
       vehicleNumber,
       licenseNumber
@@ -245,6 +259,75 @@ export const register = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Only rehanchaudhari181133@gmail.com is authorized as Owner. Additional owner accounts are disabled.' });
     }
 
+    // ── OWNER: validate & create Company first ──────────────────────────────
+    let newCompanyId: string | undefined = undefined;
+
+    if (normalizedRole === 'Owner') {
+      const trimmedCompanyName = companyName ? String(companyName).trim() : '';
+
+      if (!trimmedCompanyName || trimmedCompanyName.length < 3) {
+        return res.status(400).json({ message: 'Company name is required and must be at least 3 characters.' });
+      }
+
+      if (trimmedCompanyName.length > 100) {
+        return res.status(400).json({ message: 'Company name must not exceed 100 characters.' });
+      }
+
+      // Duplicate company name check (case-insensitive)
+      const existingCompany = await Company.findOne({
+        companyName: { $regex: `^${trimmedCompanyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' }
+      });
+      if (existingCompany) {
+        return res.status(400).json({ message: 'Company already exists.' });
+      }
+
+      if (!companyType || !['Logistics', 'Manufacturing', 'Warehouse', 'Transport', 'Other'].includes(companyType)) {
+        return res.status(400).json({ message: 'A valid company type is required.' });
+      }
+
+      // Generate unique companyId — retry on collision (extremely unlikely)
+      let generatedId = generateCompanyId();
+      let idCollision = await Company.findOne({ companyId: generatedId });
+      let retries = 0;
+      while (idCollision && retries < 5) {
+        generatedId = generateCompanyId();
+        idCollision = await Company.findOne({ companyId: generatedId });
+        retries++;
+      }
+      newCompanyId = generatedId;
+    }
+
+    // ── DRIVER: look up company by name and attach companyId ────────────────
+    let driverLinkedCompanyId: string | undefined = req.body.companyId || undefined;
+    let driverLinkedCompanyName: string | undefined = undefined;
+
+    if (normalizedRole === 'Driver') {
+      if (driverLinkedCompanyId) {
+        // Explicit companyId passed (e.g. Owner adding driver via Workers modal)
+        const linkedCompany = await Company.findOne({ companyId: driverLinkedCompanyId });
+        if (linkedCompany) {
+          driverLinkedCompanyName = linkedCompany.companyName;
+        }
+      } else {
+        const targetCompanyName = (driverCompanyName || companyName || '').trim();
+        if (!targetCompanyName) {
+          return res.status(400).json({
+            message: 'Company Name is required for Driver registration.'
+          });
+        }
+        const linkedCompany = await Company.findOne({
+          companyName: { $regex: `^${targetCompanyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' }
+        });
+        if (!linkedCompany) {
+          return res.status(400).json({
+            message: 'Company not found. Please enter the correct company name or contact your company administrator.'
+          });
+        }
+        driverLinkedCompanyId = linkedCompany.companyId;
+        driverLinkedCompanyName = linkedCompany.companyName;
+      }
+    }
+
     // Hash Security Answer if provided
     let securityAnswerHash: string | undefined = undefined;
     const defaultQuestion = securityQuestion || "What is your best friend's name?";
@@ -252,6 +335,7 @@ export const register = async (req: Request, res: Response) => {
       securityAnswerHash = await bcrypt.hash(String(securityAnswer).toLowerCase().trim(), 10);
     }
 
+    // ── Create User ─────────────────────────────────────────────────────────
     const newUser = new User({
       fullName,
       email: email.toLowerCase(),
@@ -264,7 +348,10 @@ export const register = async (req: Request, res: Response) => {
       verifiedAt: new Date(),
       securityQuestion: defaultQuestion,
       securityAnswerHash,
-      companyName,
+      companyId: normalizedRole === 'Owner' ? newCompanyId : driverLinkedCompanyId,
+      companyName: normalizedRole === 'Owner'
+        ? (companyName ? String(companyName).trim() : undefined)
+        : driverLinkedCompanyName,
       driverId: normalizedRole === 'Driver' ? (driverId || `DRV-${Date.now().toString().slice(-4)}`) : undefined,
       vehicleNumber,
       licenseNumber
@@ -272,7 +359,26 @@ export const register = async (req: Request, res: Response) => {
 
     await newUser.save();
 
-    const token = jwt.sign({ id: newUser._id, role: newUser.role }, JWT_SECRET, { expiresIn: '12h' });
+    // ── Create Company document (after user save so we have userId) ──────────
+    if (normalizedRole === 'Owner' && newCompanyId) {
+      const trimmedCompanyName = String(companyName).trim();
+      await Company.create({
+        companyId: newCompanyId,
+        companyName: trimmedCompanyName,
+        companyType,
+        companyEmail: companyEmail ? String(companyEmail).trim().toLowerCase() : undefined,
+        companyPhone: companyPhone ? String(companyPhone).trim() : undefined,
+        companyAddress: companyAddress ? String(companyAddress).trim() : undefined,
+        gstNumber: gstNumber ? String(gstNumber).trim() : undefined,
+        createdBy: String(newUser._id)
+      });
+    }
+
+    const token = jwt.sign(
+      { id: newUser._id, role: newUser.role, companyId: newCompanyId || null },
+      JWT_SECRET,
+      { expiresIn: '12h' }
+    );
 
     res.status(201).json({
       success: true,
@@ -284,6 +390,7 @@ export const register = async (req: Request, res: Response) => {
         email: newUser.email,
         mobileNumber: newUser.mobileNumber,
         role: newUser.role,
+        companyId: newUser.companyId,
         isEmailVerified: newUser.isEmailVerified,
         companyName: newUser.companyName,
         driverId: newUser.driverId,
@@ -301,6 +408,12 @@ export const register = async (req: Request, res: Response) => {
       }
       if (field === 'driverId') {
         return res.status(400).json({ message: 'This Driver ID is already registered.' });
+      }
+      if (field === 'companyName') {
+        return res.status(400).json({ message: 'Company already exists.' });
+      }
+      if (field === 'companyId') {
+        return res.status(400).json({ message: 'Company ID collision. Please try again.' });
       }
       return res.status(400).json({ message: `An account with this ${field || 'credential'} already exists.` });
     }
@@ -339,7 +452,11 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid email or password.' });
     }
 
-    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '12h' });
+    const token = jwt.sign(
+      { id: user._id, role: user.role, companyId: user.companyId || null },
+      JWT_SECRET,
+      { expiresIn: '12h' }
+    );
 
     res.json({
       message: 'Login successful.',
@@ -350,6 +467,7 @@ export const login = async (req: Request, res: Response) => {
         email: user.email,
         mobileNumber: user.mobileNumber,
         role: user.role,
+        companyId: user.companyId,
         isEmailVerified: user.isEmailVerified,
         isPhoneVerified: user.isPhoneVerified,
         companyName: user.companyName,

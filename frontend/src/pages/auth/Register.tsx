@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useOperations } from '../../store/OperationsContext';
 import { UserRole } from '../../types';
 import { motion } from 'framer-motion';
+import { api } from '../../api/client';
 import {
   ShieldCheck,
   Eye,
@@ -85,11 +86,28 @@ export const Register: React.FC = () => {
     confirmPassword: '',
     securityQuestion: "What is your best friend's name?",
     securityAnswer: '',
+    // Company fields (Owner only)
     companyName: '',
+    companyType: 'Logistics',
+    companyEmail: '',
+    companyPhone: '',
+    companyAddress: '',
+    gstNumber: '',
+    // Driver fields
     driverId: '',
     vehicleNumber: '',
     licenseNumber: ''
   });
+
+  // Company name duplicate-check state
+  const [companyNameError, setCompanyNameError] = useState('');
+  const [companyNameChecking, setCompanyNameChecking] = useState(false);
+
+  // Driver company lookup state
+  const [driverCompanyName, setDriverCompanyName] = useState('');
+  const [driverCompanyError, setDriverCompanyError] = useState('');
+  const [driverCompanyChecking, setDriverCompanyChecking] = useState(false);
+  const [driverCompanyFound, setDriverCompanyFound] = useState(false);
 
   // 6-Box OTP Inputs State
   const [otpBoxes, setOtpBoxes] = useState<string[]>(['', '', '', '', '', '']);
@@ -128,7 +146,57 @@ export const Register: React.FC = () => {
   }, [step]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear company name error when user types
+    if (name === 'companyName') setCompanyNameError('');
+  };
+
+  // Real-time duplicate company name check on blur (Owner)
+  const handleCompanyNameBlur = async () => {
+    const name = formData.companyName.trim();
+    if (!name || name.length < 3) return;
+    setCompanyNameChecking(true);
+    setCompanyNameError('');
+    try {
+      const result = await api.company.check(name);
+      if (!result.available) {
+        setCompanyNameError('Company already exists.');
+      }
+    } catch {
+      // silently skip on network error
+    } finally {
+      setCompanyNameChecking(false);
+    }
+  };
+
+  // Driver: validate that the company exists (must exist for driver to join)
+  const handleDriverCompanyBlur = async () => {
+    const name = driverCompanyName.trim();
+    if (!name) {
+      setDriverCompanyError('Company Name is required.');
+      setDriverCompanyFound(false);
+      return;
+    }
+    setDriverCompanyChecking(true);
+    setDriverCompanyError('');
+    setDriverCompanyFound(false);
+    try {
+      const result = await api.company.check(name);
+      if (result.available) {
+        // available = not found in DB = company does NOT exist
+        setDriverCompanyError('Company not found. Please enter the correct company name or contact your company administrator.');
+        setDriverCompanyFound(false);
+      } else {
+        // company exists — driver can link to it
+        setDriverCompanyFound(true);
+        setDriverCompanyError('');
+      }
+    } catch {
+      // silently skip on network error
+    } finally {
+      setDriverCompanyChecking(false);
+    }
   };
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
@@ -145,9 +213,51 @@ export const Register: React.FC = () => {
       return;
     }
 
-    if (selectedRole === 'Owner' && formData.email.toLowerCase().trim() !== 'rehanchaudhari181133@gmail.com') {
-      setErrorMsg("Only rehanchaudhari181133@gmail.com is authorized to register as Owner account.");
-      return;
+    // Owner-specific validations
+    if (selectedRole === 'Owner') {
+      if (!formData.companyName.trim() || formData.companyName.trim().length < 3) {
+        setErrorMsg("Company name is required and must be at least 3 characters.");
+        return;
+      }
+      if (formData.companyName.trim().length > 100) {
+        setErrorMsg("Company name must not exceed 100 characters.");
+        return;
+      }
+      if (companyNameError) {
+        setErrorMsg(companyNameError);
+        return;
+      }
+    }
+
+    // Driver-specific validations
+    if (selectedRole === 'Driver') {
+      if (!driverCompanyName.trim()) {
+        setErrorMsg("Company Name is required.");
+        setDriverCompanyError("Company Name is required.");
+        return;
+      }
+      if (driverCompanyError) {
+        setErrorMsg(driverCompanyError);
+        return;
+      }
+      // Re-verify company existence before submitting if not already verified
+      if (!driverCompanyFound) {
+        try {
+          const res = await api.company.check(driverCompanyName.trim());
+          if (res.available) {
+            const msg = "Company not found. Please enter the correct company name or contact your company administrator.";
+            setErrorMsg(msg);
+            setDriverCompanyError(msg);
+            setDriverCompanyFound(false);
+            return;
+          } else {
+            setDriverCompanyFound(true);
+            setDriverCompanyError('');
+          }
+        } catch {
+          // skip
+        }
+      }
     }
 
     setLoading(true);
@@ -164,8 +274,14 @@ export const Register: React.FC = () => {
       };
 
       if (selectedRole === 'Owner') {
-        payload.companyName = formData.companyName || `${formData.fullName}'s Enterprise`;
+        payload.companyName    = formData.companyName.trim();
+        payload.companyType    = formData.companyType;
+        payload.companyEmail   = formData.companyEmail.trim();
+        payload.companyPhone   = formData.companyPhone.trim();
+        payload.companyAddress = formData.companyAddress.trim();
+        payload.gstNumber      = formData.gstNumber.trim();
       } else {
+        payload.driverCompanyName = driverCompanyName.trim();
         payload.driverId = formData.driverId || `DRV-${Math.floor(Math.random() * 9000) + 1000}`;
         payload.vehicleNumber = formData.vehicleNumber;
         payload.licenseNumber = formData.licenseNumber;
@@ -318,13 +434,12 @@ export const Register: React.FC = () => {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100vh',
       width: '100vw',
       background: DS.bg,
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'stretch',
       justifyContent: 'center',
-      padding: '40px 24px',
       position: 'relative',
       overflow: 'hidden',
       fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
@@ -361,26 +476,32 @@ export const Register: React.FC = () => {
       <div style={{
         width: '100%',
         maxWidth: 1100,
+        height: '100%',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'stretch',
         justifyContent: 'center',
         gap: 56,
         position: 'relative',
         zIndex: 1,
+        padding: '0 24px',
+        margin: '0 auto',
+        boxSizing: 'border-box',
       }}>
 
-        {/* LEFT PANEL: Brand identity */}
+        {/* LEFT PANEL: Brand identity — fixed, does not scroll */}
         <motion.div
           className="login-left-panel"
           initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 400 / 1000, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            flex: '1 1 480px',
-            maxWidth: 480,
+            flex: '1 1 400px',
+            maxWidth: 440,
             display: 'flex',
             flexDirection: 'column',
             gap: 32,
+            alignSelf: 'center',
+            flexShrink: 0,
           }}
         >
           {/* Logo badge */}
@@ -468,11 +589,22 @@ export const Register: React.FC = () => {
         {/* Divider line */}
         <div
           className="login-divider"
-          style={{ width: 1, height: 440, background: DS.border, flexShrink: 0 }}
+          style={{ width: 1, alignSelf: 'stretch', background: DS.border, flexShrink: 0, minHeight: 400 }}
         />
 
-        {/* RIGHT PANEL: Card container */}
-        <div style={{ flex: '1 1 480px', maxWidth: 480, width: '100%' }}>
+        {/* RIGHT PANEL: scrollable card only */}
+        <div style={{
+          flex: '1 1 460px',
+          maxWidth: 480,
+          width: '100%',
+          alignSelf: 'stretch',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          padding: '24px 0',
+          boxSizing: 'border-box',
+          overflowY: 'auto',
+        }}>
           <motion.div
             className="login-card"
             initial={{ opacity: 0, y: 16 }}
@@ -485,6 +617,7 @@ export const Register: React.FC = () => {
               boxShadow: DS.shadowCard,
               padding: '36px 32px',
               boxSizing: 'border-box',
+              flexShrink: 0,
             }}
           >
             {/* STEP 1: FORM */}
@@ -549,6 +682,198 @@ export const Register: React.FC = () => {
                 )}
 
                 <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left' }}>
+
+                  {/* ── COMPANY INFORMATION SECTION (Owner Only) ─────────── */}
+                  {selectedRole === 'Owner' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+                    >
+                      {/* Section Header */}
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '10px 14px',
+                        background: `linear-gradient(135deg, rgba(0,106,106,0.06) 0%, rgba(0,163,163,0.04) 100%)`,
+                        borderRadius: DS.radiusInput,
+                        border: `1px solid rgba(0,106,106,0.14)`,
+                      }}>
+                        <div style={{
+                          width: 28, height: 28, borderRadius: 8,
+                          background: DS.primaryGrad,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        }}>
+                          <Building size={14} color="#fff" strokeWidth={2.2} />
+                        </div>
+                        <div>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: DS.primary, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                            Company Information
+                          </span>
+                          <span style={{ display: 'block', fontSize: 11, color: DS.textMuted, fontWeight: 500, marginTop: 1 }}>
+                            Your company becomes the root entity for all SmartOps data
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Company Name (Required) */}
+                      <div>
+                        <label htmlFor="reg-company-name" style={labelStyle}>
+                          Company Name <span style={{ color: DS.danger }}>*</span>
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            id="reg-company-name"
+                            type="text"
+                            name="companyName"
+                            required={selectedRole === 'Owner'}
+                            placeholder="e.g. SmartOps Logistics Pvt Ltd"
+                            value={formData.companyName}
+                            onChange={handleChange}
+                            onBlur={handleCompanyNameBlur}
+                            minLength={3}
+                            maxLength={100}
+                            style={{
+                              ...inputBase,
+                              borderColor: companyNameError ? DS.danger : (formData.companyName.trim().length >= 3 && !companyNameError ? '#10B981' : DS.border),
+                              boxShadow: companyNameError
+                                ? `0 0 0 3px rgba(186,26,26,0.1), 0 1px 2px 0 rgba(11,28,48,0.02)`
+                                : (formData.companyName.trim().length >= 3 && !companyNameError
+                                  ? `0 0 0 3px rgba(16,185,129,0.12), 0 1px 2px 0 rgba(11,28,48,0.02)`
+                                  : '0 1px 2px 0 rgba(11,28,48,0.02)'),
+                              paddingRight: 36,
+                            }}
+                            onFocus={onFocus}
+                          />
+                          {/* Status icon */}
+                          <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                            {companyNameChecking ? (
+                              <Loader2 size={14} color={DS.textMuted} className="animate-spin" />
+                            ) : companyNameError ? (
+                              <AlertCircle size={14} color={DS.danger} />
+                            ) : formData.companyName.trim().length >= 3 ? (
+                              <CheckCircle size={14} color="#10B981" />
+                            ) : null}
+                          </div>
+                        </div>
+                        {companyNameError && (
+                          <motion.p
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            style={{ fontSize: 12, fontWeight: 600, color: DS.danger, margin: '5px 0 0 2px' }}
+                          >
+                            {companyNameError}
+                          </motion.p>
+                        )}
+                      </div>
+
+                      {/* Company Type (Required) */}
+                      <div>
+                        <label htmlFor="reg-company-type" style={labelStyle}>
+                          Company Type <span style={{ color: DS.danger }}>*</span>
+                        </label>
+                        <select
+                          id="reg-company-type"
+                          name="companyType"
+                          required={selectedRole === 'Owner'}
+                          value={formData.companyType}
+                          onChange={(e: any) => setFormData(prev => ({ ...prev, companyType: e.target.value }))}
+                          style={{
+                            ...inputBase,
+                            appearance: 'none',
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'right 12px center',
+                            paddingRight: 36,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <option value="Logistics">Logistics</option>
+                          <option value="Manufacturing">Manufacturing</option>
+                          <option value="Warehouse">Warehouse</option>
+                          <option value="Transport">Transport</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      {/* Company Email & Company Phone */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                        <div>
+                          <label htmlFor="reg-company-email" style={labelStyle}>Company Email</label>
+                          <input
+                            id="reg-company-email"
+                            type="email"
+                            name="companyEmail"
+                            placeholder="info@company.com"
+                            value={formData.companyEmail}
+                            onChange={handleChange}
+                            style={inputBase}
+                            onFocus={onFocus}
+                            onBlur={onBlur}
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="reg-company-phone" style={labelStyle}>Company Phone</label>
+                          <input
+                            id="reg-company-phone"
+                            type="text"
+                            name="companyPhone"
+                            placeholder="+91 99999 99999"
+                            value={formData.companyPhone}
+                            onChange={handleChange}
+                            style={inputBase}
+                            onFocus={onFocus}
+                            onBlur={onBlur}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Company Address */}
+                      <div>
+                        <label htmlFor="reg-company-address" style={labelStyle}>Company Address</label>
+                        <input
+                          id="reg-company-address"
+                          type="text"
+                          name="companyAddress"
+                          placeholder="e.g. 42 Logistics Park, Mumbai, MH 400001"
+                          value={formData.companyAddress}
+                          onChange={handleChange}
+                          style={inputBase}
+                          onFocus={onFocus}
+                          onBlur={onBlur}
+                        />
+                      </div>
+
+                      {/* GST Number (Optional) */}
+                      <div>
+                        <label htmlFor="reg-gst" style={labelStyle}>
+                          GST Number <span style={{ fontSize: 11, fontWeight: 500, color: DS.textDisabled, textTransform: 'none', letterSpacing: 0 }}>(Optional)</span>
+                        </label>
+                        <input
+                          id="reg-gst"
+                          type="text"
+                          name="gstNumber"
+                          placeholder="e.g. 27AABCU9603R1ZV"
+                          value={formData.gstNumber}
+                          onChange={handleChange}
+                          style={inputBase}
+                          onFocus={onFocus}
+                          onBlur={onBlur}
+                        />
+                      </div>
+
+                      {/* Section divider */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '2px 0' }}>
+                        <div style={{ flex: 1, height: 1, background: DS.border }} />
+                        <span style={{ fontSize: 11, fontWeight: 700, color: DS.textDisabled, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                          Personal Information
+                        </span>
+                        <div style={{ flex: 1, height: 1, background: DS.border }} />
+                      </div>
+                    </motion.div>
+                  )}
+
                   {/* Full Name */}
                   <div>
                     <label htmlFor="reg-fullname" style={labelStyle}>Full Name</label>
@@ -700,6 +1025,100 @@ export const Register: React.FC = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* ── DRIVER COMPANY FIELD (Driver Only) ───────────────── */}
+                  {selectedRole === 'Driver' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      {/* Section header */}
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '10px 14px', marginBottom: 14,
+                        background: `linear-gradient(135deg, rgba(0,106,106,0.06) 0%, rgba(0,163,163,0.04) 100%)`,
+                        borderRadius: DS.radiusInput,
+                        border: `1px solid rgba(0,106,106,0.14)`,
+                      }}>
+                        <div style={{
+                          width: 28, height: 28, borderRadius: 8,
+                          background: DS.primaryGrad,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        }}>
+                          <Building size={14} color="#fff" strokeWidth={2.2} />
+                        </div>
+                        <div>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: DS.primary, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                            Company Assignment
+                          </span>
+                          <span style={{ display: 'block', fontSize: 11, color: DS.textMuted, fontWeight: 500, marginTop: 1 }}>
+                            Enter your employer's company name to link your account
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Company Name lookup */}
+                      <div>
+                        <label htmlFor="reg-driver-company" style={labelStyle}>
+                          Company Name <span style={{ color: DS.danger }}>*</span>
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            id="reg-driver-company"
+                            type="text"
+                            required={selectedRole === 'Driver'}
+                            placeholder="Enter your registered company name"
+                            value={driverCompanyName}
+                            onChange={e => {
+                              setDriverCompanyName(e.target.value);
+                              setDriverCompanyError('');
+                              setDriverCompanyFound(false);
+                            }}
+                            onBlur={handleDriverCompanyBlur}
+                            style={{
+                              ...inputBase,
+                              borderColor: driverCompanyError ? DS.danger : (driverCompanyFound ? '#10B981' : DS.border),
+                              boxShadow: driverCompanyError
+                                ? `0 0 0 3px rgba(186,26,26,0.1), 0 1px 2px 0 rgba(11,28,48,0.02)`
+                                : driverCompanyFound
+                                  ? `0 0 0 3px rgba(16,185,129,0.12), 0 1px 2px 0 rgba(11,28,48,0.02)`
+                                  : '0 1px 2px 0 rgba(11,28,48,0.02)',
+                              paddingRight: 36,
+                            }}
+                            onFocus={onFocus}
+                          />
+                          <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                            {driverCompanyChecking ? (
+                              <Loader2 size={14} color={DS.textMuted} className="animate-spin" />
+                            ) : driverCompanyError ? (
+                              <AlertCircle size={14} color={DS.danger} />
+                            ) : driverCompanyFound ? (
+                              <CheckCircle size={14} color="#10B981" />
+                            ) : null}
+                          </div>
+                        </div>
+                        {driverCompanyError && (
+                          <motion.p
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            style={{ fontSize: 12, fontWeight: 600, color: DS.danger, margin: '5px 0 0 2px' }}
+                          >
+                            {driverCompanyError}
+                          </motion.p>
+                        )}
+                        {driverCompanyFound && (
+                          <motion.p
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            style={{ fontSize: 12, fontWeight: 600, color: '#10B981', margin: '5px 0 0 2px' }}
+                          >
+                            ✓ Company found — your account will be linked on registration.
+                          </motion.p>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
 
                   {/* Submit Button */}
                   <button

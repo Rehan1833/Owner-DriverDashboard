@@ -1,7 +1,8 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import Trip from '../models/Trip';
 import LocationHistory from '../models/LocationHistory';
 import User from '../models/User';
+import { AuthRequest } from '../middleware/authMiddleware';
 import { emitTelemetryUpdate } from '../sockets/telemetrySocket';
 import {
   reverseGeocode,
@@ -12,21 +13,23 @@ import {
 
 const GEOFENCE_RADIUS_METERS = parseInt(process.env.GEOFENCE_RADIUS_METERS || '100', 10);
 
-export const getTrips = async (req: Request, res: Response): Promise<void> => {
+export const getTrips = async (req: any, res: any): Promise<any> => {
   try {
-    const userRole = (req as any).user?.role;
-    const userDriverId = (req as any).user?.driverId || (req as any).user?.id;
+    const userRole = req.userRole;
+    const userId = req.userId;
 
     let filter: any = {};
     if (userRole === 'Driver') {
+      const driverUser = await User.findById(userId);
+      const driverIdVal = driverUser?.driverId || userId;
       filter = {
         $or: [
-          { driverId: userDriverId },
-          { driverId: (req as any).user?.id },
-          { driverId: 'd1' },
-          { driverId: 'DRV-9041' }
+          { driverId: driverIdVal },
+          { driverId: userId }
         ]
       };
+    } else if (req.companyId) {
+      filter.companyId = req.companyId;
     }
 
     const trips = await Trip.find(filter).sort({ createdAt: -1 });
@@ -36,9 +39,13 @@ export const getTrips = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const createTrip = async (req: Request, res: Response): Promise<void> => {
+export const createTrip = async (req: any, res: any): Promise<any> => {
   try {
-    const tripData = { ...req.body };
+    const tripData = {
+      ...req.body,
+      companyId: req.companyId,
+      ownerId: req.userId
+    };
 
     // Auto-assign vehicle if missing
     if (!tripData.vehicleNumber) {
@@ -118,7 +125,7 @@ export const createTrip = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-export const getActiveTrip = async (req: Request, res: Response): Promise<void> => {
+export const getActiveTrip = async (req: any, res: any): Promise<any> => {
   try {
     const userRole = (req as any).user?.role;
     const userDriverId = (req as any).user?.driverId || (req as any).user?.id;
@@ -144,7 +151,7 @@ export const getActiveTrip = async (req: Request, res: Response): Promise<void> 
   }
 };
 
-export const getTripById = async (req: Request, res: Response): Promise<void> => {
+export const getTripById = async (req: any, res: any): Promise<any> => {
   try {
     const trip = await Trip.findById(req.params.id);
     if (!trip) {
@@ -165,7 +172,7 @@ export const getTripById = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-export const assignTrip = async (req: Request, res: Response): Promise<void> => {
+export const assignTrip = async (req: any, res: any): Promise<any> => {
   try {
     const { id } = req.params;
     const { driverId, driverName, vehicleNumber } = req.body;
@@ -195,7 +202,7 @@ export const assignTrip = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-export const acceptTrip = async (req: Request, res: Response): Promise<void> => {
+export const acceptTrip = async (req: any, res: any): Promise<any> => {
   try {
     const { id } = req.params;
     const trip = await Trip.findById(id);
@@ -214,7 +221,7 @@ export const acceptTrip = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-export const startTrip = async (req: Request, res: Response): Promise<void> => {
+export const startTrip = async (req: any, res: any): Promise<any> => {
   try {
     const { id } = req.body.id ? req.body : req.params;
     const tripId = id || req.params.id;
@@ -236,7 +243,7 @@ export const startTrip = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const updateLocation = async (req: Request, res: Response): Promise<void> => {
+export const updateLocation = async (req: any, res: any): Promise<any> => {
   try {
     const { id, latitude, longitude, accuracy, speed, heading, distanceRemaining, eta, timestamp } = req.body;
     const tripId = id || req.params.id;
@@ -392,7 +399,7 @@ export const updateLocation = async (req: Request, res: Response): Promise<void>
   }
 };
 
-export const arriveStop = async (req: Request, res: Response): Promise<void> => {
+export const arriveStop = async (req: any, res: any): Promise<any> => {
   try {
     const { id, stopId } = req.params;
     const { latitude, longitude } = req.body;
@@ -435,7 +442,7 @@ export const arriveStop = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-export const completeStop = async (req: Request, res: Response): Promise<void> => {
+export const completeStop = async (req: any, res: any): Promise<any> => {
   try {
     const { id, stopId } = req.params;
     const { podId, stopReason, notes } = req.body;
@@ -473,7 +480,7 @@ export const completeStop = async (req: Request, res: Response): Promise<void> =
   }
 };
 
-export const reportDelay = async (req: Request, res: Response): Promise<void> => {
+export const reportDelay = async (req: any, res: any): Promise<any> => {
   try {
     const { id } = req.params;
     const { reason, note } = req.body;
@@ -495,7 +502,7 @@ export const reportDelay = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-export const reportIncident = async (req: Request, res: Response): Promise<void> => {
+export const reportIncident = async (req: any, res: any): Promise<any> => {
   try {
     const { id } = req.params;
     const { incidentType, description } = req.body;
@@ -517,7 +524,7 @@ export const reportIncident = async (req: Request, res: Response): Promise<void>
   }
 };
 
-export const getTripLiveTracking = async (req: Request, res: Response): Promise<void> => {
+export const getTripLiveTracking = async (req: any, res: any): Promise<any> => {
   try {
     const { id } = req.params;
     const trip = await Trip.findById(id);
@@ -581,7 +588,7 @@ export const getTripLiveTracking = async (req: Request, res: Response): Promise<
   }
 };
 
-export const getLocationHistory = async (req: Request, res: Response): Promise<void> => {
+export const getLocationHistory = async (req: any, res: any): Promise<any> => {
   try {
     const { id } = req.params;
     const { driverId, startDate, endDate } = req.query;
@@ -605,7 +612,7 @@ export const getLocationHistory = async (req: Request, res: Response): Promise<v
   }
 };
 
-export const completeTrip = async (req: Request, res: Response): Promise<void> => {
+export const completeTrip = async (req: any, res: any): Promise<any> => {
   try {
     const { id, signatureData, photo } = req.body;
     const tripId = id || req.params.id;
@@ -630,7 +637,7 @@ export const completeTrip = async (req: Request, res: Response): Promise<void> =
   }
 };
 
-export const updateTrip = async (req: Request, res: Response): Promise<void> => {
+export const updateTrip = async (req: any, res: any): Promise<any> => {
   try {
     const updated = await Trip.findByIdAndUpdate(req.params.id, req.body, { new: true });
     emitTelemetryUpdate({ tripId: req.params.id, update: req.body });
@@ -640,7 +647,7 @@ export const updateTrip = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-export const cancelTrip = async (req: Request, res: Response): Promise<void> => {
+export const cancelTrip = async (req: any, res: any): Promise<any> => {
   try {
     const { id } = req.params;
     const trip = await Trip.findById(id);

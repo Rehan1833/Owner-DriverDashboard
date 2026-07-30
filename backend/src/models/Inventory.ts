@@ -13,6 +13,9 @@ export interface IInventory extends Document {
   batchNumber?: string;
   expiryDate?: string;
   description?: string;
+  // Multi-tenant isolation
+  companyId?: string;
+  ownerId?: string;
 }
 
 const InventorySchema = new Schema<IInventory>({
@@ -27,7 +30,10 @@ const InventorySchema = new Schema<IInventory>({
   supplier: { type: String, required: true },
   batchNumber: { type: String },
   expiryDate: { type: String },
-  description: { type: String }
+  description: { type: String },
+  // Multi-tenant isolation
+  companyId: { type: String, index: true, sparse: true },
+  ownerId: { type: String, index: true, sparse: true },
 }, {
   timestamps: true
 });

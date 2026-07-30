@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, Vehicle, Trip, Task, InventoryItem, PayrollRecord, AttendanceRecord, PODRecord, DriverRecord } from '../types';
+import { User, Vehicle, Trip, Task, InventoryItem, PayrollRecord, AttendanceRecord, PODRecord, DriverRecord, Company } from '../types';
 import { mockVehicles, mockTrips, mockTasks, mockInventory, mockPayroll, mockAttendance } from './mockData';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -108,9 +108,6 @@ export const api = {
       }
     },
     register: async (payload: any): Promise<{ success?: boolean; message: string; otpCode?: string; token?: string; user?: User }> => {
-      if (payload.role === 'Owner' && payload.email.toLowerCase().trim() !== 'rehanchaudhari181133@gmail.com') {
-        throw { response: { data: { message: 'Only rehanchaudhari181133@gmail.com is authorized as Owner. Additional owner accounts are disabled.' } } };
-      }
       try {
         const res = await axiosInstance.post('/auth/register', payload);
         if (res.data.token) {
@@ -128,6 +125,7 @@ export const api = {
           email: payload.email,
           mobileNumber: payload.mobileNumber,
           role: payload.role,
+          companyId: payload.role === 'Owner' ? `CMP-OFFLINE` : undefined,
           companyName: payload.companyName,
           driverId: payload.driverId,
           vehicleNumber: payload.vehicleNumber,
@@ -1119,12 +1117,46 @@ export const api = {
       driverId?: string;
       vehicleNumber?: string;
       licenseNumber?: string;
+      companyId?: string;
+      companyName?: string;
     }): Promise<{ success?: boolean; message: string; user?: User }> => {
       const res = await axiosInstance.post('/auth/register', {
         ...payload,
         role: 'Driver',
       });
       return res.data;
+    },
+  },
+
+  // COMPANY API
+  company: {
+    /**
+     * Public — checks if a company name is already taken.
+     * Used for real-time validation on the Owner Registration form.
+     */
+    check: async (name: string): Promise<{ available: boolean; message: string }> => {
+      try {
+        const res = await axiosInstance.get('/company/check', { params: { name } });
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        // Network offline — assume available so registration can proceed
+        return { available: true, message: 'Offline — name check skipped.' };
+      }
+    },
+
+    /**
+     * Protected — returns the Company linked to the authenticated user.
+     */
+    getMyCompany: async (): Promise<Company | null> => {
+      try {
+        const res = await axiosInstance.get('/company/me');
+        return res.data.company as Company;
+      } catch (err) {
+        return null;
+      }
     },
   },
 };

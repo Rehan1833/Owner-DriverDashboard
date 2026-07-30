@@ -8,11 +8,26 @@ export interface User {
   role: UserRole;
   isEmailVerified?: boolean;
   isPhoneVerified?: boolean;
+  companyId?: string;
   companyName?: string;
   driverId?: string;
   vehicleNumber?: string;
   licenseNumber?: string;
   avatarUrl?: string;
+}
+
+export interface Company {
+  id?: string;
+  companyId: string;
+  companyName: string;
+  companyType: 'Logistics' | 'Manufacturing' | 'Warehouse' | 'Transport' | 'Other';
+  companyEmail?: string;
+  companyPhone?: string;
+  companyAddress?: string;
+  gstNumber?: string;
+  logo?: string;
+  createdBy?: string;
+  createdAt?: string;
 }
 
 /**
