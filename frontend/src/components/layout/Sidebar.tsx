@@ -16,8 +16,7 @@ import {
   ChevronRight,
   ShieldCheck,
   Bell,
-  LineChart,
-  User
+  LineChart
 } from 'lucide-react';
 import { useOperations } from '../../store/OperationsContext';
 
@@ -86,7 +85,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
         {
           title: 'Account Settings',
           items: [
-            { name: 'Profile Settings', path: '/owner/profile', icon: User },
             { name: 'System Settings', path: '/owner/settings', icon: Settings },
           ],
         },

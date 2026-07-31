@@ -7,29 +7,33 @@ import {
   Mail,
   Phone,
   Building,
-  Key,
-  Shield,
   Upload,
-  Eye,
-  EyeOff,
   Edit2,
-  CheckCircle,
-  Copy
+  CheckCircle
 } from 'lucide-react';
 
 export const Profile: React.FC = () => {
-  const { user, triggerNotification, addActivity } = useOperations();
+  const { user, triggerNotification, addActivity, updateProfile } = useOperations();
   
   // Profile state
   const [fullName, setFullName] = useState(user?.fullName || 'Rehan Chaudhari');
   const [email, setEmail] = useState(user?.email || 'rehanchaudhari181133@gmail.com');
   const [mobileNumber, setMobileNumber] = useState(user?.mobileNumber || '');
   const [companyName, setCompanyName] = useState(user?.companyName || (user?.fullName ? `${user.fullName}'s Enterprise` : 'Enterprise Portal'));
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
   
-  // API credentials keys state
-  const [apiKey, setApiKey] = useState('so_live_pk_51NzW2gSFmP3dE...');
-  const [showApiKey, setShowApiKey] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Sync state if user changes (e.g. after refresh/load)
+  React.useEffect(() => {
+    if (user) {
+      setFullName(user.fullName);
+      setEmail(user.email);
+      setMobileNumber(user.mobileNumber || '');
+      setCompanyName(user.companyName || '');
+      setAvatarUrl(user.avatarUrl || '');
+    }
+  }, [user]);
 
   // Sound play
   const playSound = (severity: 'Success' | 'Warning' | 'Error' | 'Info') => {
@@ -40,19 +44,49 @@ export const Profile: React.FC = () => {
     }
   };
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsEditing(false);
-    playSound('Success');
-    triggerNotification('System Alert', 'Profile Synchronized', 'Admin profile attributes refreshed.', 'Info');
-    addActivity('Profile Modified', 'Updated contact details and avatar settings', 'task');
-    alert('Profile updated successfully!');
+    try {
+      await updateProfile({
+        fullName,
+        email,
+        mobileNumber,
+        companyName
+      });
+      setIsEditing(false);
+      playSound('Success');
+      triggerNotification('System Alert', 'Profile Synchronized', 'Admin profile attributes refreshed.', 'Info');
+      addActivity('Profile Modified', 'Updated contact details and avatar settings', 'task');
+      alert('Profile updated successfully!');
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to update profile settings.');
+    }
   };
 
-  const handleCopyKey = () => {
-    navigator.clipboard.writeText(apiKey);
-    playSound('Info');
-    alert('Secure API Access Key copied to clipboard!');
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('File is too large. Please select an image under 2MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        setAvatarUrl(base64String);
+        
+        try {
+          await updateProfile({ avatarUrl: base64String });
+          playSound('Success');
+          triggerNotification('System Alert', 'Avatar Updated', 'Your profile picture has been updated and saved.', 'Info');
+          addActivity('Profile Modified', 'Updated profile picture avatar', 'task');
+        } catch (err: any) {
+          alert(err.response?.data?.message || 'Failed to save avatar image.');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -72,15 +106,25 @@ export const Profile: React.FC = () => {
         {/* Left Avatar Card */}
         <div className="md:col-span-1 space-y-6">
           <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm text-center flex flex-col items-center">
-            <div className="relative group cursor-pointer">
+            <div 
+              onClick={() => document.getElementById('avatar-input')?.click()}
+              className="relative group cursor-pointer"
+            >
               <img
-                src={user?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${fullName}&backgroundColor=006A6A`}
+                src={avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${fullName}&backgroundColor=006A6A`}
                 alt="Avatar"
-                className="w-24 h-24 rounded-full border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] p-1 shadow-sm"
+                className="w-24 h-24 rounded-full object-cover border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] p-1 shadow-sm"
               />
               <div className="absolute inset-0 bg-slate-950/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Upload className="h-5 w-5 text-white" />
               </div>
+              <input
+                type="file"
+                id="avatar-input"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
             </div>
             <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-white mt-4">{fullName}</h3>
             <p className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] font-bold uppercase mt-1 tracking-wider">{user?.role || 'Executive Admin'}</p>
@@ -177,40 +221,6 @@ export const Profile: React.FC = () => {
                 </div>
               )}
             </form>
-          </div>
-
-          {/* Secure API Key panel */}
-          <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-4">
-            <div className="border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-3 flex items-center gap-2">
-              <Key className="h-5 w-5 text-[#006A6A]" />
-              <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-white">API Credentials Console</h3>
-            </div>
-            <p className="text-[13px] text-[#6D7A79] dark:text-[#6D7A79] font-semibold leading-relaxed">
-              Use these live auth keys to bind third-party fleet telemetry webhooks, GPS devices, or ERP software. Keep keys secure.
-            </p>
-
-            <div className="flex items-center border border-[#E5EEFF] dark:border-[#334155] rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] p-4 gap-3 shadow-sm">
-              <Shield className="h-5 w-5 text-slate-400 shrink-0" />
-              <div className="flex-1 font-mono text-xs break-all whitespace-normal text-[#545F73] dark:text-[#CBD5E1] font-bold">
-                {showApiKey ? apiKey : 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'}
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowApiKey(!showApiKey)}
-                className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer p-1"
-                title={showApiKey ? 'Hide Token' : 'Reveal Token'}
-              >
-                {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-              <button
-                type="button"
-                onClick={handleCopyKey}
-                className="text-slate-400 hover:text-[#006A6A] cursor-pointer p-1"
-                title="Copy Key"
-              >
-                <Copy className="h-4 w-4" />
-              </button>
-            </div>
           </div>
         </div>
       </div>

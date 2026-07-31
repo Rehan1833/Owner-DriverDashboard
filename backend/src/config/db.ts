@@ -11,6 +11,7 @@ const seedDefaultOwner = async () => {
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash('123456', salt);
       const owner = new User({
+        _id: new mongoose.Types.ObjectId('65f1a2b3c4d5e6f7a8b9c0d1'),
         fullName: 'Rehan Chaudhari',
         email: ownerEmail,
         mobileNumber: '9876543210',

@@ -273,8 +273,8 @@ input[type="checkbox"] {
 }
 
 /* 1a. Force white/important text to black when on white/light backgrounds (excluding buttons & badges) */
-:is(html:not(.dark),
-  main:not(.dark),
+html:not(.dark) :is(body,
+  main,
   [class*="bg-white"],
   [class*="bg-slate-55"],
   [class*="bg-slate-100"],
@@ -306,8 +306,8 @@ input[type="checkbox"] {
 }
 
 /* 1b. Force light grey/normal text to dark grey when on white/light backgrounds (excluding buttons & badges) */
-:is(html:not(.dark),
-  main:not(.dark),
+html:not(.dark) :is(body,
+  main,
   [class*="bg-white"],
   [class*="bg-slate-50"],
   [class*="bg-slate-100"],

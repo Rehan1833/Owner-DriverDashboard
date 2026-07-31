@@ -24,7 +24,7 @@ axiosInstance.interceptors.request.use((config: any) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || (error.response?.status === 404 && error.response?.data?.message === 'User not found.')) {
       // Token is invalid or expired — clear session and redirect to login
       const currentToken = localStorage.getItem('smartops_jwt');
       // Only auto-redirect if there was actually a token (avoid redirect loops on login page)
@@ -183,16 +183,29 @@ export const api = {
         return { message: 'Password has been updated successfully.' };
       }
     },
-    googleAuth: async (_googleToken: string, _role: string): Promise<{ token: string; user: User }> => {
-      throw new Error('Google authentication is temporarily disabled.');
-      /*
-      // TEMPORARILY DISABLED GOOGLE OAUTH API CALL
-      const res = await axiosInstance.post('/auth/google', { idToken: _googleToken, googleToken: _googleToken, role: _role });
-      if (res.data.token) {
-        localStorage.setItem('smartops_jwt', res.data.token);
+    updateProfile: async (payload: {
+      fullName?: string;
+      email?: string;
+      mobileNumber?: string;
+      companyName?: string;
+      avatarUrl?: string;
+    }): Promise<{ success: boolean; message: string; user: User }> => {
+      try {
+        const res = await axiosInstance.put('/users/profile', payload);
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        const saved = localStorage.getItem('smartops_user');
+        const currentUser = saved ? JSON.parse(saved) : {};
+        const updatedUser = {
+          ...currentUser,
+          ...payload
+        };
+        localStorage.setItem('smartops_user', JSON.stringify(updatedUser));
+        return { success: true, message: 'Profile updated in offline mode.', user: updatedUser };
       }
-      return res.data;
-      */
     }
   },
 

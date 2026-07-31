@@ -24,6 +24,7 @@ export interface IUser extends Document {
   driverId?: string;
   vehicleNumber?: string;
   licenseNumber?: string;
+  avatarUrl?: string;
   comparePassword: (password: string) => Promise<boolean>;
   compareSecurityAnswer: (answer: string) => Promise<boolean>;
 }
@@ -47,7 +48,8 @@ const UserSchema = new Schema<IUser>({
   companyName: { type: String },
   driverId: { type: String, unique: true, sparse: true },
   vehicleNumber: { type: String },
-  licenseNumber: { type: String }
+  licenseNumber: { type: String },
+  avatarUrl: { type: String }
 }, {
   timestamps: true
 });

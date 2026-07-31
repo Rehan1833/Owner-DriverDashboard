@@ -1,11 +1,17 @@
 import { Router } from 'express';
 import { getDrivers, updateDriverStatus } from '../controllers/driverController';
+import { updateProfile } from '../controllers/userController';
 import { authenticateJWT, ownerOnly } from '../middleware/authMiddleware';
 
 const router = Router();
 
-// All routes in this file require authentication AND Owner role
+// Require authentication for all routes
 router.use(authenticateJWT);
+
+// Authenticated user profile routes
+router.put('/profile', updateProfile);
+
+// Owner-only routes
 router.use(ownerOnly);
 
 /**

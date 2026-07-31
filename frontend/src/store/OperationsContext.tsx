@@ -84,6 +84,13 @@ interface OperationsContextType {
   addActivity: (action: string, details: string, category: ActivityItem['category']) => void;
   triggerNotification: (type: SystemNotification['type'], title: string, message: string, severity?: SystemNotification['severity']) => void;
   markAllNotificationsRead: () => void;
+  updateProfile: (payload: {
+    fullName?: string;
+    email?: string;
+    mobileNumber?: string;
+    companyName?: string;
+    avatarUrl?: string;
+  }) => Promise<void>;
 }
 
 const OperationsContext = createContext<OperationsContextType | undefined>(undefined);
@@ -316,6 +323,20 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const markAllNotificationsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const updateProfile = async (payload: {
+    fullName?: string;
+    email?: string;
+    mobileNumber?: string;
+    companyName?: string;
+    avatarUrl?: string;
+  }) => {
+    const res = await api.auth.updateProfile(payload);
+    if (res.user) {
+      setUser(res.user);
+      localStorage.setItem('smartops_user', JSON.stringify(res.user));
+    }
   };
 
   const addActivity = (action: string, details: string, category: ActivityItem['category']) => {
@@ -581,7 +602,8 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         approvePayroll,
         addActivity,
         triggerNotification,
-        markAllNotificationsRead
+        markAllNotificationsRead,
+        updateProfile
       }}
     >
       {children}
