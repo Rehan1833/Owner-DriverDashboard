@@ -110,13 +110,10 @@
   --color-tertiary-container: #00687A;
 
   /* ── Text ── */
-  <<<<<<< HEAD --color-text-primary: #FFFFFF;
-  --color-text-secondary: #D1D5DB;
-  --color-text-muted: #9CA3AF;
-  =======--color-text-primary: #F8FAFC;
+  --color-text-primary: #F8FAFC;
   --color-text-secondary: #CBD5E1;
   --color-text-muted: #94A3B8;
-  >>>>>>>09f0cb6 (Remove useless pages) --color-text-disabled: #64748B;
+  --color-text-disabled: #64748B;
 
   /* ── Modal & Dialog Tokens ── */
   --color-modal-bg: #111827;

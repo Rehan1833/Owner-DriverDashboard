@@ -272,10 +272,8 @@ input[type="checkbox"] {
   outline-color: #7DF5F5;
 }
 
-<<<<<<< HEAD
-
 /* 1a. Force white/important text to black when on white/light backgrounds (excluding buttons & badges) */
-:is(body:not(.dark),
+:is(html:not(.dark),
   main:not(.dark),
   [class*="bg-white"],
   [class*="bg-slate-55"],
@@ -308,7 +306,7 @@ input[type="checkbox"] {
 }
 
 /* 1b. Force light grey/normal text to dark grey when on white/light backgrounds (excluding buttons & badges) */
-:is(body:not(.dark),
+:is(html:not(.dark),
   main:not(.dark),
   [class*="bg-white"],
   [class*="bg-slate-50"],
@@ -399,58 +397,57 @@ input[type="checkbox"] {
   .dark\:text-slate-555,
   .dark\:text-slate-655):not(input, textarea, select) {
   color: #D1D5DB !important;
-  =======
+}
 
-  /* ── Modal, Dialog & Overlay Contrast Rules ── */
-  .modal-overlay {
-    background-color: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(8px);
-  }
+/* ── Modal, Dialog & Overlay Contrast Rules ── */
+.modal-overlay {
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+}
 
-  .dark .modal-overlay {
-    background-color: rgba(0, 0, 0, 0.75);
-  }
+.dark .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.75);
+}
 
-  .modal-container,
-  [role="dialog"] {
-    background-color: var(--color-modal-bg) !important;
-    color: var(--color-text-body);
-  }
+.modal-container,
+[role="dialog"] {
+  background-color: var(--color-modal-bg) !important;
+  color: var(--color-text-body);
+}
 
-  .modal-title {
-    color: var(--color-text-heading) !important;
-    font-size: 24px !important;
-    font-weight: 700 !important;
-    line-height: 1.25 !important;
-    letter-spacing: -0.02em !important;
-  }
+.modal-title {
+  color: var(--color-text-heading) !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.02em !important;
+}
 
-  .modal-description {
-    color: var(--color-text-body) !important;
-    font-size: 15px !important;
-    font-weight: 500 !important;
-    line-height: 1.6 !important;
-  }
+.modal-description {
+  color: var(--color-text-body) !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  line-height: 1.6 !important;
+}
 
-  .modal-subtitle {
-    color: var(--color-text-subtle) !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-  }
+.modal-subtitle {
+  color: var(--color-text-subtle) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
 
-  .warning-card {
-    background-color: var(--color-bg-warning) !important;
-    border: 1px solid var(--color-border-warning) !important;
-    color: var(--color-text-warning) !important;
-    border-radius: 12px !important;
-    padding: 16px !important;
-  }
+.warning-card {
+  background-color: var(--color-bg-warning) !important;
+  border: 1px solid var(--color-border-warning) !important;
+  color: var(--color-text-warning) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+}
 
-  .warning-card p,
-  .warning-card span {
-    color: var(--color-text-warning) !important;
-    >>>>>>>09f0cb6 (Remove useless pages)
-  }
+.warning-card p,
+.warning-card span {
+  color: var(--color-text-warning) !important;
+}
 
   /* ── Navbar Search Input Overrides ── */
   input.navbar-search-input {
@@ -504,8 +501,8 @@ input[type="checkbox"] {
   }
 
   /* ── KPI Card & Header Text Contrast Overrides ── */
-  body:not(.dark) .text-\[\#0B1C30\],
-  body:not(.dark) .text-\[\#0b1c30\] {
+  html:not(.dark) .text-\[\#0B1C30\],
+  html:not(.dark) .text-\[\#0b1c30\] {
     color: #0B1C30 !important;
   }
 

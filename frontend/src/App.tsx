@@ -37,7 +37,6 @@ const OwnerReports = lazy(() => import('./pages/owner/Reports').then(m => ({ def
 const OwnerSettings = lazy(() => import('./pages/owner/Settings').then(m => ({ default: m.Settings })));
 const OwnerNotifications = lazy(() => import('./pages/owner/Notifications').then(m => ({ default: m.Notifications })));
 const OwnerWorkers = lazy(() => import('./pages/owner/Workers').then(m => ({ default: m.Workers })));
-const OwnerAnalytics = lazy(() => import('./pages/owner/Analytics').then(m => ({ default: m.Analytics })));
 const OwnerProfile = lazy(() => import('./pages/owner/Profile').then(m => ({ default: m.Profile })));
 const OwnerPOD = lazy(() => import('./pages/owner/POD').then(m => ({ default: m.POD })));
 const OwnerTrips = lazy(() => import('./pages/owner/Trips').then(m => ({ default: m.OwnerTrips })));
@@ -88,7 +87,6 @@ const App: React.FC = () => {
                   <Route path="settings" element={<OwnerSettings />} />
                   <Route path="notifications" element={<OwnerNotifications />} />
                   <Route path="workers" element={<OwnerWorkers />} />
-                  <Route path="analytics" element={<OwnerAnalytics />} />
                   <Route path="profile" element={<OwnerProfile />} />
                   <Route path="pod" element={<OwnerPOD />} />
                 </Route>

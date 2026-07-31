@@ -74,10 +74,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
         ],
       },
       {
-        title: 'Analytics & Alerts',
+        title: 'Reports & Alerts',
         items: [
           { name: 'Reports Desk', path: '/owner/reports', icon: FileText },
-          { name: 'Business Analytics', path: '/owner/analytics', icon: LineChart },
         ],
       },
       {
@@ -185,38 +184,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
 
       {/* Footer Logout */}
       <div className="p-3 border-t border-[#1E293B] shrink-0 space-y-1">
-<<<<<<< HEAD
-  {
-    !isCollapsed && (
-      <div className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#1E293B] transition-colors overflow-hidden">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.12 }}
-          className="flex-1 min-w-0"
+        <button
+          onClick={handleLogout}
+          title={isCollapsed ? 'Logout' : undefined}
+          aria-label="Logout"
+          className={`flex items-center gap-3 w-full px-3 py-2.5 text-xs text-[#FCA5A5] hover:bg-red-500/10 rounded-xl transition-all font-semibold group cursor-pointer ${isCollapsed ? 'justify-center' : ''}`}
         >
-          <p className="text-xs font-bold text-[#F8FAFC] truncate leading-tight">{user?.fullName || 'User'}</p>
-          <p className="text-[10px] font-semibold text-[#94A3B8] truncate leading-tight mt-0.5">{user?.role || 'Driver'}</p>
-        </motion.div>
+          <LogOut className="h-4 w-4 shrink-0 group-hover:opacity-80" />
+          {!isCollapsed && (
+            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12 }}>
+              Logout
+            </motion.span>
+          )}
+        </button>
       </div>
-    )
-  }
-=======
->>>>>>> 09f0cb6 (Remove useless pages)
-  <button
-    onClick={handleLogout}
-    title={isCollapsed ? 'Logout' : undefined}
-    aria-label="Logout"
-    className={`flex items-center gap-3 w-full px-3 py-2.5 text-xs text-[#FCA5A5] hover:bg-red-500/10 rounded-xl transition-all font-semibold group cursor-pointer ${isCollapsed ? 'justify-center' : ''}`}
-  >
-    <LogOut className="h-4 w-4 shrink-0 group-hover:opacity-80" />
-    {!isCollapsed && (
-      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12 }}>
-        Logout
-      </motion.span>
-    )}
-  </button>
-      </div >
-    </motion.aside >
+    </motion.aside>
   );
 };

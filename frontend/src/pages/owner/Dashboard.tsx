@@ -166,7 +166,7 @@ export const Dashboard: React.FC = () => {
   const handleCardClick = (id: string) => {
     switch (id) {
       case 'rev':
-        navigate('/owner/analytics');
+        navigate('/owner/reports');
         break;
       case 'fleet':
         navigate('/owner/fleet');
