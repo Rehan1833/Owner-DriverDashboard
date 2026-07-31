@@ -17,15 +17,19 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   size = 'md'
 }) => {
-  // Prevent body scroll when open
+  // Prevent body scroll when open; restore on close
   useEffect(() => {
     if (isOpen) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     };
   }, [isOpen]);
 
@@ -39,7 +43,7 @@ export const Modal: React.FC<ModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -78,7 +82,7 @@ export const Modal: React.FC<ModalProps> = ({
 
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827]">
-              <h2 className="text-xl sm:text-2xl font-bold text-[#0B1C30] dark:text-[#F8FAFC] tracking-tight modal-title">{title}</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#F8FAFC] tracking-tight modal-title">{title}</h2>
               <button
                 onClick={onClose}
                 aria-label="Close dialog"

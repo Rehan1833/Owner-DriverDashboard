@@ -86,6 +86,50 @@
   --shadow-2xl: 0 25px 60px -12px rgba(11, 28, 48, 0.15);
 }
 
+:root {
+  color-scheme: light dark;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+html:not(.dark) {
+  color-scheme: light;
+}
+
+/* Chrome Force Dark Mode & High Contrast Safeguards */
+@media (forced-colors: active) {
+  * {
+    forced-color-adjust: auto;
+  }
+}
+
+/* Chrome Force Dark Mode Protection for arbitrary hardcoded dark hex colors */
+.text-\[\#0B1C30\] {
+  color: var(--color-text-primary) !important;
+}
+
+.dark .text-\[\#0B1C30\] {
+  color: #F8FAFC !important;
+}
+
+.text-\[\#545F73\] {
+  color: var(--color-text-secondary) !important;
+}
+
+.dark .text-\[\#545F73\] {
+  color: #CBD5E1 !important;
+}
+
+.text-\[\#6D7A79\] {
+  color: var(--color-text-muted) !important;
+}
+
+.dark .text-\[\#6D7A79\] {
+  color: #94A3B8 !important;
+}
+
 @layer base {
   * {
     margin: 0;

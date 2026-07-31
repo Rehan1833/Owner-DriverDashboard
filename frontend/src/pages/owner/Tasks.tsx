@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Table } from '../../components/tables/Table';
 import { Badge } from '../../components/ui/Badge';
@@ -135,8 +135,8 @@ export const Tasks: React.FC = () => {
             <CheckSquare className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">Pending Tasks</span>
-            <h4 className="text-[22px] font-extrabold text-[#0B1C30] dark:text-white leading-tight">{pendingCount} Items</h4>
+            <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight block">Pending Tasks</span>
+            <h4 className="text-[22px] font-extrabold text-slate-900 dark:text-white leading-tight">{pendingCount} Items</h4>
           </div>
         </div>
 
@@ -145,8 +145,8 @@ export const Tasks: React.FC = () => {
             <Clock className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">In Progress</span>
-            <h4 className="text-[22px] font-extrabold text-[#0B1C30] dark:text-white leading-tight">{inProgressCount} Items</h4>
+            <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight block">In Progress</span>
+            <h4 className="text-[22px] font-extrabold text-slate-900 dark:text-white leading-tight">{inProgressCount} Items</h4>
           </div>
         </div>
 
@@ -155,8 +155,8 @@ export const Tasks: React.FC = () => {
             <CheckCircle className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">Completed</span>
-            <h4 className="text-[22px] font-extrabold text-[#0B1C30] dark:text-white leading-tight">{completedCount} Items</h4>
+            <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight block">Completed</span>
+            <h4 className="text-[22px] font-extrabold text-slate-900 dark:text-white leading-tight">{completedCount} Items</h4>
           </div>
         </div>
 
@@ -165,7 +165,7 @@ export const Tasks: React.FC = () => {
             <AlertTriangle className="h-6 w-6 animate-pulse" />
           </div>
           <div>
-            <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">Overdue Alerts</span>
+            <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight block">Overdue Alerts</span>
             <h4 className="text-[22px] font-extrabold text-[#EF4444] leading-tight">{overdueCount} Items</h4>
           </div>
         </div>

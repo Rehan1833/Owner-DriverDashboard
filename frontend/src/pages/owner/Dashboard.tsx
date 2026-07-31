@@ -115,7 +115,7 @@ const KPICard: React.FC<{
       {/* Middle Row: Large Value */}
       <div className="min-w-0 py-0.5">
         <h4 
-          className="text-2xl sm:text-3xl font-black text-[#0B1C30] dark:text-white leading-none tracking-tight truncate w-full"
+          className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tight truncate w-full"
           title={String(value)}
         >
           {value}

@@ -664,9 +664,9 @@ export const Home: React.FC = () => {
               <Truck className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-extrabold text-[#6B7280] dark:text-[#94A3B8] uppercase tracking-tight block">{card.name}</span>
-              <h4 className="text-[17px] font-black text-[#111827] dark:text-[#F8FAFC] mt-0.5 whitespace-normal break-words leading-tight">{card.val}</h4>
-              <p className="text-[11px] text-[#4B5563] dark:text-[#94A3B8] mt-0.5 font-semibold">{card.sub} • <span className="text-emerald-600 dark:text-emerald-400 font-bold">{card.trend}</span></p>
+              <span className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-tight block">{card.name}</span>
+              <h4 className="text-[17px] font-black text-slate-900 dark:text-slate-50 mt-0.5 whitespace-normal break-words leading-tight">{card.val}</h4>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 font-semibold">{card.sub} • <span className="text-emerald-600 dark:text-emerald-400 font-bold">{card.trend}</span></p>
             </div>
           </div>
         ))}

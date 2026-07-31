@@ -95,7 +95,7 @@ const MetricCard: React.FC<{
 
       {/* Middle Row: Value */}
       <div className="min-w-0 py-0.5">
-        <h4 className="text-2xl sm:text-3xl font-black text-[#0B1C30] dark:text-slate-100 leading-none tracking-tight truncate w-full" title={String(value)}>
+        <h4 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 leading-none tracking-tight truncate w-full" title={String(value)}>
           {value}
         </h4>
       </div>
