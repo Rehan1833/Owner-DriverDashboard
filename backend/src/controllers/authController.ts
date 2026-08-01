@@ -255,10 +255,6 @@ export const register = async (req: Request, res: Response) => {
     const passwordHash = await bcrypt.hash(password, salt);
     const normalizedRole = normalizeRole(role);
 
-    if (normalizedRole === 'Owner' && email.toLowerCase().trim() !== 'rehanchaudhari181133@gmail.com') {
-      return res.status(403).json({ message: 'Only rehanchaudhari181133@gmail.com is authorized as Owner. Additional owner accounts are disabled.' });
-    }
-
     // ── OWNER: validate & create Company first ──────────────────────────────
     let newCompanyId: string | undefined = undefined;
 
@@ -438,7 +434,7 @@ export const login = async (req: Request, res: Response) => {
 
     const user = await User.findOne({
       $or: [
-        { email: email.toLowerCase() },
+        { email: email.toLowerCase().trim() },
         { mobileNumber: String(email).trim() }
       ]
     });
@@ -449,30 +445,40 @@ export const login = async (req: Request, res: Response) => {
 
     const isPassMatch = await user.comparePassword(password);
     if (!isPassMatch) {
-      return res.status(400).json({ message: 'Invalid email or password.' });
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+
+    if (user.isEmailVerified === false) {
+      return res.status(403).json({ message: 'Account verification pending or account disabled.' });
     }
 
     const token = jwt.sign(
-      { id: user._id, role: user.role, companyId: user.companyId || null },
+      {
+        id: String(user._id),
+        email: user.email,
+        role: user.role,
+        companyId: user.companyId || null
+      },
       JWT_SECRET,
       { expiresIn: '12h' }
     );
 
     res.json({
+      success: true,
       message: 'Login successful.',
       token,
       user: {
-        id: user._id,
+        id: String(user._id),
         fullName: user.fullName,
         email: user.email,
-        mobileNumber: user.mobileNumber,
+        mobileNumber: user.mobileNumber || '',
         role: user.role,
-        companyId: user.companyId,
+        companyId: user.companyId || null,
         isEmailVerified: user.isEmailVerified,
         isPhoneVerified: user.isPhoneVerified,
-        companyName: user.companyName,
-        driverId: user.driverId,
-        vehicleNumber: user.vehicleNumber
+        companyName: user.companyName || null,
+        driverId: user.driverId || null,
+        vehicleNumber: user.vehicleNumber || null
       }
     });
   } catch (err: any) {

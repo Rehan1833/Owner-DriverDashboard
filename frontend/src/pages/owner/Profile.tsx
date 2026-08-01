@@ -16,8 +16,8 @@ export const Profile: React.FC = () => {
   const { user, triggerNotification, addActivity, updateProfile } = useOperations();
   
   // Profile state
-  const [fullName, setFullName] = useState(user?.fullName || 'Rehan Chaudhari');
-  const [email, setEmail] = useState(user?.email || 'rehanchaudhari181133@gmail.com');
+  const [fullName, setFullName] = useState(user?.fullName || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [mobileNumber, setMobileNumber] = useState(user?.mobileNumber || '');
   const [companyName, setCompanyName] = useState(user?.companyName || (user?.fullName ? `${user.fullName}'s Enterprise` : 'Enterprise Portal'));
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');

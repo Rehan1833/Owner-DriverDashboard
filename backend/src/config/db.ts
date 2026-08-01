@@ -64,15 +64,14 @@ export const connectDB = async () => {
     
     try {
       console.log('Starting MongoMemoryServer for simulated in-memory fallback...');
+      // @ts-ignore
       const { MongoMemoryServer } = await import('mongodb-memory-server');
       const mongoServer = await MongoMemoryServer.create();
       const mongoUri = mongoServer.getUri();
       console.log(`In-memory MongoDB instance started. Connecting Mongoose to: ${mongoUri}...`);
       
-      const conn = await mongoose.connect(mongoUri);
+      await mongoose.connect(mongoUri);
       console.log('Connected successfully to in-memory MongoDB!');
-      
-      await seedDefaultOwner();
     } catch (fallbackErr: any) {
       console.error(`In-memory database startup failed: ${fallbackErr.message}`);
     }
