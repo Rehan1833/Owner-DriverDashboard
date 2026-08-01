@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-﻿import React, { useState, useMemo } from 'react';
-=======
 import React, { useState, useMemo } from 'react';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { ChevronDown, ChevronUp, Search, Download } from 'lucide-react';
 import { Button } from '../ui/Button';
 
@@ -133,15 +129,8 @@ export function Table<T extends { id: string | number }>({
       {/* Table Header Controls */}
       <div className="flex flex-col sm:flex-row items-center justify-between p-6 gap-4 border-b border-[#E5EEFF] dark:border-[#334155] bg-transparent">
         {searchKey ? (
-<<<<<<< HEAD
-          <div className="relative w-full sm:max-w-xs">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-              <Search className="h-4 w-4 text-[#6D7A79] dark:text-[#94A3B8]" />
-            </span>
-=======
           <div className="relative w-full sm:max-w-[240px]">
             <Search className="search-icon-glow absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none z-10" />
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             <input
               type="text"
               value={searchQuery}
@@ -150,11 +139,7 @@ export function Table<T extends { id: string | number }>({
                 setCurrentPage(1);
               }}
               placeholder={searchPlaceholder}
-<<<<<<< HEAD
-              className="w-full pl-10 pr-4 h-11 text-xs border border-[#E5EEFF] dark:border-[#334155] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] bg-[#EFF4FF] dark:bg-[#111827] text-[#0B1C30] dark:text-[#F8FAFC] transition-all placeholder-slate-400 font-medium shadow-sm"
-=======
               className="navbar-search-input w-full pl-9 pr-3 h-9 text-xs border border-[#E5E7EB] dark:border-[#334155] rounded-full bg-slate-50/50 dark:bg-slate-800/40 text-[#111827] dark:text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#006A6A] focus:border-[#006A6A] transition-all font-medium"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             />
           </div>
         ) : (

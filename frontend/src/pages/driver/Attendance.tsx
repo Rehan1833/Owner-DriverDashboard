@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-﻿import React from 'react';
-=======
 import React from 'react';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { useOperations } from '../../store/OperationsContext';
 import { Badge } from '../../components/ui/Badge';
 import { MapPin, Navigation, Compass, AlertTriangle, Clock, Map, Target } from 'lucide-react';
@@ -13,62 +9,35 @@ export const GPS: React.FC = () => {
   const driverVehicle = vehicles[0];
 
   return (
-<<<<<<< HEAD
-    <div className="space-y-8 text-left animate-fade-in">
-      {/* Title */}
-      <div>
-        <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-slate-100 tracking-tight leading-none">Live GPS Navigation Map</h2>
-        <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">Real-time truck tracking coordinates, highway milestones, and traffic diagnostics.</p>
-=======
     <div className="space-y-6 text-left animate-fade-in">
       {/* Title */}
       <div>
         <h2 className="text-[26px] font-extrabold text-[#111827] dark:text-[#F8FAFC] tracking-tight leading-none">Live GPS Navigation Map</h2>
         <p className="text-[13px] text-[#4B5563] dark:text-[#94A3B8] mt-1.5 font-medium">Real-time truck tracking coordinates, highway milestones, and traffic diagnostics.</p>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Navigation Info Bar */}
-<<<<<<< HEAD
-        <div className="bg-[#0B1C30] text-white rounded-2xl p-6 flex items-center gap-4 shadow-md lg:col-span-4 border border-slate-800">
-=======
         <div className="bg-[#0B1C30] dark:bg-[#1E293B] text-white rounded-2xl p-6 flex items-center gap-4 shadow-md lg:col-span-4 border border-slate-800 dark:border-[#334155]">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
           <div className="p-3 bg-[#006A6A] rounded-xl animate-pulse shrink-0">
             <Navigation className="h-5 w-5 rotate-45 text-white" />
           </div>
           <div className="space-y-1.5 flex-1 text-left">
             <h4 className="text-[15px] font-bold text-white tracking-tight">In 800m, keep left towards Mumbai-Pune Expressway exit</h4>
-<<<<<<< HEAD
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 font-semibold">
-              <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> ETA: {activeTrip?.eta || '16:45 PM'}</span>
-              <span className="w-1 h-1 bg-slate-700 rounded-full" />
-              <span>Remaining: {activeTrip?.distanceRemaining || 48} km</span>
-              <span className="w-1 h-1 bg-slate-700 rounded-full" />
-              <span className="text-[#14B8A6]">Consignment: {activeTrip?.tripNumber}</span>
-=======
             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300 font-semibold">
               <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> ETA: {activeTrip?.eta || '16:45 PM'}</span>
               <span className="w-1 h-1 bg-slate-600 rounded-full" />
               <span>Remaining: {activeTrip?.distanceRemaining || 48} km</span>
               <span className="w-1 h-1 bg-slate-600 rounded-full" />
               <span className="text-[#14B8A6] font-bold">Consignment: {activeTrip?.tripNumber}</span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             </div>
           </div>
         </div>
 
         {/* Fullscreen Map container (75%) */}
-<<<<<<< HEAD
-        <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm lg:col-span-3 space-y-4">
-          <div className="flex justify-between items-center border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-2.5">
-            <h4 className="text-[13px] font-bold text-[#0B1C30] dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wide">
-=======
         <div className="bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] rounded-2xl p-6 shadow-sm lg:col-span-3 space-y-4">
           <div className="flex justify-between items-center border-b border-[#E5E7EB] dark:border-[#334155] pb-2.5">
             <h4 className="text-[13px] font-extrabold text-[#111827] dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wide">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               <Map className="h-4 w-4 text-[#006A6A]" /> Route Vector Visualization
             </h4>
             <Badge variant="info">Active Tracker</Badge>
@@ -144,15 +113,9 @@ export const GPS: React.FC = () => {
         </div>
 
         {/* Checkpoint sidebar (25%) */}
-<<<<<<< HEAD
-        <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-5 flex flex-col justify-between text-left">
-          <div className="space-y-4">
-            <h4 className="text-[13px] font-bold text-[#0B1C30] dark:text-slate-100 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-2 flex items-center gap-1.5 uppercase tracking-wide">
-=======
         <div className="bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-5 flex flex-col justify-between text-left">
           <div className="space-y-4">
             <h4 className="text-[13px] font-extrabold text-[#111827] dark:text-slate-100 border-b border-[#E5E7EB] dark:border-[#334155] pb-2 flex items-center gap-1.5 uppercase tracking-wide">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               <Target className="h-4 w-4 text-[#006A6A]" /> Route Milestones
             </h4>
 
@@ -170,19 +133,11 @@ export const GPS: React.FC = () => {
                       ? 'bg-[#006A6A] border-[#006A6A] animate-pulse shadow-sm' 
                       : checkpoint.active 
                       ? 'bg-[#10B981] border-[#10B981]' 
-<<<<<<< HEAD
-                      : 'bg-white dark:bg-[#0F172A] border-slate-200 dark:border-slate-800'
-                  }`} />
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-bold ${checkpoint.isCurrent ? 'text-[#0B1C30] dark:text-[#F8FAFC]' : 'text-[#6D7A79] dark:text-[#94A3B8]'}`}>{checkpoint.name}</p>
-                    <p className="text-[10px] text-slate-400 dark:text-[#6D7A79] mt-0.5 font-bold uppercase">{checkpoint.status}</p>
-=======
                       : 'bg-white dark:bg-[#0F172A] border-slate-300 dark:border-slate-800'
                   }`} />
                   <div className="flex-1 min-w-0">
                     <p className={`font-bold ${checkpoint.isCurrent ? 'text-[#111827] dark:text-[#F8FAFC]' : 'text-[#6B7280] dark:text-[#94A3B8]'}`}>{checkpoint.name}</p>
                     <p className="text-[10px] text-[#6B7280] dark:text-[#94A3B8] mt-0.5 font-bold uppercase">{checkpoint.status}</p>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                   </div>
                 </div>
               ))}

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-﻿import React, { useState, useRef, useEffect } from 'react';
-=======
 import React, { useState, useRef, useEffect } from 'react';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -367,15 +363,6 @@ export const POD: React.FC = () => {
   });
 
   return (
-<<<<<<< HEAD
-    <div className="space-y-8 max-w-4xl mx-auto pb-12 text-left animate-fade-in">
-      
-      {/* Title Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-5">
-        <div>
-          <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-slate-100 tracking-tight leading-none">Proof of Delivery (POD) Workspace</h2>
-          <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">Verify cargo receipts, customer signatures, and coordinates for dispatched orders.</p>
-=======
     <div className="space-y-6 max-w-4xl mx-auto pb-12 text-left animate-fade-in">
       
       {/* Title Header */}
@@ -383,22 +370,12 @@ export const POD: React.FC = () => {
         <div>
           <h2 className="text-[26px] font-extrabold text-[#111827] dark:text-[#F8FAFC] tracking-tight leading-none">Proof of Delivery (POD) Workspace</h2>
           <p className="text-[13px] text-[#4B5563] dark:text-[#94A3B8] mt-1.5 font-medium">Verify cargo receipts, customer signatures, and coordinates for dispatched orders.</p>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         </div>
       </div>
 
       {/* Driver Statistics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {[
-<<<<<<< HEAD
-          { title: 'Pending Approval', val: pendingCount, color: 'text-amber-600', bg: 'bg-amber-50/60' },
-          { title: 'Approved PODs', val: approvedCount, color: 'text-emerald-600', bg: 'bg-emerald-50/60' },
-          { title: 'Rejected PODs', val: rejectedCount, color: 'text-rose-600', bg: 'bg-rose-50/60' },
-          { title: 'Uploaded Today', val: uploadedTodayCount, color: 'text-[#006A6A]', bg: 'bg-[#006A6A]/10' }
-        ].map((stat, i) => (
-          <div key={i} className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] p-5 rounded-2xl shadow-sm text-left">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">{stat.title}</span>
-=======
           { title: 'Pending Approval', val: pendingCount, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50/60' },
           { title: 'Approved PODs', val: approvedCount, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50/60' },
           { title: 'Rejected PODs', val: rejectedCount, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50/60' },
@@ -406,40 +383,17 @@ export const POD: React.FC = () => {
         ].map((stat, i) => (
           <div key={i} className="bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] p-5 rounded-2xl shadow-sm text-left">
             <span className="text-[11px] font-extrabold text-[#6B7280] dark:text-[#94A3B8] uppercase tracking-wider block">{stat.title}</span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             <h4 className={`text-2xl font-extrabold mt-1.5 leading-none ${stat.color}`}>{stat.val}</h4>
           </div>
         ))}
       </div>
 
       {submitSuccess ? (
-<<<<<<< HEAD
-        <div className="max-w-md mx-auto bg-white dark:bg-[#1E293B] rounded-2xl p-8 border border-[#E5EEFF] dark:border-[#334155] shadow-xl text-center space-y-6 my-6 text-left animate-fade-in">
-=======
         <div className="max-w-md mx-auto bg-white dark:bg-[#1E293B] rounded-2xl p-8 border border-[#E5E7EB] dark:border-[#334155] shadow-xl text-center space-y-6 my-6 text-left animate-fade-in">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
           <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/20 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto animate-bounce ring-8 ring-emerald-500/10">
             <CheckCircle2 className="h-9 w-9 text-emerald-500" />
           </div>
           <div className="space-y-2 text-center">
-<<<<<<< HEAD
-            <h3 className="text-xl font-bold text-[#0B1C30] dark:text-slate-100">? POD Dispatched</h3>
-            <p className="text-xs text-[#6D7A79] leading-normal font-semibold">Cargo receipt successfully logged and queued for Owner approval check.</p>
-          </div>
-          
-          <div className="bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] p-4 rounded-xl text-xs space-y-2">
-            <div className="flex justify-between font-mono">
-              <span className="text-[#6D7A79] font-semibold">POD Code</span>
-              <span className="font-bold text-slate-800 dark:text-[#F8FAFC]">{generatedPodNumber}</span>
-            </div>
-            <div className="flex justify-between font-mono">
-              <span className="text-[#6D7A79] font-semibold">Order ID</span>
-              <span className="font-bold text-slate-800 dark:text-[#F8FAFC]">{orderNumber}</span>
-            </div>
-            <div className="flex justify-between font-mono">
-              <span className="text-[#6D7A79] font-semibold">GPS Coords</span>
-              <span className="font-bold text-slate-800 dark:text-[#F8FAFC]">{gpsCoords}</span>
-=======
             <h3 className="text-xl font-bold text-[#111827] dark:text-[#F8FAFC]">POD Dispatched</h3>
             <p className="text-xs text-[#4B5563] dark:text-[#94A3B8] leading-normal font-semibold">Cargo receipt successfully logged and queued for Owner approval check.</p>
           </div>
@@ -456,7 +410,6 @@ export const POD: React.FC = () => {
             <div className="flex justify-between font-mono">
               <span className="text-[#6B7280] dark:text-[#94A3B8] font-semibold">GPS Coords</span>
               <span className="font-bold text-[#111827] dark:text-[#F8FAFC]">{gpsCoords}</span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             </div>
           </div>
 
@@ -464,11 +417,7 @@ export const POD: React.FC = () => {
             <Button
               onClick={handleResetForm}
               variant="outline"
-<<<<<<< HEAD
-              className="flex-1 text-xs font-bold py-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155]"
-=======
               className="flex-1 text-xs font-bold py-2.5 rounded-xl border border-[#E5E7EB] dark:border-[#334155]"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             >
               Upload Another
             </Button>
@@ -486,15 +435,9 @@ export const POD: React.FC = () => {
           
           {/* Form and Camera Upload Panel (66%) */}
           <div className="lg:col-span-2 space-y-6">
-<<<<<<< HEAD
-            <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm space-y-5">
-              <div className="flex items-center justify-between pb-3 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
-                <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 flex items-center gap-2 uppercase tracking-wide">
-=======
             <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-5">
               <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB] dark:border-[#334155]">
                 <h4 className="text-[15px] font-extrabold text-[#111827] dark:text-[#F8FAFC] flex items-center gap-2 uppercase tracking-wide">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                   <ClipboardCheck className="h-5 w-5 text-[#006A6A]" /> Delivery Verification Details
                 </h4>
                 {validationError && (

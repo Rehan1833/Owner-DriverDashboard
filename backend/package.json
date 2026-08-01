@@ -6,12 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-<<<<<<< HEAD
-    "dev": "nodemon src/server.ts"
-=======
     "dev": "nodemon src/server.ts",
     "test": "jest"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   },
   "dependencies": {
     "@types/cookie-parser": "^1.4.10",

@@ -6,11 +6,8 @@ export interface User {
   email: string;
   mobileNumber: string;
   role: UserRole;
-<<<<<<< HEAD
-=======
   isEmailVerified?: boolean;
   isPhoneVerified?: boolean;
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   companyName?: string;
   driverId?: string;
   vehicleNumber?: string;
@@ -18,8 +15,6 @@ export interface User {
   avatarUrl?: string;
 }
 
-<<<<<<< HEAD
-=======
 /**
  * DriverRecord — shape returned by GET /api/users/drivers.
  * Mirrors the backend DTO (no sensitive fields).
@@ -41,7 +36,6 @@ export interface DriverRecord {
   updatedAt: string | null;
 }
 
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 export interface Vehicle {
   id: string;
   vehicleNumber: string;
@@ -65,8 +59,6 @@ export interface Vehicle {
   insuranceExpiry?: string;
 }
 
-<<<<<<< HEAD
-=======
 export interface TripStop {
   id?: string;
   _id?: string;
@@ -82,15 +74,11 @@ export interface TripStop {
   notes?: string;
 }
 
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 export interface Trip {
   id: string;
   tripNumber: string;
   vehicleNumber: string;
-<<<<<<< HEAD
-=======
   vehicleId?: string;
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   driverId: string;
   driverName: string;
   pickupLocation: string;
@@ -100,9 +88,6 @@ export interface Trip {
   material: string;
   weight: string;
   invoiceNumber: string;
-<<<<<<< HEAD
-  status: 'Assigned' | 'Accepted' | 'Started' | 'Reached Pickup' | 'Loaded' | 'In Transit' | 'Reached Destination' | 'Delivered' | 'Completed' | 'Delayed';
-=======
   priority?: 'Normal' | 'High' | 'Urgent';
   cargo?: {
     description?: string;
@@ -114,18 +99,12 @@ export interface Trip {
   expectedEnd?: string;
   notes?: string;
   status: 'Draft' | 'Assigned' | 'Accepted' | 'Started' | 'Reached Pickup' | 'Loaded' | 'In Transit' | 'At Stop' | 'Reached Destination' | 'Delivered' | 'Completed' | 'Cancelled' | 'Delayed' | 'Incident Reported';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   eta: string;
   distanceRemaining: number;
   stopReason?: string;
   deliveryPhoto?: string[];
   signatureData?: string;
   timestamp: string;
-<<<<<<< HEAD
-  vehicleId?: string;
-}
-
-=======
   startedAt?: string;
   completedAt?: string;
   // Google Maps Telemetry Fields
@@ -145,7 +124,6 @@ export interface Trip {
 }
 
 
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 export interface Task {
   id: string;
   title: string;

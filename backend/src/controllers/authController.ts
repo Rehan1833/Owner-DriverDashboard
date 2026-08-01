@@ -1,16 +1,10 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-<<<<<<< HEAD
-import jwt from 'jsonwebtoken';
-import User from '../models/User';
-import { verifyGoogleToken } from '../utils/googleAuth';
-=======
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import VerificationCode from '../models/VerificationCode';
 import { sendMobileOTP } from '../utils/otpService';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
 const JWT_SECRET = process.env.JWT_SECRET || 'smartops_super_secret_key_123!';
 
@@ -26,66 +20,6 @@ const normalizeRole = (role?: string): 'Owner' | 'Driver' => {
 };
 
 /**
-<<<<<<< HEAD
- * Controller for Google OAuth Signup / Authentication
- */
-export const googleAuth = async (req: Request, res: Response) => {
-  try {
-    const googleToken = req.body.idToken || req.body.googleToken || req.body.token || req.body.credential;
-    if (!googleToken) {
-      return res.status(400).json({ message: 'Google OAuth token (idToken or googleToken) is required.' });
-    }
-
-    const payload = await verifyGoogleToken(googleToken);
-    const requestedRole = normalizeRole(req.body.role);
-
-    let user = await User.findOne({ email: payload.email });
-
-    if (user) {
-      // User exists with this email -> Link Google ID / provider if not already linked
-      let updated = false;
-      if (!user.googleId) {
-        user.googleId = payload.googleId;
-        updated = true;
-      }
-      if (user.provider !== 'google') {
-        user.provider = 'google';
-        updated = true;
-      }
-      if (!user.isEmailVerified && payload.isEmailVerified) {
-        user.isEmailVerified = true;
-        updated = true;
-      }
-      if (updated) {
-        await user.save();
-      }
-    } else {
-      // Create new user with Google OAuth details
-      const userDoc: any = {
-        fullName: req.body.fullName || payload.fullName,
-        email: payload.email,
-        mobileNumber: req.body.mobileNumber || '',
-        role: requestedRole,
-        googleId: payload.googleId,
-        provider: 'google',
-        isEmailVerified: payload.isEmailVerified,
-        companyName: requestedRole === 'Owner' ? (req.body.companyName || '') : undefined,
-        vehicleNumber: req.body.vehicleNumber,
-        licenseNumber: req.body.licenseNumber
-      };
-
-      if (requestedRole === 'Driver') {
-        userDoc.driverId = req.body.driverId || `DRV-${Date.now().toString().slice(-4)}`;
-      }
-
-      user = new User(userDoc);
-      await user.save();
-    }
-
-    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '12h' });
-
-    res.status(user.isNew ? 201 : 200).json({
-=======
  * Generates a cryptographically secure 6-digit numeric OTP string
  */
 export const generateSecureOTP = (): string => {
@@ -230,32 +164,21 @@ export const verifyOTP = async (req: Request, res: Response) => {
     res.json({
       success: true,
       message: 'Mobile number verified successfully. Account activated.',
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       token,
       user: {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
-<<<<<<< HEAD
-        role: user.role,
-=======
         mobileNumber: user.mobileNumber,
         role: user.role,
         isEmailVerified: user.isEmailVerified,
         isPhoneVerified: user.isPhoneVerified,
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         companyName: user.companyName,
         driverId: user.driverId,
         vehicleNumber: user.vehicleNumber
       }
     });
   } catch (err: any) {
-<<<<<<< HEAD
-    res.status(401).json({ message: err.message || 'Google OAuth authentication failed.' });
-  }
-};
-
-=======
     res.status(500).json({ message: err.message });
   }
 };
@@ -270,25 +193,10 @@ export const googleAuth = async (_req: Request, res: Response) => {
   });
 };
 
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 export const register = async (req: Request, res: Response) => {
   try {
     const googleToken = req.body.idToken || req.body.googleToken || req.body.credential;
     if (googleToken) {
-<<<<<<< HEAD
-      return googleAuth(req, res);
-    }
-
-    const { fullName, email, mobileNumber, role, password, companyName, driverId, vehicleNumber, licenseNumber } = req.body;
-    
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email is already registered.' });
-    }
-
-    if (!password) {
-      return res.status(400).json({ message: 'Password is required for local registration.' });
-=======
       return res.status(400).json({
         success: false,
         message: 'Google authentication is temporarily disabled.'
@@ -327,23 +235,12 @@ export const register = async (req: Request, res: Response) => {
 
     if (password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
     }
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
     const normalizedRole = normalizeRole(role);
 
-<<<<<<< HEAD
-    const newUser = new User({
-      fullName,
-      email: email.toLowerCase(),
-      mobileNumber: mobileNumber || '',
-      role: normalizedRole,
-      passwordHash,
-      provider: 'local',
-      isEmailVerified: false,
-=======
     if (normalizedRole === 'Owner' && email.toLowerCase().trim() !== 'rehanchaudhari181133@gmail.com') {
       return res.status(403).json({ message: 'Only rehanchaudhari181133@gmail.com is authorized as Owner. Additional owner accounts are disabled.' });
     }
@@ -367,7 +264,6 @@ export const register = async (req: Request, res: Response) => {
       verifiedAt: new Date(),
       securityQuestion: defaultQuestion,
       securityAnswerHash,
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       companyName,
       driverId: normalizedRole === 'Driver' ? (driverId || `DRV-${Date.now().toString().slice(-4)}`) : undefined,
       vehicleNumber,
@@ -375,38 +271,26 @@ export const register = async (req: Request, res: Response) => {
     });
 
     await newUser.save();
-<<<<<<< HEAD
-    const token = jwt.sign({ id: newUser._id, role: newUser.role }, JWT_SECRET, { expiresIn: '12h' });
-
-    res.status(201).json({
-=======
 
     const token = jwt.sign({ id: newUser._id, role: newUser.role }, JWT_SECRET, { expiresIn: '12h' });
 
     res.status(201).json({
       success: true,
       message: `Registration completed successfully for ${normalizedRole}. You can now log in.`,
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       token,
       user: {
         id: newUser._id,
         fullName: newUser.fullName,
         email: newUser.email,
-<<<<<<< HEAD
-        role: newUser.role,
-=======
         mobileNumber: newUser.mobileNumber,
         role: newUser.role,
         isEmailVerified: newUser.isEmailVerified,
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         companyName: newUser.companyName,
         driverId: newUser.driverId,
         vehicleNumber: newUser.vehicleNumber
       }
     });
   } catch (err: any) {
-<<<<<<< HEAD
-=======
     if (err.code === 11000) {
       const field = Object.keys(err.keyPattern || err.keyValue || {})[0];
       if (field === 'email') {
@@ -420,7 +304,6 @@ export const register = async (req: Request, res: Response) => {
       }
       return res.status(400).json({ message: `An account with this ${field || 'credential'} already exists.` });
     }
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
     res.status(500).json({ message: err.message });
   }
 };
@@ -429,20 +312,6 @@ export const login = async (req: Request, res: Response) => {
   try {
     const googleToken = req.body.idToken || req.body.googleToken || req.body.credential;
     if (googleToken) {
-<<<<<<< HEAD
-      return googleAuth(req, res);
-    }
-
-    const { email, password } = req.body;
-    const user = await User.findOne({ email: email?.toLowerCase() });
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials.' });
-    }
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials.' });
-=======
       return res.status(400).json({
         success: false,
         message: 'Google authentication is temporarily disabled.'
@@ -468,29 +337,21 @@ export const login = async (req: Request, res: Response) => {
     const isPassMatch = await user.comparePassword(password);
     if (!isPassMatch) {
       return res.status(400).json({ message: 'Invalid email or password.' });
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
     }
 
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '12h' });
 
     res.json({
-<<<<<<< HEAD
-=======
       message: 'Login successful.',
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       token,
       user: {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
-<<<<<<< HEAD
-        role: user.role,
-=======
         mobileNumber: user.mobileNumber,
         role: user.role,
         isEmailVerified: user.isEmailVerified,
         isPhoneVerified: user.isPhoneVerified,
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         companyName: user.companyName,
         driverId: user.driverId,
         vehicleNumber: user.vehicleNumber
@@ -501,17 +362,6 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-<<<<<<< HEAD
-export const forgotPassword = (req: Request, res: Response) => {
-  const { email } = req.body;
-  res.json({ message: `Reset link dispatched to ${email}. Token simulated.` });
-};
-
-export const resetPassword = (req: Request, res: Response) => {
-  res.json({ message: 'Password has been successfully updated.' });
-};
-
-=======
 /**
  * Controller to fetch user's Security Question for Password Reset
  */
@@ -602,4 +452,3 @@ export const resetPasswordWithSecurity = async (req: Request, res: Response) => 
 
 export const forgotPassword = getSecurityQuestion;
 export const resetPassword = resetPasswordWithSecurity;
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a

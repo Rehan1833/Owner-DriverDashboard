@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import React, { useState, useRef, useEffect } from 'react';
-=======
 import React, { useState, useRef, useEffect, useMemo } from 'react';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { useNavigate, Link } from 'react-router-dom';
 import { useOperations } from '../../store/OperationsContext';
 import { Table } from '../../components/tables/Table';
@@ -289,40 +285,6 @@ export const Home: React.FC = () => {
   const [stopModalOpen, setStopModalOpen] = useState(false);
   const [selectedReason, setSelectedReason] = useState('Traffic Congestion');
 
-<<<<<<< HEAD
-  // Recharts mock datasets
-  const weeklyDistData = [
-    { day: 'Mon', distance: 180 },
-    { day: 'Tue', distance: 220 },
-    { day: 'Wed', distance: 195 },
-    { day: 'Thu', distance: 240 },
-    { day: 'Fri', distance: 310 },
-    { day: 'Sat', distance: 150 },
-    { day: 'Sun', distance: 80 },
-  ];
-
-  const monthlyTripsData = [
-    { month: 'Jan', runs: 12 },
-    { month: 'Feb', runs: 15 },
-    { month: 'Mar', runs: 14 },
-    { month: 'Apr', runs: 19 },
-    { month: 'May', runs: 22 },
-    { month: 'Jun', runs: driverTrips.length || 18 },
-  ];
-
-  const fuelConsumptionData = [
-    { week: 'Wk 1', usage: 140 },
-    { week: 'Wk 2', usage: 155 },
-    { week: 'Wk 3', usage: 130 },
-    { week: 'Wk 4', usage: 172 },
-  ];
-
-  const performanceScoreData = [
-    { name: 'On Time Delivery', value: 85, color: '#006A6A' },
-    { name: 'Delayed Delivery', value: 10, color: '#F59E0B' },
-    { name: 'Failed Delivery', value: 5, color: '#EF4444' },
-  ];
-=======
   // Dynamic Recharts datasets
   const driverAttendanceRecords = useMemo(() => {
     return attendance.filter(a => a.driverId === driverId);
@@ -402,7 +364,6 @@ export const Home: React.FC = () => {
       { name: 'Failed Delivery', value: failedPercent, color: '#EF4444' }
     ];
   }, [driverTrips]);
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
   const isOffDuty = currentDutyStatus === 'Off Duty' && !todayRecord?.checkOut;
   const isDutyEnded = todayRecord && todayRecord.checkOut;
@@ -425,29 +386,6 @@ export const Home: React.FC = () => {
 
           <div className="grid grid-cols-3 gap-4 text-left">
             <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
-<<<<<<< HEAD
-              <span className="text-[10px] text-slate-400 uppercase font-bold block">Worked Time</span>
-              <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.workingHours} hrs</span>
-            </div>
-            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
-              <span className="text-[10px] text-slate-400 uppercase font-bold block">Overtime</span>
-              <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.overtime} hrs</span>
-            </div>
-            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
-              <span className="text-[10px] text-slate-400 uppercase font-bold block">Break Duration</span>
-              <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.breakDuration} mins</span>
-            </div>
-            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
-              <span className="text-[10px] text-slate-400 uppercase font-bold block">Distance covered</span>
-              <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.distanceCovered} km</span>
-            </div>
-            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
-              <span className="text-[10px] text-slate-400 uppercase font-bold block">Fuel Consumed</span>
-              <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.fuelUsed} L</span>
-            </div>
-            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
-              <span className="text-[10px] text-slate-400 uppercase font-bold block">Safety Score</span>
-=======
               <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-bold block">Worked Time</span>
               <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.workingHours} hrs</span>
             </div>
@@ -469,7 +407,6 @@ export const Home: React.FC = () => {
             </div>
             <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
               <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-bold block">Safety Score</span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 block mt-1">{todayRecord.performanceScore}%</span>
             </div>
           </div>
@@ -493,16 +430,6 @@ export const Home: React.FC = () => {
   }
 
   return (
-<<<<<<< HEAD
-    <div className="space-y-8 animate-fade-in text-left">
-      {/* Real-time Duty tracking status strip */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-5 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className={`p-2.5 rounded-xl shrink-0 ${
-            currentDutyStatus === 'On Duty' ? 'bg-[#DCFCE7] dark:bg-[#064E3B]/40 text-[#10B981] dark:text-[#34D399]' :
-            currentDutyStatus === 'On Trip' ? 'bg-[#EFF4FF] dark:bg-blue-950/20 text-[#006A6A] dark:text-[#7DF5F5]' :
-            currentDutyStatus === 'On Break' ? 'bg-[#FEF3C7] dark:bg-amber-950/20 text-[#F59E0B] dark:text-[#FBBF24]' : 'bg-[#FFDAD4] dark:bg-red-950/20 text-[#BA1A1A] dark:text-[#FCA5A5]'
-=======
     <div className="space-y-6 animate-fade-in text-left">
 
       {/* ── 1. Prominent Welcome Header (Always Visible) ── */}
@@ -555,56 +482,32 @@ export const Home: React.FC = () => {
             currentDutyStatus === 'On Duty' ? 'bg-[#ECFDF5] dark:bg-[#064E3B]/40 text-[#059669] dark:text-[#34D399]' :
             currentDutyStatus === 'On Trip' ? 'bg-[#F0F9FF] dark:bg-blue-950/20 text-[#006A6A] dark:text-[#7DF5F5]' :
             currentDutyStatus === 'On Break' ? 'bg-[#FEF3C7] dark:bg-amber-950/20 text-[#D97706] dark:text-[#FBBF24]' : 'bg-[#FFDAD4] dark:bg-red-950/20 text-[#BA1A1A] dark:text-[#FCA5A5]'
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
           }`}>
             <Activity className="h-5 w-5 animate-pulse" />
           </div>
           <div>
-<<<<<<< HEAD
-            <span className="text-[11px] font-semibold text-[#6D7A79] dark:text-[#94A3B8] uppercase block">Duty Status</span>
-            <span className="font-bold text-[#0B1C30] dark:text-white text-sm">{currentDutyStatus}</span>
-=======
             <span className="text-[11px] font-extrabold text-[#6B7280] dark:text-[#94A3B8] uppercase block">Duty Status</span>
             <span className="font-extrabold text-[#111827] dark:text-white text-sm">{currentDutyStatus}</span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-<<<<<<< HEAD
-          <div className="p-2.5 rounded-xl bg-[#EFF4FF] dark:bg-[#111827] text-[#6D7A79] dark:text-[#94A3B8] shrink-0 border border-[#E5EEFF] dark:border-[#334155]">
-            <Clock className="h-5 w-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-semibold text-[#6D7A79] dark:text-[#94A3B8] uppercase block">Check-In Time</span>
-            <span className="font-bold text-[#0B1C30] dark:text-white text-sm font-mono">{todayRecord?.checkIn || '--'}</span>
-=======
           <div className="p-2.5 rounded-xl bg-[#F3F4F6] dark:bg-[#111827] text-[#4B5563] dark:text-[#94A3B8] shrink-0 border border-[#E5E7EB] dark:border-[#334155]">
             <Clock className="h-5 w-5" />
           </div>
           <div>
             <span className="text-[11px] font-extrabold text-[#6B7280] dark:text-[#94A3B8] uppercase block">Check-In Time</span>
             <span className="font-bold text-[#111827] dark:text-white text-sm font-mono">{todayRecord?.checkIn || '--'}</span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-<<<<<<< HEAD
-          <div className="p-2.5 rounded-xl bg-[#EFF4FF] dark:bg-[#111827] text-[#6D7A79] dark:text-[#94A3B8] shrink-0 border border-[#E5EEFF] dark:border-[#334155]">
-            <Gauge className="h-5 w-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-semibold text-[#6D7A79] dark:text-[#94A3B8] uppercase block">Break Duration</span>
-            <span className="font-bold text-[#0B1C30] dark:text-white text-sm font-mono">{todayRecord?.breakDuration || 0} mins</span>
-=======
           <div className="p-2.5 rounded-xl bg-[#F3F4F6] dark:bg-[#111827] text-[#4B5563] dark:text-[#94A3B8] shrink-0 border border-[#E5E7EB] dark:border-[#334155]">
             <Gauge className="h-5 w-5" />
           </div>
           <div>
             <span className="text-[11px] font-extrabold text-[#6B7280] dark:text-[#94A3B8] uppercase block">Break Duration</span>
             <span className="font-bold text-[#111827] dark:text-white text-sm font-mono">{todayRecord?.breakDuration || 0} mins</span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
           </div>
         </div>
 
@@ -613,11 +516,7 @@ export const Home: React.FC = () => {
             <Button
               onClick={handleEndBreak}
               variant="primary"
-<<<<<<< HEAD
-              className="text-xs py-2 px-4 rounded-xl"
-=======
               className="text-xs py-2 px-4 rounded-xl font-bold"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             >
               Resume Duty
             </Button>
@@ -626,11 +525,7 @@ export const Home: React.FC = () => {
               <Button
                 onClick={() => setBreakModalOpen(true)}
                 variant="outline"
-<<<<<<< HEAD
-                className="text-xs py-2 px-4 rounded-xl bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] text-[#545F73] dark:text-[#CBD5E1] hover:bg-[#F8F9FF] dark:hover:bg-[#111827]"
-=======
                 className="text-xs py-2 px-4 rounded-xl bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] text-[#374151] dark:text-[#CBD5E1] hover:bg-[#F3F4F6] dark:hover:bg-[#111827] font-bold"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               >
                 Start Break
               </Button>
@@ -638,11 +533,7 @@ export const Home: React.FC = () => {
                 onClick={handleEndDuty}
                 isLoading={isEndingDuty}
                 variant="danger"
-<<<<<<< HEAD
-                className="text-xs py-2 px-4 rounded-xl"
-=======
                 className="text-xs py-2 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               >
                 End Duty
               </Button>
@@ -651,24 +542,6 @@ export const Home: React.FC = () => {
         </div>
       </div>
 
-<<<<<<< HEAD
-      {/* Restructured Banner with Welcome & Attendance Card side-by-side */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Welcome Card & Quick Actions (2/3 width) */}
-        <div className="lg:col-span-2 flex flex-col justify-between bg-[#0B1C30] p-6 md:p-8 rounded-2xl text-white shadow-lg min-h-[220px]">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                Operator Shift Active
-              </span>
-              <span className="flex items-center gap-1.5 text-[10px] text-emerald-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Telemetry
-              </span>
-            </div>
-            <h2 className="text-[26px] font-extrabold tracking-tight leading-tight">Welcome, {user?.fullName || 'Rajesh Kumar'}</h2>
-            <p className="text-slate-400 text-[13px] leading-relaxed max-w-2xl font-medium">
-              You are assigned to container vehicle <span className="text-white font-bold">{driverVehicle?.vehicleNumber || 'MH-12-QW-9874'}</span>. 
-=======
       {/* ── 3. Shift Action Card & Today's Attendance Card ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Active Operational Consignment Card (2/3 width) */}
@@ -685,7 +558,6 @@ export const Home: React.FC = () => {
             <h2 className="text-xl md:text-2xl font-bold tracking-tight leading-tight text-[#111827] dark:text-white">Assigned Freight Consignment</h2>
             <p className="text-[#4B5563] dark:text-[#CBD5E1] text-[13px] leading-relaxed max-w-2xl font-medium">
               You are assigned to container vehicle <span className="text-[#111827] dark:text-white font-extrabold">{driverVehicle?.vehicleNumber || 'MH-12-QW-9874'}</span>. 
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               GPS tracking loop and automatic checkpoint verification logs are active.
             </p>
           </div>
@@ -695,11 +567,7 @@ export const Home: React.FC = () => {
               onClick={handleStatusTransition}
               disabled={!activeTrip}
               variant="primary"
-<<<<<<< HEAD
-              className="text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-md shadow-teal-900/10"
-=======
               className="text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-sm font-bold"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             >
               <Play className="h-4 w-4" /> Start/Next Step
             </Button>
@@ -707,20 +575,12 @@ export const Home: React.FC = () => {
               onClick={() => setStopModalOpen(true)}
               disabled={!activeTrip || activeTrip.status !== 'In Transit'}
               variant="outline"
-<<<<<<< HEAD
-              className="text-xs py-2.5 px-4 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#1E293B] text-[#545F73] dark:text-[#CBD5E1] hover:bg-[#F8F9FF] dark:hover:bg-[#111827] flex items-center gap-1.5"
-=======
               className="text-xs py-2.5 px-4 rounded-xl border border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#1E293B] text-[#374151] dark:text-[#CBD5E1] hover:bg-[#F3F4F6] dark:hover:bg-[#111827] flex items-center gap-1.5 font-bold"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             >
               <AlertTriangle className="h-4 w-4 text-amber-500" /> Log Delay Stop
             </Button>
             <a href="#pod-section">
-<<<<<<< HEAD
-              <Button variant="primary" className="text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-900/10">
-=======
               <Button variant="primary" className="text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-sm font-bold">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                 <FileText className="h-4 w-4" /> Upload POD
               </Button>
             </a>
@@ -728,68 +588,40 @@ export const Home: React.FC = () => {
         </div>
 
         {/* Today's Attendance Card (1/3 width) */}
-<<<<<<< HEAD
-        <div className="bg-white dark:bg-[#1E293B] p-6 rounded-2xl border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex flex-col justify-between min-h-[220px]">
-          <div className="space-y-3.5 text-left">
-            <div className="flex justify-between items-center pb-2.5 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
-              <span className="text-[13px] font-bold text-[#0B1C30] dark:text-white uppercase tracking-wider block">Today's Attendance</span>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#10B981] text-[10px] font-extrabold flex items-center gap-1 border border-[#10B981]/15">
-=======
         <div className="bg-white dark:bg-[#1E293B] p-6 rounded-2xl border border-[#E5E7EB] dark:border-[#334155] shadow-sm flex flex-col justify-between min-h-[220px]">
           <div className="space-y-3.5 text-left">
             <div className="flex justify-between items-center pb-2.5 border-b border-[#E5E7EB] dark:border-[#334155]">
               <span className="text-[13px] font-extrabold text-[#111827] dark:text-white uppercase tracking-wider block">Today's Attendance</span>
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#059669] dark:text-[#34D399] text-[10px] font-extrabold flex items-center gap-1 border border-[#10B981]/25">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                 <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping" /> Present
               </span>
             </div>
             
             <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs">
               <div>
-<<<<<<< HEAD
-                <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-semibold block">Status</span>
-                <span className="font-bold text-[#0B1C30] dark:text-[#F8FAFC] flex items-center gap-1 mt-0.5">
-=======
                 <span className="text-[10px] text-[#6B7280] dark:text-[#94A3B8] uppercase font-extrabold block">Status</span>
                 <span className="font-extrabold text-[#111827] dark:text-[#F8FAFC] flex items-center gap-1 mt-0.5">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                   Present
                 </span>
               </div>
               
               <div>
-<<<<<<< HEAD
-                <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-semibold block">Check-In</span>
-                <span className="font-bold text-[#545F73] dark:text-[#CBD5E1] block mt-0.5 font-mono">
-=======
                 <span className="text-[10px] text-[#6B7280] dark:text-[#94A3B8] uppercase font-extrabold block">Check-In</span>
                 <span className="font-bold text-[#374151] dark:text-[#CBD5E1] block mt-0.5 font-mono">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                   {todayRecord?.checkInTime || todayRecord?.checkIn || '09:05 AM'}
                 </span>
               </div>
               
               <div className="col-span-2">
-<<<<<<< HEAD
-                <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-semibold block">Working Hours</span>
-                <span className="font-extrabold text-[#0B1C30] dark:text-[#F8FAFC] block mt-0.5 font-mono text-sm tracking-tight text-[#006A6A] dark:text-[#7DF5F5]">
-=======
                 <span className="text-[10px] text-[#6B7280] dark:text-[#94A3B8] uppercase font-extrabold block">Working Hours</span>
                 <span className="font-black text-[#006A6A] dark:text-[#7DF5F5] block mt-0.5 font-mono text-sm tracking-tight">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                   {liveWorkingTime}
                 </span>
               </div>
 
               <div className="col-span-2">
-<<<<<<< HEAD
-                <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-semibold block">Location</span>
-                <span className="font-bold text-[#545F73] dark:text-[#CBD5E1] block mt-0.5 whitespace-normal break-words leading-tight" title={todayRecord?.address || todayRecord?.checkInWarehouse || 'Pune Warehouse'}>
-=======
                 <span className="text-[10px] text-[#6B7280] dark:text-[#94A3B8] uppercase font-extrabold block">Location</span>
                 <span className="font-bold text-[#374151] dark:text-[#CBD5E1] block mt-0.5 whitespace-normal break-words leading-snug" title={todayRecord?.address || todayRecord?.checkInWarehouse || 'Pune Warehouse'}>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                   {todayRecord?.checkInWarehouse || todayRecord?.address || 'Pune Warehouse'}
                 </span>
               </div>
@@ -802,20 +634,12 @@ export const Home: React.FC = () => {
                 onClick={handleEndDuty}
                 isLoading={isEndingDuty}
                 variant="danger"
-<<<<<<< HEAD
-                className="w-full text-xs py-2.5 rounded-xl shadow-md shadow-red-900/10"
-=======
                 className="w-full text-xs py-2.5 rounded-xl shadow-md bg-red-600 hover:bg-red-700 text-white font-bold"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               >
                 <LogOut className="h-4 w-4 animate-pulse" /> End Duty
               </Button>
             ) : (
-<<<<<<< HEAD
-              <div className="text-center py-2.5 text-xs font-bold text-slate-400 bg-[#F8F9FF] dark:bg-slate-800/20 border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 rounded-xl">
-=======
               <div className="text-center py-2.5 text-xs font-bold text-[#6B7280] dark:text-[#94A3B8] bg-[#F9FAFB] dark:bg-slate-800/40 border border-[#E5E7EB] dark:border-[#334155] rounded-xl">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                 Shift Duty Completed
               </div>
             )}
@@ -823,28 +647,6 @@ export const Home: React.FC = () => {
         </div>
       </div>
 
-<<<<<<< HEAD
-      {/* Row 1: KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { name: "Today's Assignments", val: driverTrips.length, sub: "Cargo runs", trend: "0% deviation", color: "text-[#006A6A] dark:text-[#7DF5F5]", bg: "bg-[#EFF4FF] dark:bg-slate-800" },
-          { name: "Completed Runs", val: completedTrips.length, sub: "Deliveries closed", trend: "+12% this week", color: "text-[#10B981] dark:text-[#34D399]", bg: "bg-[#DCFCE7] dark:bg-emerald-950/20" },
-          { name: "Active Run Status", val: activeTrip ? activeTrip.status : 'None', sub: activeTrip?.tripNumber || '--', trend: "Real-time updates", color: "text-[#F59E0B] dark:text-[#FBBF24]", bg: "bg-[#FEF3C7] dark:bg-amber-950/20" },
-          { name: "Distance Covered", val: `${340} km`, sub: "This week's log", trend: "Target: 500km", color: "text-[#006A6A] dark:text-[#7DF5F5]", bg: "bg-[#006A6A]/10 dark:bg-[#006A6A]/20" },
-          { name: "Fuel Remaining", val: `${driverVehicle?.fuelLevel || 78}%`, sub: "Diesel yard status", trend: "Good range", color: "text-[#F59E0B] dark:text-[#FBBF24]", bg: "bg-[#FEF3C7] dark:bg-amber-950/20" },
-          { name: "Duty Hours", val: "7.5 hrs", sub: "Shift time logging", trend: "Under safety limits", color: "text-[#0284C7] dark:text-[#38BDF8]", bg: "bg-[#E0F2FE] dark:bg-sky-950/20" },
-          { name: "Deliveries Completed", val: completedTrips.length, sub: "Consignments handed", trend: "100% success", color: "text-[#10B981] dark:text-[#34D399]", bg: "bg-[#DCFCE7] dark:bg-emerald-950/20" },
-          { name: "Pending Deliveries", val: driverTrips.filter(t => t.status !== 'Completed').length, sub: "Awaiting dispatch", trend: "Action required", color: "text-[#BA1A1A] dark:text-[#FCA5A5]", bg: "bg-[#FFDAD4] dark:bg-red-950/20" },
-        ].map((card, idx) => (
-          <div key={idx} className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div className={`p-3.5 rounded-xl shrink-0 ${card.bg} ${card.color}`}>
-              <Truck className="h-6 w-6" />
-            </div>
-            <div>
-              <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#94A3B8] uppercase tracking-tight block">{card.name}</span>
-              <h4 className="text-lg font-bold text-[#0B1C30] dark:text-[#F8FAFC] mt-0.5 whitespace-normal break-words leading-tight">{card.val}</h4>
-              <p className="text-[11px] text-[#6D7A79] dark:text-[#94A3B8] mt-0.5 font-bold">{card.sub} • <span className="text-emerald-600 dark:text-emerald-400">{card.trend}</span></p>
-=======
       {/* ── 4. KPI Cards Grid ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         {[
@@ -865,27 +667,17 @@ export const Home: React.FC = () => {
               <span className="text-[11px] font-extrabold text-[#6B7280] dark:text-[#94A3B8] uppercase tracking-tight block">{card.name}</span>
               <h4 className="text-[17px] font-black text-[#111827] dark:text-[#F8FAFC] mt-0.5 whitespace-normal break-words leading-tight">{card.val}</h4>
               <p className="text-[11px] text-[#4B5563] dark:text-[#94A3B8] mt-0.5 font-semibold">{card.sub} • <span className="text-emerald-600 dark:text-emerald-400 font-bold">{card.trend}</span></p>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             </div>
           </div>
         ))}
       </div>
 
-<<<<<<< HEAD
-      {/* Row 2: GPS Vector Map (70%) + Telemetry Panel (30%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Interactive GPS map */}
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm lg:col-span-2 space-y-4">
-          <div className="flex justify-between items-center border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-3 text-left">
-            <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 flex items-center gap-2">
-=======
       {/* ── 5. GPS Vector Map & Telemetry Panel ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* GPS map container */}
         <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm lg:col-span-2 space-y-4">
           <div className="flex justify-between items-center border-b border-[#E5E7EB] dark:border-[#334155] pb-3 text-left">
             <h4 className="text-[15px] font-extrabold text-[#111827] dark:text-slate-100 flex items-center gap-2">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               <Compass className="h-5 w-5 text-[#006A6A] animate-spin-slow" /> Interactive Route Navigation
             </h4>
             <Badge variant="info">Speed: 64 km/h</Badge>
@@ -935,64 +727,26 @@ export const Home: React.FC = () => {
 
             <div className="relative z-10 bg-slate-900/90 backdrop-blur-md rounded-xl p-3.5 text-white border border-slate-800 flex justify-between items-center text-left">
               <div className="text-xs">
-<<<<<<< HEAD
-                <p className="text-[10px] text-slate-400">Destination Point</p>
-                <p className="font-bold whitespace-normal break-words leading-tight max-w-[220px]">{activeTrip?.dropLocation || 'Distribution Center'}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] text-slate-400">ETA Clock</p>
-                <p className="font-bold font-mono text-[#14B8A6]">{activeTrip?.eta || '16:45 PM'}</p>
-=======
                 <p className="text-[10px] text-slate-400 font-bold">Destination Point</p>
                 <p className="font-extrabold whitespace-normal break-words leading-tight max-w-[220px]">{activeTrip?.dropLocation || 'Distribution Center'}</p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] text-slate-400 font-bold">ETA Clock</p>
                 <p className="font-extrabold font-mono text-[#14B8A6]">{activeTrip?.eta || '16:45 PM'}</p>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               </div>
             </div>
           </div>
         </div>
 
         {/* Telemetry panel */}
-<<<<<<< HEAD
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm space-y-5 flex flex-col justify-between">
-          <div>
-            <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 mb-4 pb-3 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 flex items-center gap-2 text-left uppercase tracking-wide">
-=======
         <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-5 flex flex-col justify-between">
           <div>
             <h4 className="text-[15px] font-extrabold text-[#111827] dark:text-slate-100 mb-4 pb-3 border-b border-[#E5E7EB] dark:border-[#334155] flex items-center gap-2 text-left uppercase tracking-wide">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               <Activity className="h-5 w-5 text-[#006A6A]" /> Active Trip Telemetry
             </h4>
 
             <div className="space-y-4 text-left">
               <div className="flex justify-between items-center text-xs">
-<<<<<<< HEAD
-                <span className="text-[#6D7A79] dark:text-[#94A3B8] font-semibold">Consignment Code</span>
-                <span className="font-mono font-bold text-slate-700 dark:text-[#CBD5E1]">{activeTrip?.tripNumber || 'None'}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#6D7A79] dark:text-[#94A3B8] font-semibold">Trip Stage Status</span>
-                <Badge variant="warning">{activeTrip?.status || 'Idle'}</Badge>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#6D7A79] dark:text-[#94A3B8] font-semibold">Odometer Reading</span>
-                <span className="font-bold text-slate-700 dark:text-[#CBD5E1] font-mono">{(driverVehicle?.odometer || 48200).toLocaleString()} km</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#6D7A79] dark:text-[#94A3B8] font-semibold">Fuel Level</span>
-                <span className="font-bold text-slate-700 dark:text-[#CBD5E1] font-mono">{driverVehicle?.fuelLevel || 78}%</span>
-              </div>
-              <div className="space-y-1.5 pt-2">
-                <div className="flex justify-between text-[11px] font-bold text-[#6D7A79] dark:text-[#94A3B8]">
-                  <span>Trip Progress</span>
-                  <span>{activeTrip ? `${Math.max(10, 100 - Math.floor(activeTrip.distanceRemaining / 4.8))}%` : '0%'}</span>
-                </div>
-                <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-=======
                 <span className="text-[#4B5563] dark:text-[#94A3B8] font-bold">Consignment Code</span>
                 <span className="font-mono font-extrabold text-[#111827] dark:text-[#CBD5E1]">{activeTrip?.tripNumber || 'None'}</span>
               </div>
@@ -1014,7 +768,6 @@ export const Home: React.FC = () => {
                   <span>{activeTrip ? `${Math.max(10, 100 - Math.floor(activeTrip.distanceRemaining / 4.8))}%` : '0%'}</span>
                 </div>
                 <div className="w-full h-2 bg-[#F3F4F6] dark:bg-slate-800 rounded-full overflow-hidden">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                   <div 
                     className="h-full bg-[#006A6A] rounded-full transition-all duration-300"
                     style={{ width: `${activeTrip ? Math.max(10, 100 - Math.floor(activeTrip.distanceRemaining / 4.8)) : 0}%` }}
@@ -1024,15 +777,6 @@ export const Home: React.FC = () => {
             </div>
           </div>
 
-<<<<<<< HEAD
-          <div className="bg-[#F8F9FF] dark:bg-[#0F172A]/60 rounded-xl p-4 border border-[#E5EEFF]/80 dark:border-[#334155]/60 space-y-2 text-left shadow-sm">
-            <h5 className="text-[11px] font-bold text-[#0B1C30] dark:text-[#F8FAFC] flex items-center gap-1.5">
-              <Award className="h-4 w-4 text-emerald-600" /> Safety Score Card
-            </h5>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-[#6D7A79] dark:text-[#94A3B8]">Weekly Driver Rating</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">98.4% (Class A)</span>
-=======
           <div className="bg-[#F9FAFB] dark:bg-[#0F172A]/60 rounded-xl p-4 border border-[#E5E7EB] dark:border-[#334155]/60 space-y-2 text-left shadow-sm">
             <h5 className="text-[11px] font-extrabold text-[#111827] dark:text-[#F8FAFC] flex items-center gap-1.5">
               <Award className="h-4 w-4 text-emerald-600" /> Safety Score Card
@@ -1040,54 +784,28 @@ export const Home: React.FC = () => {
             <div className="flex justify-between items-center text-xs">
               <span className="text-[#4B5563] dark:text-[#94A3B8] font-medium">Weekly Driver Rating</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">100% (Class A)</span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             </div>
           </div>
         </div>
       </div>
 
-<<<<<<< HEAD
-      {/* Row 3: Today's Dispatch Schedule summary */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm space-y-4">
-        <div className="flex justify-between items-center pb-2 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
-          <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 uppercase tracking-wide">Today's Dispatch Schedule</h4>
-          <span className="text-[11px] bg-[#F8F9FF] dark:bg-slate-800 border border-[#E5EEFF] dark:border-[#334155] text-[#6D7A79] dark:text-[#94A3B8] font-bold px-3 py-1 rounded-full">
-=======
       {/* ── 6. Today's Dispatch Schedule ── */}
       <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-4">
         <div className="flex justify-between items-center pb-2 border-b border-[#E5E7EB] dark:border-[#334155]">
           <h4 className="text-[15px] font-extrabold text-[#111827] dark:text-slate-100 uppercase tracking-wide">Today's Dispatch Schedule</h4>
           <span className="text-[11px] bg-[#F9FAFB] dark:bg-slate-800 border border-[#E5E7EB] dark:border-[#334155] text-[#4B5563] dark:text-[#94A3B8] font-bold px-3 py-1 rounded-full">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             {driverTrips.length} active assignments
           </span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {driverTrips.slice(0, 3).map((trip, idx) => (
-<<<<<<< HEAD
-            <div key={idx} className="p-4 border border-[#E5EEFF] dark:border-[#334155] rounded-xl space-y-3.5 hover:bg-[#F8F9FF]/50 dark:hover:bg-slate-800/40 transition-colors text-left shadow-sm">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-[#0B1C30] dark:text-[#F8FAFC]">{trip.tripNumber}</span>
-=======
             <div key={idx} className="p-4 border border-[#E5E7EB] dark:border-[#334155] rounded-xl space-y-3.5 hover:bg-[#F9FAFB] dark:hover:bg-slate-800/40 transition-colors text-left shadow-sm bg-white dark:bg-[#1E293B]">
               <div className="flex justify-between items-center text-xs">
                 <span className="font-bold text-[#111827] dark:text-[#F8FAFC]">{trip.tripNumber}</span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                 <Badge variant={trip.status === 'Completed' ? 'success' : trip.status === 'In Transit' ? 'info' : 'warning'}>
                   {trip.status}
                 </Badge>
               </div>
-<<<<<<< HEAD
-              <div className="text-xs space-y-1 text-[#6D7A79] dark:text-[#94A3B8]">
-                <p className="font-semibold text-[#545F73] dark:text-[#CBD5E1] block">{trip.pickupLocation} → {trip.dropLocation}</p>
-                <p className="text-[11px] text-[#6D7A79] dark:text-[#94A3B8] font-bold block mt-0.5">Material: {trip.material} ({trip.weight})</p>
-              </div>
-              <div className="flex justify-between items-center pt-2.5 border-t border-[#E5EEFF] dark:border-[#334155] text-[11px] font-bold">
-                <span className="text-[#6D7A79] dark:text-[#94A3B8]">ETA: <span className="font-semibold font-mono text-[#545F73] dark:text-[#CBD5E1]">{trip.eta}</span></span>
-                <a
-                  href={`tel:${trip.customerPhone}`}
-                  className="text-[#006A6A] dark:text-[#7DF5F5] font-bold hover:underline flex items-center gap-0.5"
-=======
               <div className="text-xs space-y-1 text-[#4B5563] dark:text-[#94A3B8]">
                 <p className="font-bold text-[#111827] dark:text-[#CBD5E1] block">{trip.pickupLocation} → {trip.dropLocation}</p>
                 <p className="text-[11px] text-[#6B7280] dark:text-[#94A3B8] font-bold block mt-0.5">Material: {trip.material} ({trip.weight})</p>
@@ -1097,7 +815,6 @@ export const Home: React.FC = () => {
                 <a
                   href={`tel:${trip.customerPhone}`}
                   className="text-[#006A6A] dark:text-[#7DF5F5] font-extrabold hover:underline flex items-center gap-0.5"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                 >
                   <Phone className="h-3 w-3" /> Call Client
                 </a>
@@ -1107,21 +824,12 @@ export const Home: React.FC = () => {
         </div>
       </div>
 
-<<<<<<< HEAD
-      {/* Row 6: Live Shift Activity Timeline */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm space-y-6 text-left">
-        <h4 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 uppercase tracking-wide">Operator Shift Checkpoint Logs</h4>
-        
-        <div className="relative pl-6 space-y-6">
-          <div className="absolute left-[7px] top-1.5 bottom-1.5 w-[2px] bg-[#E5EEFF] dark:bg-[#334155]" />
-=======
       {/* ── 7. Shift Checkpoint Timeline ── */}
       <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-6 text-left">
         <h4 className="text-[15px] font-extrabold text-[#111827] dark:text-slate-100 uppercase tracking-wide">Operator Shift Checkpoint Logs</h4>
         
         <div className="relative pl-6 space-y-6">
           <div className="absolute left-[7px] top-1.5 bottom-1.5 w-[2px] bg-[#E5E7EB] dark:bg-[#334155]" />
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
           {[
             { title: "Trip Started", desc: `Departed from Pune Warehouse yard`, time: "08:12 AM", active: true },
@@ -1132,15 +840,6 @@ export const Home: React.FC = () => {
           ].map((mile, index) => (
             <div key={index} className="relative flex justify-between items-start gap-4">
               <span className={`absolute -left-[24px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#1E293B] ${
-<<<<<<< HEAD
-                mile.active ? 'bg-[#006A6A] dark:bg-[#7DF5F5] ring-4 ring-[#006A6A]/10 dark:ring-[#7DF5F5]/10' : 'bg-[#EFF4FF] dark:bg-[#111827] border border-[#E5EEFF] dark:border-[#334155]'
-              }`} />
-              <div className="space-y-1 text-left">
-                <h5 className="text-xs font-bold text-[#0B1C30] dark:text-[#F8FAFC]">{mile.title}</h5>
-                <p className="text-[11px] text-[#6D7A79] dark:text-[#94A3B8] font-semibold">{mile.desc}</p>
-              </div>
-              <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] font-mono shrink-0 font-bold">{mile.time}</span>
-=======
                 mile.active ? 'bg-[#006A6A] dark:bg-[#7DF5F5] ring-4 ring-[#006A6A]/10 dark:ring-[#7DF5F5]/10' : 'bg-[#F3F4F6] dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#334155]'
               }`} />
               <div className="space-y-1 text-left">
@@ -1148,25 +847,16 @@ export const Home: React.FC = () => {
                 <p className="text-[11px] text-[#4B5563] dark:text-[#94A3B8] font-medium">{mile.desc}</p>
               </div>
               <span className="text-[10px] text-[#6B7280] dark:text-[#94A3B8] font-mono shrink-0 font-bold">{mile.time}</span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             </div>
           ))}
         </div>
       </div>
 
-<<<<<<< HEAD
-      {/* Row 7: Analytics charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Chart 1: Area Chart */}
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm md:col-span-2 space-y-4 text-left">
-          <h5 className="text-[13px] font-bold text-[#0B1C30] dark:text-slate-100 uppercase tracking-wide">Weekly Odometer Runs (km)</h5>
-=======
       {/* ── 8. Analytics Charts ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Chart 1: Area Chart */}
         <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm md:col-span-2 space-y-4 text-left">
           <h5 className="text-[13px] font-extrabold text-[#111827] dark:text-slate-100 uppercase tracking-wide">Weekly Odometer Runs (km)</h5>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={weeklyDistData} margin={{ left: -25, top: 10 }}>
@@ -1176,13 +866,8 @@ export const Home: React.FC = () => {
                     <stop offset="95%" stopColor="#006A6A" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-<<<<<<< HEAD
-                <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#667085" }} stroke="rgba(11,28,48,0.08)" />
-                <YAxis tick={{ fontSize: 10, fill: "#667085" }} stroke="rgba(11,28,48,0.08)" />
-=======
                 <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#4B5563" }} stroke="rgba(0,0,0,0.1)" />
                 <YAxis tick={{ fontSize: 10, fill: "#4B5563" }} stroke="rgba(0,0,0,0.1)" />
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                 <Tooltip />
                 <Area type="monotone" dataKey="distance" stroke="#006A6A" fillOpacity={1} fill="url(#areaColor)" strokeWidth={2} />
               </AreaChart>
@@ -1191,15 +876,6 @@ export const Home: React.FC = () => {
         </div>
 
         {/* Chart 2: Bar Chart */}
-<<<<<<< HEAD
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm space-y-4 text-left">
-          <h5 className="text-[13px] font-bold text-[#0B1C30] dark:text-slate-100 uppercase tracking-wide">Monthly Completed Trips</h5>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyTripsData} margin={{ left: -25, top: 10 }}>
-                <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#667085" }} stroke="rgba(11,28,48,0.08)" />
-                <YAxis tick={{ fontSize: 10, fill: "#667085" }} stroke="rgba(11,28,48,0.08)" />
-=======
         <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-4 text-left">
           <h5 className="text-[13px] font-extrabold text-[#111827] dark:text-slate-100 uppercase tracking-wide">Monthly Completed Trips</h5>
           <div className="h-48">
@@ -1207,7 +883,6 @@ export const Home: React.FC = () => {
               <BarChart data={monthlyTripsData} margin={{ left: -25, top: 10 }}>
                 <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#4B5563" }} stroke="rgba(0,0,0,0.1)" />
                 <YAxis tick={{ fontSize: 10, fill: "#4B5563" }} stroke="rgba(0,0,0,0.1)" />
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                 <Tooltip />
                 <Bar dataKey="runs" fill="#14B8A6" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -1216,13 +891,8 @@ export const Home: React.FC = () => {
         </div>
 
         {/* Chart 3: Pie Chart */}
-<<<<<<< HEAD
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm space-y-4 text-left">
-          <h5 className="text-[13px] font-bold text-[#0B1C30] dark:text-slate-100 uppercase tracking-wide">Performance Delivery Score</h5>
-=======
         <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-4 text-left">
           <h5 className="text-[13px] font-extrabold text-[#111827] dark:text-slate-100 uppercase tracking-wide">Performance Delivery Score</h5>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
           <div className="h-48 flex justify-center items-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -1249,15 +919,6 @@ export const Home: React.FC = () => {
       {/* Delay log stop modal */}
       <Modal isOpen={stopModalOpen} onClose={() => setStopModalOpen(false)} title="Log Transit Delay Stop" size="md">
         <div className="space-y-4 text-left">
-<<<<<<< HEAD
-          <p className="text-xs text-[#6D7A79]">Select the operational block delay reason to log GPS status telemetry.</p>
-          <div className="space-y-1.5 text-left">
-            <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Reason for Stop</label>
-            <select
-              value={selectedReason}
-              onChange={e => setSelectedReason(e.target.value)}
-              className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
-=======
           <p className="text-xs text-[#4B5563] dark:text-[#94A3B8]">Select the operational block delay reason to log GPS status telemetry.</p>
           <div className="space-y-1.5 text-left">
             <label className="text-[13px] font-extrabold text-[#111827] dark:text-[#CBD5E1] uppercase">Reason for Stop</label>
@@ -1265,7 +926,6 @@ export const Home: React.FC = () => {
               value={selectedReason}
               onChange={e => setSelectedReason(e.target.value)}
               className="w-full px-4 h-12 text-sm border border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#111827] text-[#111827] dark:text-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             >
               <option>Traffic Congestion</option>
               <option>Vehicle Servicing / Flat Tyre</option>
@@ -1274,11 +934,7 @@ export const Home: React.FC = () => {
               <option>Extreme Weather Halts</option>
             </select>
           </div>
-<<<<<<< HEAD
-          <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
-=======
           <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5E7EB] dark:border-[#334155]">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             <Button variant="outline" onClick={() => setStopModalOpen(false)}>
               Cancel
             </Button>
@@ -1301,15 +957,6 @@ export const Home: React.FC = () => {
       {/* Break Selection Modal */}
       <Modal isOpen={breakModalOpen} onClose={() => setBreakModalOpen(false)} title="Start Break Authorization" size="md">
         <div className="space-y-4 text-left">
-<<<<<<< HEAD
-          <p className="text-xs text-[#6D7A79]">Select the type of break to capture and log duty tracking telemetry.</p>
-          <div className="space-y-1.5 text-left">
-            <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Break Category</label>
-            <select
-              value={breakType}
-              onChange={e => setBreakType(e.target.value)}
-              className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
-=======
           <p className="text-xs text-[#4B5563] dark:text-[#94A3B8]">Select the type of break to capture and log duty tracking telemetry.</p>
           <div className="space-y-1.5 text-left">
             <label className="text-[13px] font-extrabold text-[#111827] dark:text-[#CBD5E1] uppercase">Break Category</label>
@@ -1317,7 +964,6 @@ export const Home: React.FC = () => {
               value={breakType}
               onChange={e => setBreakType(e.target.value)}
               className="w-full px-4 h-12 text-sm border border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#111827] text-[#111827] dark:text-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             >
               <option value="Lunch Break">Lunch</option>
               <option value="Fuel Stop">Fuel Stop</option>
@@ -1330,29 +976,17 @@ export const Home: React.FC = () => {
           </div>
 
           <div className="space-y-1.5 text-left">
-<<<<<<< HEAD
-            <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Remarks / Notes</label>
-=======
             <label className="text-[13px] font-extrabold text-[#111827] dark:text-[#CBD5E1] uppercase">Remarks / Notes</label>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             <textarea
               value={breakRemarks}
               onChange={e => setBreakRemarks(e.target.value)}
               placeholder="Provide context or comments for break log..."
               rows={2}
-<<<<<<< HEAD
-              className="w-full px-4 py-3 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium resize-none"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
-=======
               className="w-full px-4 py-3 text-sm border border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#111827] text-[#111827] dark:text-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium resize-none"
             />
           </div>
 
           <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5E7EB] dark:border-[#334155]">
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             <Button variant="outline" onClick={() => setBreakModalOpen(false)}>
               Cancel
             </Button>

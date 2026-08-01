@@ -1,9 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-<<<<<<< HEAD
-=======
 import User from '../models/User';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
 const JWT_SECRET = process.env.JWT_SECRET || 'smartops_super_secret_key_123!';
 
@@ -12,21 +9,6 @@ export interface AuthRequest extends Request {
   userRole?: string;
 }
 
-<<<<<<< HEAD
-export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    jwt.verify(token, JWT_SECRET, (err, decoded: any) => {
-      if (err) return res.status(403).json({ message: 'Invalid or expired token.' });
-      req.userId = decoded.id;
-      req.userRole = decoded.role;
-      next();
-    });
-  } else {
-    res.status(401).json({ message: 'Authorization header required.' });
-  }
-=======
 /**
  * JWT Authentication Middleware.
  *
@@ -145,5 +127,4 @@ export const ownerOnly = (req: AuthRequest, res: Response, next: NextFunction) =
     });
   }
   next();
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 };

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-﻿import React, { useState } from 'react';
-=======
 import React, { useState } from 'react';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { soundPlayer } from '../../utils/audio';
@@ -25,17 +21,10 @@ export const Profile: React.FC = () => {
   const { user, triggerNotification, addActivity } = useOperations();
   
   // Profile state
-<<<<<<< HEAD
-  const [fullName, setFullName] = useState(user?.fullName || 'Harsh Vardhan');
-  const [email, setEmail] = useState(user?.email || 'harsh.vardhan@smartops.com');
-  const [mobileNumber, setMobileNumber] = useState(user?.mobileNumber || '9876543210');
-  const [companyName, setCompanyName] = useState(user?.companyName || 'SmartOps Logistics Ltd.');
-=======
   const [fullName, setFullName] = useState(user?.fullName || 'Rehan Chaudhari');
   const [email, setEmail] = useState(user?.email || 'rehanchaudhari181133@gmail.com');
   const [mobileNumber, setMobileNumber] = useState(user?.mobileNumber || '');
   const [companyName, setCompanyName] = useState(user?.companyName || (user?.fullName ? `${user.fullName}'s Enterprise` : 'Enterprise Portal'));
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   
   // API credentials keys state
   const [apiKey, setApiKey] = useState('so_live_pk_51NzW2gSFmP3dE...');

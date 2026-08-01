@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-﻿import React, { Suspense, lazy } from 'react';
-=======
 import React, { Suspense, lazy } from 'react';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { OperationsProvider } from './store/OperationsContext';
 import { ThemeProvider } from './store/ThemeContext';
@@ -44,10 +40,7 @@ const OwnerWorkers = lazy(() => import('./pages/owner/Workers').then(m => ({ def
 const OwnerAnalytics = lazy(() => import('./pages/owner/Analytics').then(m => ({ default: m.Analytics })));
 const OwnerProfile = lazy(() => import('./pages/owner/Profile').then(m => ({ default: m.Profile })));
 const OwnerPOD = lazy(() => import('./pages/owner/POD').then(m => ({ default: m.POD })));
-<<<<<<< HEAD
-=======
 const OwnerTrips = lazy(() => import('./pages/owner/Trips').then(m => ({ default: m.OwnerTrips })));
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
 // Driver Pages (Lazy Loaded)
 const DriverDashboard = lazy(() => import('./pages/driver/Dashboard').then(m => ({ default: m.Home })));
@@ -85,10 +78,7 @@ const App: React.FC = () => {
                 <Route element={<DashboardLayout />}>
                   <Route index element={<OwnerDashboard />} />
                   <Route path="operations" element={<OwnerOperations />} />
-<<<<<<< HEAD
-=======
                   <Route path="trips" element={<OwnerTrips />} />
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
                   <Route path="inventory" element={<OwnerInventory />} />
                   <Route path="attendance" element={<OwnerAttendance />} />
                   <Route path="fleet" element={<OwnerFleet />} />
@@ -104,10 +94,7 @@ const App: React.FC = () => {
                 </Route>
               </Route>
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               {/* Driver Portal (Decoupled Dashboard Wrapper) */}
               <Route path="/driver" element={<DriverLayout />}>
                 <Route element={<DashboardLayout />}>

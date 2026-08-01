@@ -1,10 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-<<<<<<< HEAD
-export interface ITrip extends Document {
-  tripNumber: string;
-  vehicleNumber: string;
-=======
 export interface ITripStop {
   _id?: string;
   sequence: number;
@@ -33,7 +28,6 @@ export interface ITrip extends Document {
   tripNumber: string;
   vehicleNumber: string;
   vehicleId?: string;
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   driverId: string;
   driverName: string;
   pickupLocation: string;
@@ -43,9 +37,6 @@ export interface ITrip extends Document {
   material: string;
   weight: string;
   invoiceNumber: string;
-<<<<<<< HEAD
-  status: 'Assigned' | 'Accepted' | 'Started' | 'Reached Pickup' | 'Loaded' | 'In Transit' | 'Reached Destination' | 'Delivered' | 'Completed' | 'Delayed';
-=======
   priority: 'Normal' | 'High' | 'Urgent';
   cargo?: {
     description?: string;
@@ -57,20 +48,12 @@ export interface ITrip extends Document {
   expectedEnd?: Date;
   notes?: string;
   status: 'Draft' | 'Assigned' | 'Accepted' | 'Started' | 'Reached Pickup' | 'Loaded' | 'In Transit' | 'At Stop' | 'Reached Destination' | 'Delivered' | 'Completed' | 'Cancelled' | 'Delayed' | 'Incident Reported';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   eta: string;
   distanceRemaining: number;
   stopReason?: string;
   deliveryPhoto?: string[];
   signatureData?: string;
   timestamp: Date;
-<<<<<<< HEAD
-}
-
-const TripSchema = new Schema<ITrip>({
-  tripNumber: { type: String, required: true, unique: true },
-  vehicleNumber: { type: String, required: true },
-=======
   startedAt?: Date;
   completedAt?: Date;
   // Google Maps & GPS Telemetry Fields
@@ -108,29 +91,10 @@ const TripSchema = new Schema<ITrip>({
   tripNumber: { type: String, required: true, unique: true },
   vehicleNumber: { type: String, required: true },
   vehicleId: { type: String },
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   driverId: { type: String, required: true },
   driverName: { type: String, required: true },
   pickupLocation: { type: String, required: true },
   dropLocation: { type: String, required: true },
-<<<<<<< HEAD
-  customerName: { type: String, required: true },
-  customerPhone: { type: String, required: true },
-  material: { type: String, required: true },
-  weight: { type: String, required: true },
-  invoiceNumber: { type: String, required: true },
-  status: {
-    type: String,
-    enum: ['Assigned', 'Accepted', 'Started', 'Reached Pickup', 'Loaded', 'In Transit', 'Reached Destination', 'Delivered', 'Completed', 'Delayed'],
-    default: 'Assigned'
-  },
-  eta: { type: String, required: true },
-  distanceRemaining: { type: Number, required: true },
-  stopReason: { type: String },
-  deliveryPhoto: [{ type: String }],
-  signatureData: { type: String },
-  timestamp: { type: Date, default: Date.now }
-=======
   customerName: { type: String, default: 'Logistics Client' },
   customerPhone: { type: String, default: '9876543210' },
   material: { type: String, default: 'General Freight' },
@@ -191,7 +155,6 @@ const TripSchema = new Schema<ITrip>({
       accuracy: { type: Number }
     }
   ]
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 }, {
   timestamps: true
 });

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-﻿import React, { useState } from 'react';
-=======
 import React, { useState } from 'react';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { soundPlayer } from '../../utils/audio';
@@ -159,11 +155,7 @@ export const Notifications: React.FC = () => {
       <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-[20px] p-5 shadow-sm flex flex-col md:flex-row gap-4 items-center">
         {/* Search */}
         <div className="relative w-full md:w-80">
-<<<<<<< HEAD
-          <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-=======
           <Search className="search-icon-glow absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none z-10" />
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
           <input
             type="text"
             placeholder="Search alerts detail..."
@@ -172,11 +164,7 @@ export const Notifications: React.FC = () => {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-<<<<<<< HEAD
-            className="w-full pl-10 pr-4 h-11 text-xs border border-[#E5EEFF] dark:border-[#334155] rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] transition-all font-semibold placeholder-slate-400"
-=======
             className="navbar-search-input w-full pl-9 pr-3 h-9 text-xs border border-[#E5E7EB] dark:border-[#334155] rounded-full bg-slate-50/50 dark:bg-slate-800/40 text-[#111827] dark:text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#006A6A] focus:border-[#006A6A] transition-all font-medium"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
           />
         </div>
 

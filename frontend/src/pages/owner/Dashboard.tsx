@@ -1,18 +1,11 @@
-<<<<<<< HEAD
-﻿import React, { useState, useMemo } from 'react';
-=======
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { OperationsChart } from '../../components/charts/Charts';
 import { soundPlayer } from '../../utils/audio';
-<<<<<<< HEAD
-=======
 import { downloadReport } from '../../utils/downloadReport';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import {
   TrendingUp,
   Package,
@@ -91,11 +84,6 @@ const KPICard: React.FC<{
   sparklineData: number[];
   color: string;
   description: string;
-<<<<<<< HEAD
-}> = ({ id, title, value, change, isPositive, icon: Icon, sparklineData, color, description }) => {
-  return (
-    <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] p-6 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between items-stretch gap-4 group cursor-pointer text-left">
-=======
   onClick?: () => void;
 }> = ({ id, title, value, change, isPositive, icon: Icon, sparklineData, color, description, onClick }) => {
   return (
@@ -103,7 +91,6 @@ const KPICard: React.FC<{
       onClick={onClick}
       className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] p-6 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between items-stretch gap-4 group cursor-pointer text-left"
     >
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       <div className="flex justify-between items-start">
         <div className="space-y-1 min-w-0">
           <span className="text-[15px] font-semibold text-[#6D7A79] dark:text-[#94A3B8] tracking-tight block whitespace-normal break-words leading-tight">{title}</span>
@@ -134,10 +121,7 @@ const KPICard: React.FC<{
 };
 
 export const Dashboard: React.FC = () => {
-<<<<<<< HEAD
-=======
   const navigate = useNavigate();
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   const {
     user,
     vehicles,
@@ -152,8 +136,6 @@ export const Dashboard: React.FC = () => {
     addActivity
   } = useOperations();
 
-<<<<<<< HEAD
-=======
   const handleCardClick = (id: string) => {
     switch (id) {
       case 'rev':
@@ -191,7 +173,6 @@ export const Dashboard: React.FC = () => {
     }
   };
 
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   // Selected multi-metric chart trigger
   const [activeChartTab, setActiveChartTab] = useState<'Inventory' | 'Revenue' | 'Attendance' | 'Fleet' | 'Stock'>('Revenue');
 
@@ -219,71 +200,6 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-<<<<<<< HEAD
-  // Mock Orders dataset
-  const latestOrders = useMemo(() => [
-    { id: 'O-1002', item: 'Cold-Rolled Steel Coils', client: 'L&T Manufacturing', qty: 250, status: 'Completed', date: 'Today' },
-    { id: 'O-1003', item: 'Zinc Galvanized Plates', client: 'Tata Motors Pune', qty: 400, status: 'Pending', date: 'Today' },
-    { id: 'O-1004', item: 'Machine Fasteners (Grade 8)', client: 'Bajaj Auto', qty: 1500, status: 'Completed', date: 'Yesterday' },
-    { id: 'O-1005', item: 'Aluminium Extrusion Bars', client: 'Thermax India', qty: 350, status: 'Pending', date: 'Yesterday' }
-  ], []);
-
-  // Calculated Metrics for the 10 KPI Cards
-  const activeVehiclesCount = vehicles.filter(v => v.status === 'Moving').length;
-  const lowStockCount = inventory.filter(i => i.quantity <= i.minimumQuantity).length;
-  const presentCount = attendance.filter(a => a.attendanceStatus === 'Present' || a.attendanceStatus === 'Late').length;
-  const pendingTripsCount = trips.filter(t => t.status !== 'Completed').length;
-  const processedPayrollCount = payroll.filter(p => p.paymentStatus === 'Paid').length;
-  const totalEmployeesCount = 18; // Drivers + Managers + Supervisor
-
-  // Chart datasets generator
-  const revenueChartData = [
-    { name: 'Mon', revenue: 15400, cost: 7200, target: 12000 },
-    { name: 'Tue', revenue: 17200, cost: 7500, target: 12000 },
-    { name: 'Wed', revenue: 19100, cost: 8100, target: 14000 },
-    { name: 'Thu', revenue: 16500, cost: 7000, target: 14000 },
-    { name: 'Fri', revenue: 21000, cost: 9500, target: 15000 },
-    { name: 'Sat', revenue: 12200, cost: 5800, target: 10000 },
-    { name: 'Sun', revenue: 11800, cost: 5400, target: 10000 }
-  ];
-
-  const inventoryChartData = [
-    { name: 'Mon', itemsIn: 450, itemsOut: 432 },
-    { name: 'Tue', itemsIn: 520, itemsOut: 468 },
-    { name: 'Wed', itemsIn: 610, itemsOut: 490 },
-    { name: 'Thu', itemsIn: 380, itemsOut: 440 },
-    { name: 'Fri', itemsIn: 720, itemsOut: 512 },
-    { name: 'Sat', itemsIn: 300, itemsOut: 360 },
-    { name: 'Sun', itemsIn: 290, itemsOut: 345 }
-  ];
-
-  const attendanceChartData = [
-    { name: 'Mon', present: 14, late: 2 },
-    { name: 'Tue', present: 15, late: 1 },
-    { name: 'Wed', present: 16, late: 0 },
-    { name: 'Thu', present: 13, late: 3 },
-    { name: 'Fri', present: 15, late: 1 },
-    { name: 'Sat', present: 8, late: 0 },
-    { name: 'Sun', present: 6, late: 0 }
-  ];
-
-  const fleetChartData = [
-    { name: 'Mon', moving: 6, idle: 3, delayed: 1 },
-    { name: 'Tue', moving: 8, idle: 2, delayed: 0 },
-    { name: 'Wed', moving: 7, idle: 2, delayed: 1 },
-    { name: 'Thu', moving: 5, idle: 4, delayed: 1 },
-    { name: 'Fri', moving: 9, idle: 1, delayed: 0 },
-    { name: 'Sat', moving: 4, idle: 6, delayed: 0 },
-    { name: 'Sun', moving: 3, idle: 7, delayed: 0 }
-  ];
-
-  const stockSafetyChartData = [
-    { name: 'Coils', safetyQty: 100, currentQty: 140 },
-    { name: 'Plates', safetyQty: 150, currentQty: 180 },
-    { name: 'Fasteners', safetyQty: 500, currentQty: 320 }, // Low Stock
-    { name: 'Bars', safetyQty: 80, currentQty: 95 }
-  ];
-=======
   // Safe array references to prevent blank page crashes
   const safeTrips = trips || [];
   const safeVehicles = vehicles || [];
@@ -391,7 +307,6 @@ export const Dashboard: React.FC = () => {
     }));
   }, [safeInventory]);
 
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
   // Actions
   const handleCreateTask = (e: React.FormEvent) => {
@@ -411,12 +326,6 @@ export const Dashboard: React.FC = () => {
   };
 
   const handleExport = (format: 'PDF' | 'Excel') => {
-<<<<<<< HEAD
-    triggerNotification(
-      'System Alert',
-      'Export Dispatched',
-      `Calculated operational reports successfully compiled. Exported file: smartops_export_${activeTableTab.toLowerCase()}.${format === 'PDF' ? 'pdf' : 'xlsx'}`,
-=======
     let headers: string[] = [];
     let rows: (string | number)[][] = [];
 
@@ -453,7 +362,6 @@ export const Dashboard: React.FC = () => {
       'System Alert',
       'File Saved to Device',
       `Exported smartops_${activeTableTab.toLowerCase()}_report.${format === 'PDF' ? 'pdf' : 'csv'} to your device.`,
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
       'Info'
     );
     addActivity('Data Export', `Downloaded ${activeTableTab} table in ${format} format`, 'fleet');
@@ -511,15 +419,9 @@ export const Dashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-[#0B1C30] via-[#0D2A4A] to-[#0A1828] p-8 md:p-10 rounded-[24px] text-white shadow-lg border border-[#E5EEFF]/80 dark:border-[#334155]/60 text-left animate-fade-in">
         <div className="space-y-2">
           <span className="text-[13px] font-bold text-[#14B8A6] tracking-widest uppercase">Admin Executive Console</span>
-<<<<<<< HEAD
-          <h2 className="text-[42px] font-extrabold tracking-tight leading-none text-white">Hello, {user?.fullName || 'Harsh Vardhan'}</h2>
-          <p className="text-slate-400 text-[15px] leading-relaxed max-w-2xl font-medium pt-1">
-            Logistics dashboards and telemetry channels are synchronized. Branch operations in Pune, Mumbai and Bangalore are actively reporting.
-=======
           <h2 className="text-[42px] font-extrabold tracking-tight leading-none text-white">Welcome back, {user?.fullName || 'Owner'}</h2>
           <p className="text-slate-400 text-[15px] leading-relaxed max-w-2xl font-medium pt-1">
             Role: <span className="text-[#14B8A6] font-bold">{user?.role || 'Owner'}</span> · Email: <span className="text-white font-semibold">{user?.email || 'rehanchaudhari181133@gmail.com'}</span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 shrink-0">
@@ -547,15 +449,6 @@ export const Dashboard: React.FC = () => {
         <KPICard
           id="rev"
           title="Gross Revenue"
-<<<<<<< HEAD
-          value="â‚¹1.28L"
-          description="Total simulated revenue"
-          change="+12.4%"
-          isPositive={true}
-          icon={DollarSign}
-          sparklineData={[11000, 13400, 12000, 15000, 16800, 18500, 21000]}
-          color="#10B981"
-=======
           value={`₹${totalInventoryRevenue.toLocaleString()}`}
           description="Total inventory value"
           change=""
@@ -564,100 +457,58 @@ export const Dashboard: React.FC = () => {
           sparklineData={[0, 0, 0, 0, 0, 0, totalInventoryRevenue]}
           color="#10B981"
           onClick={() => handleCardClick('rev')}
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         />
         <KPICard
           id="fleet"
           title="Active Vehicles"
           value={`${activeVehiclesCount}/${vehicles.length}`}
           description="Trucks moving transit cargo"
-<<<<<<< HEAD
-          change="+4"
-          isPositive={true}
-          icon={Truck}
-          sparklineData={[2, 3, 3, 2, 4, 3, activeVehiclesCount]}
-          color="#006A6A"
-=======
           change=""
           isPositive={true}
           icon={Truck}
           sparklineData={[0, 0, 0, 0, 0, 0, activeVehiclesCount]}
           color="#006A6A"
           onClick={() => handleCardClick('fleet')}
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         />
         <KPICard
           id="stock"
           title="Safety Low Stock"
           value={lowStockCount}
           description="Critical safety replenishment"
-<<<<<<< HEAD
-          change="-2"
-          isPositive={true}
-          icon={Package}
-          sparklineData={[6, 5, 5, 4, 3, 3, lowStockCount]}
-          color="#F59E0B"
-=======
           change=""
           isPositive={true}
           icon={Package}
           sparklineData={[0, 0, 0, 0, 0, 0, lowStockCount]}
           color="#F59E0B"
           onClick={() => handleCardClick('stock')}
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         />
         <KPICard
           id="att"
           title="Workers Present"
           value={`${presentCount}/${totalEmployeesCount}`}
           description="Daily check-in logs active"
-<<<<<<< HEAD
-          change="92%"
-          isPositive={true}
-          icon={Users}
-          sparklineData={[12, 14, 15, 13, 15, 14, presentCount]}
-          color="#14B8A6"
-=======
           change=""
           isPositive={true}
           icon={Users}
           sparklineData={[0, 0, 0, 0, 0, 0, presentCount]}
           color="#14B8A6"
           onClick={() => handleCardClick('att')}
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         />
         <KPICard
           id="total"
           title="Total Employees"
           value={totalEmployeesCount}
           description="Roster registry headcount"
-<<<<<<< HEAD
-          change="Stable"
-          isPositive={true}
-          icon={Users}
-          sparklineData={[18, 18, 18, 18, 18, 18, 18]}
-          color="#8B5CF6"
-=======
           change=""
           isPositive={true}
           icon={Users}
           sparklineData={[0, 0, 0, 0, 0, 0, totalEmployeesCount]}
           color="#8B5CF6"
           onClick={() => handleCardClick('total')}
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         />
         <KPICard
           id="del"
           title="Completed Deliveries"
-<<<<<<< HEAD
-          value="142"
-          description="SLA orders reached yard"
-          change="+15.2%"
-          isPositive={true}
-          icon={CheckCircle}
-          sparklineData={[110, 115, 120, 128, 132, 138, 142]}
-          color="#10B981"
-=======
           value={trips.filter(t => t.status === 'Completed').length}
           description="SLA orders reached yard"
           change=""
@@ -666,87 +517,54 @@ export const Dashboard: React.FC = () => {
           sparklineData={[0, 0, 0, 0, 0, 0, trips.filter(t => t.status === 'Completed').length]}
           color="#10B981"
           onClick={() => handleCardClick('del')}
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         />
         <KPICard
           id="ship"
           title="Pending Shipments"
           value={pendingTripsCount}
           description="Unload cargo in transit"
-<<<<<<< HEAD
-          change="+1"
-          isPositive={false}
-          icon={ShoppingCart}
-          sparklineData={[3, 2, 4, 2, 3, 2, pendingTripsCount]}
-          color="#3b82f6"
-=======
           change=""
           isPositive={false}
           icon={ShoppingCart}
           sparklineData={[0, 0, 0, 0, 0, 0, pendingTripsCount]}
           color="#3b82f6"
           onClick={() => handleCardClick('ship')}
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         />
         <KPICard
           id="alerts"
           title="Critical Alerts"
           value={notifications.filter(n => !n.read).length}
           description="Active unresolved warnings"
-<<<<<<< HEAD
-          change="-5"
-          isPositive={true}
-          icon={Bell}
-          sparklineData={[12, 10, 8, 9, 6, 5, notifications.filter(n => !n.read).length]}
-          color="#EF4444"
-=======
           change=""
           isPositive={true}
           icon={Bell}
           sparklineData={[0, 0, 0, 0, 0, 0, notifications.filter(n => !n.read).length]}
           color="#EF4444"
           onClick={() => handleCardClick('alerts')}
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         />
         <KPICard
           id="salary"
           title="Salary Disbursed"
           value={`${processedPayrollCount}/${payroll.length}`}
           description="Staff payroll structures paid"
-<<<<<<< HEAD
-          change="100%"
-          isPositive={true}
-          icon={Wallet}
-          sparklineData={[3, 4, 5, 6, 6, 6, processedPayrollCount]}
-          color="#EC4899"
-=======
           change=""
           isPositive={true}
           icon={Wallet}
           sparklineData={[0, 0, 0, 0, 0, 0, processedPayrollCount]}
           color="#EC4899"
           onClick={() => handleCardClick('salary')}
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         />
         <KPICard
           id="inc"
           title="Incident Status"
           value="Normal"
           description="Telemetry alerts status"
-<<<<<<< HEAD
-          change="Stable"
-          isPositive={true}
-          icon={CheckCircle}
-          sparklineData={[1, 1, 1, 1, 1, 1, 1]}
-          color="#10B981"
-=======
           change=""
           isPositive={true}
           icon={CheckCircle}
           sparklineData={[0, 0, 0, 0, 0, 0, 0]}
           color="#10B981"
           onClick={() => handleCardClick('inc')}
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
         />
       </div>
 
@@ -846,25 +664,15 @@ export const Dashboard: React.FC = () => {
             {/* Widget 1: Inventory Health */}
             <div className="flex justify-between items-center text-[15px] font-medium text-[#545F73]">
               <span className="text-[#545F73] dark:text-[#CBD5E1]">Inventory Health</span>
-<<<<<<< HEAD
-              <span className="px-2.5 py-0.5 text-xs bg-[#10B981]/10 text-[#10B981] font-bold rounded-full border border-[#10B981]/15">Optimal 94%</span>
-=======
               <span className="px-2.5 py-0.5 text-xs bg-[#10B981]/10 text-[#10B981] font-bold rounded-full border border-[#10B981]/15">
                 {inventory.length > 0 ? 'Optimal 100%' : '0%'}
               </span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             </div>
 
             {/* Widget 2: Stock Availability */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-[13px] font-bold text-[#6D7A79]">
                 <span>Stock Availability</span>
-<<<<<<< HEAD
-                <span className="text-[#0B1C30] dark:text-[#CBD5E1]">86% Capacity</span>
-              </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div className="bg-[#006A6A] h-full rounded-full" style={{ width: '86%' }} />
-=======
                 <span className="text-[#0B1C30] dark:text-[#CBD5E1]">
                   {inventory.length > 0 ? Math.min(100, inventory.length * 10) : 0}% Capacity
                 </span>
@@ -874,7 +682,6 @@ export const Dashboard: React.FC = () => {
                   className="bg-[#006A6A] h-full rounded-full"
                   style={{ width: `${inventory.length > 0 ? Math.min(100, inventory.length * 10) : 0}%` }}
                 />
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               </div>
             </div>
 
@@ -882,12 +689,6 @@ export const Dashboard: React.FC = () => {
             <div className="space-y-1.5">
               <div className="flex justify-between text-[13px] font-bold text-[#6D7A79]">
                 <span>Storage Utilization</span>
-<<<<<<< HEAD
-                <span className="text-[#0B1C30] dark:text-[#CBD5E1]">68% Filled</span>
-              </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div className="bg-[#14B8A6] h-full rounded-full" style={{ width: '68%' }} />
-=======
                 <span className="text-[#0B1C30] dark:text-[#CBD5E1]">
                   {inventory.length > 0 ? Math.min(100, inventory.length * 8) : 0}% Filled
                 </span>
@@ -897,7 +698,6 @@ export const Dashboard: React.FC = () => {
                   className="bg-[#14B8A6] h-full rounded-full"
                   style={{ width: `${inventory.length > 0 ? Math.min(100, inventory.length * 8) : 0}%` }}
                 />
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               </div>
             </div>
 
@@ -910,25 +710,15 @@ export const Dashboard: React.FC = () => {
             {/* Widget 5: Driver Availability */}
             <div className="flex justify-between items-center text-[15px] font-medium">
               <span className="text-[#545F73] dark:text-[#CBD5E1]">Driver On-Duty status</span>
-<<<<<<< HEAD
-              <span className="px-2.5 py-0.5 text-xs bg-[#10B981]/10 text-[#10B981] font-bold rounded-full border border-[#10B981]/15">14 Active</span>
-=======
               <span className="px-2.5 py-0.5 text-xs bg-[#10B981]/10 text-[#10B981] font-bold rounded-full border border-[#10B981]/15">
                 {presentCount} Active
               </span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             </div>
 
             {/* Widget 6: Vehicle Health */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-[13px] font-bold text-[#6D7A79]">
                 <span>Vehicle Health Tracker</span>
-<<<<<<< HEAD
-                <span className="text-[#0B1C30] dark:text-[#CBD5E1]">92% Clean SLA</span>
-              </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div className="bg-[#10B981] h-full rounded-full" style={{ width: '92%' }} />
-=======
                 <span className="text-[#0B1C30] dark:text-[#CBD5E1]">
                   {vehicles.length > 0 ? '100% Clean SLA' : '0% SLA'}
                 </span>
@@ -938,7 +728,6 @@ export const Dashboard: React.FC = () => {
                   className="bg-[#10B981] h-full rounded-full"
                   style={{ width: `${vehicles.length > 0 ? 100 : 0}%` }}
                 />
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               </div>
             </div>
           </div>
@@ -977,21 +766,13 @@ export const Dashboard: React.FC = () => {
           <div className="flex flex-wrap gap-2.5 items-center w-full lg:w-auto">
             {/* Search */}
             <div className="relative flex-1 lg:flex-none">
-<<<<<<< HEAD
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-=======
               <Search className="search-icon-glow absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none z-10" />
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               <input
                 type="text"
                 placeholder={`Search ${activeTableTab.toLowerCase()}...`}
                 value={tableSearch}
                 onChange={e => setTableSearch(e.target.value)}
-<<<<<<< HEAD
-                className="w-full lg:w-60 pl-9 pr-4 py-2 h-10 text-xs border border-[#E5EEFF] dark:border-[#334155] rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-700 dark:text-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] transition-all font-medium"
-=======
                 className="navbar-search-input w-full lg:w-60 pl-9 pr-3 h-9 text-xs border border-[#E5E7EB] dark:border-[#334155] rounded-full bg-slate-50/50 dark:bg-slate-800/40 text-[#111827] dark:text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#006A6A] focus:border-[#006A6A] transition-all font-medium"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               />
             </div>
 

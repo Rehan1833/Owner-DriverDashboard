@@ -1,15 +1,4 @@
 import { Router } from 'express';
-<<<<<<< HEAD
-import { 
-  getTrips, 
-  createTrip, 
-  updateTrip, 
-  getActiveTrip, 
-  getTripById, 
-  startTrip, 
-  updateLocation, 
-  completeTrip 
-=======
 import {
   getTrips,
   createTrip,
@@ -28,7 +17,6 @@ import {
   reportIncident,
   completeTrip,
   cancelTrip
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 } from '../controllers/tripController';
 import { authenticateJWT } from '../middleware/authMiddleware';
 
@@ -38,17 +26,6 @@ router.use(authenticateJWT);
 
 router.get('/', getTrips);
 router.get('/active', getActiveTrip);
-<<<<<<< HEAD
-router.get('/:id', getTripById);
-router.post('/', createTrip);
-router.put('/start', startTrip);
-router.put('/update-location', updateLocation);
-router.put('/complete', completeTrip);
-router.put('/:id', updateTrip);
-
-export default router;
-
-=======
 router.get('/:id/live-tracking', getTripLiveTracking);
 router.get('/:id/location-history', getLocationHistory);
 router.get('/:id', getTripById);
@@ -72,4 +49,3 @@ router.put('/:id/cancel', cancelTrip);
 router.put('/:id', updateTrip);
 
 export default router;
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a

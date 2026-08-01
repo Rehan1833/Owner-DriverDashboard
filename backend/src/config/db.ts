@@ -11,8 +11,6 @@ export const connectDB = async () => {
     });
     
     console.log(`MongoDB Connected successfully: ${conn.connection.host}`);
-<<<<<<< HEAD
-=======
 
     // Clean up legacy/stale collection indexes (e.g., username_1)
     try {
@@ -27,7 +25,6 @@ export const connectDB = async () => {
     } catch (indexErr: any) {
       console.log('[DB INDEX SYNC] Legacy index check completed:', indexErr.message);
     }
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   } catch (err: any) {
     console.error(`MongoDB connection warning: ${err.message}`);
     console.log('Backend will operate in simulated in-memory state fallback if connection fails.');

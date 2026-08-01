@@ -8,19 +8,10 @@ main .bg-white.rounded-3xl,
 main .bg-white.rounded-2xl,
 main .glass-panel,
 .glass-panel {
-<<<<<<< HEAD
-  background: rgba(255, 255, 255, 0.78) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  border: 1px solid var(--color-border) !important;
-  border-radius: 18px !important;
-  box-shadow: 0 1px 3px 0 rgba(11, 28, 48, 0.03), 0 4px 12px -4px rgba(11, 28, 48, 0.04) !important;
-=======
   background: #FFFFFF !important;
   border: 1px solid var(--color-border) !important;
   border-radius: 16px !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 2px 8px -2px rgba(0, 0, 0, 0.04) !important;
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1), border-color 280ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
@@ -28,17 +19,6 @@ main .bg-white.rounded-3xl:hover,
 main .bg-white.rounded-2xl:hover,
 main .glass-panel:hover,
 .glass-panel:hover {
-<<<<<<< HEAD
-  transform: translateY(-3px) !important;
-  box-shadow: 0 8px 24px -4px rgba(0, 106, 106, 0.08), 0 4px 12px -4px rgba(11, 28, 48, 0.04) !important;
-  border-color: rgba(0, 106, 106, 0.18) !important;
-}
-
-/* Dark mode cards */
-.dark main .dark\:bg-slate-900.rounded-3xl,
-.dark main .dark\:bg-slate-900.rounded-2xl,
-.dark main .dark\:bg-\[1E293B\].rounded-2xl {
-=======
   transform: translateY(-4px) !important;
   box-shadow: 0 12px 30px -4px rgba(0, 106, 106, 0.1), 0 0 16px 2px rgba(0, 163, 163, 0.2) !important;
   border-color: #00A3A3 !important;
@@ -51,15 +31,10 @@ main .glass-panel:hover,
 .dark main .dark\:bg-slate-900.rounded-3xl,
 .dark main .dark\:bg-slate-900.rounded-2xl,
 .dark main .dark\:bg-\[\#1E293B\].rounded-2xl {
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   background: rgba(30, 41, 59, 0.78) !important;
   backdrop-filter: blur(16px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
   border: 1px solid #334155 !important;
-<<<<<<< HEAD
-  border-radius: 18px !important;
-  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3) !important;
-=======
   border-radius: 16px !important;
   box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3) !important;
   transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1), border-color 280ms cubic-bezier(0.16, 1, 0.3, 1) !important;
@@ -83,7 +58,6 @@ main .glass-panel:hover,
   transform: translateY(-4px) !important;
   border-color: #7DF5F5 !important;
   box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.4), 0 0 20px 3px rgba(125, 245, 245, 0.28) !important;
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 }
 
 /* ── Tables — floating container ── */
@@ -104,27 +78,13 @@ button.bg-teal-600 {
   font-weight: 600 !important;
   border-radius: 12px !important;
   box-shadow: 0 2px 8px 0 rgba(0, 106, 106, 0.15) !important;
-<<<<<<< HEAD
-  transition: transform 200ms ease, box-shadow 200ms ease, opacity 200ms ease !important;
-=======
   transition: transform 200ms ease, box-shadow 200ms ease, opacity 200ms ease, border-color 200ms ease !important;
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 }
 
 .btn-primary:hover,
 button.bg-primary:hover,
 button.bg-teal-600:hover {
   transform: translateY(-2px) !important;
-<<<<<<< HEAD
-  box-shadow: 0 6px 20px 0 rgba(0, 106, 106, 0.25) !important;
-  opacity: 0.95 !important;
-}
-
-/* ── Secondary Button ── */
-.btn-secondary,
-button.bg-secondary,
-button.border-slate-700 {
-=======
   box-shadow: 0 6px 20px 0 rgba(0, 106, 106, 0.25), 0 0 12px 3px rgba(0, 163, 163, 0.4) !important;
   opacity: 0.95 !important;
 }
@@ -138,24 +98,12 @@ button.border-slate-700 {
 /* ── Secondary Button ── */
 .btn-secondary,
 button.bg-secondary {
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   background: #FFFFFF !important;
   border: 1px solid var(--color-border) !important;
   color: #545F73 !important;
   font-weight: 600 !important;
   border-radius: 12px !important;
   box-shadow: 0 1px 3px 0 rgba(11, 28, 48, 0.03) !important;
-<<<<<<< HEAD
-  transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease !important;
-}
-
-.btn-secondary:hover,
-button.bg-secondary:hover,
-button.border-slate-700:hover {
-  transform: translateY(-2px) !important;
-  background-color: #F8F9FF !important;
-  box-shadow: 0 4px 12px 0 rgba(11, 28, 48, 0.05) !important;
-=======
   transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease, border-color 200ms ease !important;
 }
 
@@ -171,7 +119,6 @@ button.bg-secondary:hover {
 .dark button.bg-secondary:hover {
   border-color: #7DF5F5 !important;
   box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.3), 0 0 12px 2px rgba(125, 245, 245, 0.3) !important;
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 }
 
 /* ── Danger Button ── */
@@ -183,21 +130,13 @@ button.bg-danger {
   font-weight: 600 !important;
   border-radius: 12px !important;
   box-shadow: 0 2px 8px 0 rgba(186, 26, 26, 0.15) !important;
-<<<<<<< HEAD
-  transition: transform 200ms ease, box-shadow 200ms ease !important;
-=======
   transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease !important;
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 }
 
 .btn-danger:hover,
 button.bg-danger:hover {
   transform: translateY(-2px) !important;
-<<<<<<< HEAD
-  box-shadow: 0 6px 20px 0 rgba(186, 26, 26, 0.25) !important;
-=======
   box-shadow: 0 6px 20px 0 rgba(186, 26, 26, 0.25), 0 0 12px 2px rgba(186, 26, 26, 0.35) !important;
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 }
 
 /* ── Status Pills ── */
@@ -324,8 +263,6 @@ input[type="checkbox"] {
 .dark *:focus-visible {
   outline-color: #7DF5F5;
 }
-<<<<<<< HEAD
-=======
 
 /* ── Fallback Text Readability & Dynamic Contrast Rules ── */
 /* 1. Force white/light text to black when on white/light backgrounds (excluding buttons & badges) */
@@ -470,4 +407,3 @@ input.navbar-search-input:focus {
   filter: drop-shadow(0 0 4px rgba(125, 245, 245, 0.8)) !important;
 }
 
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a

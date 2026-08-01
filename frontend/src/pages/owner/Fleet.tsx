@@ -1,21 +1,12 @@
-<<<<<<< HEAD
-﻿import React, { useState } from 'react';
-=======
 import React, { useState } from 'react';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { useOperations } from '../../store/OperationsContext';
 import { Table } from '../../components/tables/Table';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
-<<<<<<< HEAD
-import { Truck, MapPin, Gauge, ShieldAlert, Plus, Edit2, Trash2, Download, FileCheck, CheckCircle2, Clock, Users, UserCheck } from 'lucide-react';
-import { Trip, Vehicle } from '../../types';
-=======
 import { Truck, MapPin, Gauge, ShieldAlert, Plus, Edit2, Trash2, Download, FileCheck, CheckCircle2, Clock, Users, UserCheck, Navigation } from 'lucide-react';
 import { Trip, Vehicle } from '../../types';
 import { GoogleDriverMap } from '../../components/common/GoogleDriverMap';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
 export const Fleet: React.FC = () => {
   const { vehicles, trips, createVehicle, updateVehicle, deleteVehicle } = useOperations();
@@ -23,10 +14,7 @@ export const Fleet: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [selectedPODTrip, setSelectedPODTrip] = useState<Trip | null>(null);
-<<<<<<< HEAD
-=======
   const [trackingModalTrip, setTrackingModalTrip] = useState<Trip | null>(null);
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 
   const downloadPODPDF = (trip: Trip) => {
     alert(`Compiling Proof of Delivery PDF for ${trip.tripNumber}... Download started!`);
@@ -255,9 +243,6 @@ export const Fleet: React.FC = () => {
       accessor: (row: Trip) => {
         const hasPOD = row.status === 'Completed' || row.deliveryPhoto?.length || row.signatureData;
         return (
-<<<<<<< HEAD
-          <div className="flex gap-2">
-=======
           <div className="flex items-center gap-1.5">
             <Button
               variant="outline"
@@ -268,28 +253,19 @@ export const Fleet: React.FC = () => {
               <Navigation className="w-3 h-3 text-blue-500" />
               <span>Track Map</span>
             </Button>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             {hasPOD ? (
               <Button
                 variant="primary"
                 size="sm"
                 onClick={() => setSelectedPODTrip(row)}
-<<<<<<< HEAD
-                className="text-[10px] py-1 px-3.5 rounded-lg shadow-md shadow-teal-900/10 cursor-pointer"
-=======
                 className="text-[10px] py-1 px-3 rounded-lg shadow-md shadow-teal-900/10 cursor-pointer"
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
               >
                 View POD
               </Button>
             ) : (
-<<<<<<< HEAD
-              <span className="text-[11px] text-slate-400 dark:text-[#6D7A79] font-bold italic">In Progress</span>
-=======
               <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold bg-teal-50 dark:bg-teal-950/40 px-2 py-0.5 rounded border border-teal-200 dark:border-teal-800">
                 In Transit
               </span>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
             )}
           </div>
         );
@@ -738,8 +714,6 @@ export const Fleet: React.FC = () => {
           </div>
         )}
       </Modal>
-<<<<<<< HEAD
-=======
 
       {/* Live Driver Google Maps Tracking Modal */}
       <Modal
@@ -793,7 +767,6 @@ export const Fleet: React.FC = () => {
           </div>
         )}
       </Modal>
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
     </div>
   );
 };

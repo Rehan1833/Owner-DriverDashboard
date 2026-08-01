@@ -1,22 +1,12 @@
-<<<<<<< HEAD
-﻿import React, { useState } from 'react';
-=======
 import React, { useState } from 'react';
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
 import { useOperations } from '../../store/OperationsContext';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { FileText, FileSpreadsheet, Download, RefreshCw, Calendar } from 'lucide-react';
-<<<<<<< HEAD
-
-export const Reports: React.FC = () => {
-  const { triggerNotification } = useOperations();
-=======
 import { downloadReport } from '../../utils/downloadReport';
 
 export const Reports: React.FC = () => {
   const { triggerNotification, inventory, vehicles, payroll, attendance } = useOperations();
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   const [generating, setGenerating] = useState<string | null>(null);
 
   const reportOptions = [
@@ -32,17 +22,6 @@ export const Reports: React.FC = () => {
     if (!report) return;
 
     setGenerating(`${id}-${format}`);
-<<<<<<< HEAD
-    setTimeout(() => {
-      setGenerating(null);
-      triggerNotification(
-        'System Alert',
-        'Download Finished',
-        `Completed download of ${report.name} in ${format} format.`,
-        'Info'
-      );
-    }, 1800);
-=======
 
     setTimeout(() => {
       let headers: string[] = [];
@@ -85,7 +64,6 @@ export const Reports: React.FC = () => {
         'Info'
       );
     }, 600);
->>>>>>> 98a6f2e269eab87d20df8838bf300a778640a36a
   };
 
   return (
