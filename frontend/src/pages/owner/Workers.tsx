@@ -45,7 +45,7 @@ const formatDate = (iso: string | null) => {
 // ─── component ──────────────────────────────────────────────────────────────
 
 export const Workers: React.FC = () => {
-  const { triggerNotification, addActivity } = useOperations();
+  const { triggerNotification, addActivity, user, company } = useOperations();
 
   // ── real database state ──────────────────────────────────────────────────
   const [drivers, setDrivers] = useState<DriverRecord[]>([]);
@@ -163,6 +163,8 @@ export const Workers: React.FC = () => {
         password: newPassword,
         vehicleNumber: newVehicleNumber || undefined,
         licenseNumber: newLicenseNumber || undefined,
+        companyId: user?.companyId || company?.companyId,
+        companyName: user?.companyName || company?.companyName,
       });
       setAddModalOpen(false);
       playSound('Success');

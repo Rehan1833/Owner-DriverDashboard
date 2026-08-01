@@ -57,7 +57,8 @@ export const createPOD = async (req: AuthRequest, res: Response) => {
       remarks,
       latitude,
       longitude,
-      status: 'Pending'
+      status: 'Pending',
+      companyId: driverUser.companyId || req.companyId,
     });
 
     await newPOD.save();
@@ -79,6 +80,9 @@ export const getPODs = async (req: AuthRequest, res: Response) => {
     // Drivers can only see their own uploads
     if (req.userRole === 'Driver') {
       filter.driverId = req.userId;
+    } else if (req.companyId) {
+      // Owners can only see PODs from their company
+      filter.companyId = req.companyId;
     }
 
     // Query filters

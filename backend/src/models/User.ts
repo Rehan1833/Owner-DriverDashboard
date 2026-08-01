@@ -16,12 +16,15 @@ export interface IUser extends Document {
   verifiedAt?: Date;
   securityQuestion?: string;
   securityAnswerHash?: string;
+  // Company Reference — root entity for data isolation
+  companyId?: string;
   // Owner Fields
   companyName?: string;
   // Driver Fields
   driverId?: string;
   vehicleNumber?: string;
   licenseNumber?: string;
+  avatarUrl?: string;
   comparePassword: (password: string) => Promise<boolean>;
   compareSecurityAnswer: (answer: string) => Promise<boolean>;
 }
@@ -41,10 +44,12 @@ const UserSchema = new Schema<IUser>({
   verifiedAt: { type: Date },
   securityQuestion: { type: String },
   securityAnswerHash: { type: String },
+  companyId: { type: String, index: true, sparse: true },
   companyName: { type: String },
   driverId: { type: String, unique: true, sparse: true },
   vehicleNumber: { type: String },
-  licenseNumber: { type: String }
+  licenseNumber: { type: String },
+  avatarUrl: { type: String }
 }, {
   timestamps: true
 });

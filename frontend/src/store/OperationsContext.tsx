@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole, Vehicle, Trip, Task, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord } from '../types';
-import { mockTasks, mockNotifications, mockActivities } from '../api/mockData';
+import { User, UserRole, Vehicle, Trip, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord, Company } from '../types';
+import { mockNotifications, mockActivities } from '../api/mockData';
 import { api } from '../api/client';
 import { io } from 'socket.io-client';
+import { LogoutConfirmationModal } from '../components/common/LogoutConfirmationModal';
 
 interface OperationsContextType {
   user: User | null;
+  company: Company | null;
   vehicles: Vehicle[];
   trips: Trip[];
-  tasks: Task[];
   inventory: InventoryItem[];
   payroll: PayrollRecord[];
   attendance: AttendanceRecord[];
@@ -19,6 +20,10 @@ interface OperationsContextType {
   register: (payload: any) => Promise<{ success?: boolean; message: string; otpCode?: string; token?: string; user?: User }>;
   verifyOTP: (emailOrPayload: string | { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile'; otpCode: string }, code?: string) => Promise<{ message: string; token?: string; user?: User }>;
   resendOTP: (emailOrPayload: string | { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile' }) => Promise<{ success?: boolean; message: string; channel?: string; cooldownSeconds?: number }>;
+  isLogoutModalOpen: boolean;
+  isLoggingOut: boolean;
+  cancelLogout: () => void;
+  performLogout: () => void;
   logout: () => void;
   // Inventory CRUD
   createInventory: (item: Omit<InventoryItem, 'id'>) => Promise<void>;
@@ -71,13 +76,18 @@ interface OperationsContextType {
   cancelTrip: (tripId: string) => Promise<void>;
   updateTripStatus: (tripId: string, status: Trip['status'], details?: { stopReason?: string; signatureData?: string; photo?: string; deliveryPhoto?: string[] }) => Promise<void>;
 
-  // Dashboard compatibility helpers
-  createTask: (task: Omit<Task, 'id' | 'status' | 'progress'>) => void;
   approvePayroll: (id: string) => Promise<void>;
   // Helpers
   addActivity: (action: string, details: string, category: ActivityItem['category']) => void;
   triggerNotification: (type: SystemNotification['type'], title: string, message: string, severity?: SystemNotification['severity']) => void;
   markAllNotificationsRead: () => void;
+  updateProfile: (payload: {
+    fullName?: string;
+    email?: string;
+    mobileNumber?: string;
+    companyName?: string;
+    avatarUrl?: string;
+  }) => Promise<void>;
 }
 
 const OperationsContext = createContext<OperationsContextType | undefined>(undefined);
@@ -90,12 +100,14 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [payroll, setPayroll] = useState<PayrollRecord[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [company, setCompany] = useState<Company | null>(null);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Load Data on Mount & Auth State changes
   const refreshAllData = async () => {
@@ -112,6 +124,14 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setPayroll(salData);
       setVehicles(fltData);
       setTrips(trpData);
+
+      // Fetch company for Owner users
+      const savedUser = localStorage.getItem('smartops_user');
+      const currentUser: User | null = savedUser ? JSON.parse(savedUser) : null;
+      if (currentUser?.role === 'Owner') {
+        const companyData = await api.company.getMyCompany();
+        if (companyData) setCompany(companyData);
+      }
     } catch (err) {
       console.error('Data refreshing error:', err);
     }
@@ -234,9 +254,48 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem('smartops_user');
-    localStorage.removeItem('smartops_jwt');
+    setIsLogoutModalOpen(true);
+  };
+
+  const cancelLogout = () => {
+    if (!isLoggingOut) {
+      setIsLogoutModalOpen(false);
+    }
+  };
+
+  const performLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      // Clear React context states
+      setUser(null);
+      setCompany(null);
+      setVehicles([]);
+      setTrips([]);
+      setInventory([]);
+      setPayroll([]);
+      setAttendance([]);
+
+      // Clear tokens & storage
+      localStorage.removeItem('smartops_user');
+      localStorage.removeItem('smartops_jwt');
+      localStorage.removeItem('smartops_token');
+      localStorage.removeItem('smartops_owner_settings');
+      sessionStorage.clear();
+
+      // Clear cookies if applicable
+      if (document.cookie) {
+        document.cookie.split(";").forEach((c) => {
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+      }
+    } catch {
+      // Silent fallback
+    } finally {
+      setIsLoggingOut(false);
+      setIsLogoutModalOpen(false);
+      // Hard replace location to purge back button history access
+      window.location.replace('/login');
+    }
   };
 
   const triggerNotification = (
@@ -259,6 +318,20 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const markAllNotificationsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const updateProfile = async (payload: {
+    fullName?: string;
+    email?: string;
+    mobileNumber?: string;
+    companyName?: string;
+    avatarUrl?: string;
+  }) => {
+    const res = await api.auth.updateProfile(payload);
+    if (res.user) {
+      setUser(res.user);
+      localStorage.setItem('smartops_user', JSON.stringify(res.user));
+    }
   };
 
   const addActivity = (action: string, details: string, category: ActivityItem['category']) => {
@@ -462,18 +535,6 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return () => clearInterval(interval);
   }, [user, trips]);
 
-  const createTask = (taskData: Omit<Task, 'id' | 'status' | 'progress'>) => {
-    const newTask: Task = {
-      ...taskData,
-      id: `tk-${Date.now()}`,
-      status: 'Pending',
-      progress: 0
-    };
-    setTasks(prev => [newTask, ...prev]);
-    addActivity('Task Created', `Created task "${newTask.title}" for ${newTask.assignedTo}`, 'task');
-    triggerNotification('Task Assigned', 'New Operational Task', `Task "${newTask.title}" assigned to ${newTask.assignedTo}.`, 'Info');
-  };
-
   const approvePayroll = async (id: string) => {
     await updateSalary(id, { paymentStatus: 'Paid' });
   };
@@ -482,9 +543,9 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     <OperationsContext.Provider
       value={{
         user,
+        company,
         vehicles,
         trips,
-        tasks,
         inventory,
         payroll,
         attendance,
@@ -495,6 +556,10 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         register,
         verifyOTP,
         resendOTP,
+        isLogoutModalOpen,
+        isLoggingOut,
+        cancelLogout,
+        performLogout,
         logout,
         createInventory,
         updateInventory,
@@ -515,14 +580,15 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         createTrip,
         cancelTrip,
         updateTripStatus,
-        createTask,
         approvePayroll,
         addActivity,
         triggerNotification,
-        markAllNotificationsRead
+        markAllNotificationsRead,
+        updateProfile
       }}
     >
       {children}
+      <LogoutConfirmationModal />
     </OperationsContext.Provider>
   );
 };

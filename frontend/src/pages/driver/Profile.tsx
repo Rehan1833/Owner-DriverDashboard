@@ -5,9 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { User, Phone, Mail, Award, Lock, LogOut, ShieldAlert } from 'lucide-react';
 
 export const Profile: React.FC = () => {
-  const { vehicles, user, triggerNotification } = useOperations();
+  const { vehicles, user, logout, triggerNotification } = useOperations();
   const navigate = useNavigate();
-  const driverVehicle = vehicles[0]; // container MH-12
+  const driverVehicle = vehicles[0] || { vehicleNumber: user?.vehicleNumber || 'MH-12-QW-9874' };
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -38,7 +38,7 @@ export const Profile: React.FC = () => {
   };
 
   const handleLogout = () => {
-    navigate('/login');
+    logout();
   };
 
   return (

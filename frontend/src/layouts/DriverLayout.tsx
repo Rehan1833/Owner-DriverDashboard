@@ -30,12 +30,14 @@ export const DriverLayout: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
+  const userRole = (user.role || '').toLowerCase();
+
   // Allow Drivers and Owners to access the portal layout
-  if (user.role !== 'Driver' && user.role !== 'Owner') {
+  if (userRole !== 'driver' && userRole !== 'owner') {
     return <Navigate to="/login" replace />;
   }
 
-  const showAttendanceModal = user.role === 'Driver' && !isModalDismissed;
+  const showAttendanceModal = userRole === 'driver' && !isModalDismissed;
 
   return (
     <div className="flex bg-white dark:bg-[#0F172A] min-h-screen text-[#111827] dark:text-[#F8FAFC] relative transition-colors duration-200">

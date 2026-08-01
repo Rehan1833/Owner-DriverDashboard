@@ -12,6 +12,8 @@ const toDriverDTO = (user: any) => ({
   email: user.email || '',
   mobileNumber: user.mobileNumber || '',
   role: user.role,
+  companyId: user.companyId || null,
+  companyName: user.companyName || null,
   driverId: user.driverId || null,
   vehicleNumber: user.vehicleNumber || null,
   licenseNumber: user.licenseNumber || null,
@@ -49,6 +51,18 @@ export const getDrivers = async (req: AuthRequest, res: Response) => {
 
     // Build MongoDB filter — always restrict to role = 'Driver'
     const filter: Record<string, any> = { role: 'Driver' };
+
+    // ── DATA ISOLATION: Only return drivers belonging to this Owner's company ──
+    // req.companyId is extracted from the JWT by authenticateJWT middleware.
+    // If the token is a legacy token (pre-companyId), fall back to a DB lookup.
+    let ownerCompanyId = req.companyId;
+    if (!ownerCompanyId && req.userId) {
+      const ownerUser = await User.findById(req.userId).select('companyId').lean();
+      ownerCompanyId = (ownerUser as any)?.companyId || undefined;
+    }
+    if (ownerCompanyId) {
+      filter.companyId = ownerCompanyId;
+    }
 
     // Search across fullName, email, mobileNumber (case-insensitive)
     if (search && search.trim() !== '') {

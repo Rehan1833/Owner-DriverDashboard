@@ -4,6 +4,7 @@
    ================================================================ */
 
 :root {
+  color-scheme: light dark;
   /* ── Surfaces ── */
   --color-bg: #FFFFFF;
   --color-card: #FFFFFF;
@@ -33,10 +34,20 @@
   --color-tertiary-container: #00A0BB;
 
   /* ── Text ── */
-  --color-text-primary: #111827;
-  --color-text-secondary: #4B5563;
-  --color-text-muted: #6B7280;
+  --color-text-primary: #0B1C30;
+  --color-text-secondary: #334155;
+  --color-text-muted: #64748B;
   --color-text-disabled: #9CA3AF;
+
+  /* ── Modal & Dialog Tokens ── */
+  --color-modal-bg: #FFFFFF;
+  --color-text-heading: #0B1C30;
+  --color-text-body: #334155;
+  --color-text-subtle: #64748B;
+  --color-text-warning: #92400E;
+  --color-bg-warning: #FEF3C7;
+  --color-border-warning: #FDE68A;
+  --color-text-danger: #B91C1C;
 
   /* ── Outline & Borders ── */
   --color-outline: #6B7280;
@@ -69,6 +80,7 @@
    DARK MODE
    ================================================================ */
 .dark {
+  color-scheme: dark;
   /* ── Surfaces ── */
   --color-bg: #0F172A;
   --color-card: #1E293B;
@@ -98,10 +110,20 @@
   --color-tertiary-container: #00687A;
 
   /* ── Text ── */
-  --color-text-primary: #FFFFFF;
-  --color-text-secondary: #FFFFFF;
-  --color-text-muted: #FFFFFF;
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #CBD5E1;
+  --color-text-muted: #94A3B8;
   --color-text-disabled: #64748B;
+
+  /* ── Modal & Dialog Tokens ── */
+  --color-modal-bg: #111827;
+  --color-text-heading: #F8FAFC;
+  --color-text-body: #CBD5E1;
+  --color-text-subtle: #94A3B8;
+  --color-text-warning: #FCD34D;
+  --color-bg-warning: rgba(120, 53, 15, 0.4);
+  --color-border-warning: rgba(245, 158, 11, 0.3);
+  --color-text-danger: #FCA5A5;
 
   /* ── Outline & Borders ── */
   --color-outline: #94A3B8;

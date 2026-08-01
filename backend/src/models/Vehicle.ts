@@ -12,6 +12,9 @@ export interface IVehicle extends Document {
   mileage: number;
   currentLocation: string;
   status: 'Moving' | 'Idle' | 'Maintenance' | 'Delayed';
+  // Multi-tenant isolation
+  companyId?: string;
+  ownerId?: string;
 }
 
 const VehicleSchema = new Schema<IVehicle>({
@@ -25,7 +28,10 @@ const VehicleSchema = new Schema<IVehicle>({
   fuelType: { type: String, required: true },
   mileage: { type: Number, required: true },
   currentLocation: { type: String, required: true },
-  status: { type: String, enum: ['Moving', 'Idle', 'Maintenance', 'Delayed'], default: 'Idle' }
+  status: { type: String, enum: ['Moving', 'Idle', 'Maintenance', 'Delayed'], default: 'Idle' },
+  // Multi-tenant isolation
+  companyId: { type: String, index: true, sparse: true },
+  ownerId: { type: String, index: true, sparse: true },
 }, {
   timestamps: true
 });

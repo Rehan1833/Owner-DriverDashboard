@@ -383,7 +383,7 @@ export const Login: React.FC = () => {
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="rehanchaudhari181133@gmail.com"
+                  placeholder="name@company.com"
                   style={inputBase}
                   onFocus={onFocus}
                   onBlur={onBlur}

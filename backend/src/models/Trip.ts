@@ -68,6 +68,9 @@ export interface ITrip extends Document {
   pickupCoordinates?: { lat: number; lng: number };
   dropCoordinates?: { lat: number; lng: number };
   locationHistory?: ILocationPoint[];
+  // Multi-tenant isolation
+  companyId?: string;
+  ownerId?: string;
 }
 
 const TripStopSchema = new Schema<ITripStop>({
@@ -154,7 +157,10 @@ const TripSchema = new Schema<ITrip>({
       heading: { type: Number },
       accuracy: { type: Number }
     }
-  ]
+  ],
+  // Multi-tenant isolation
+  companyId: { type: String, index: true, sparse: true },
+  ownerId: { type: String, index: true, sparse: true },
 }, {
   timestamps: true
 });

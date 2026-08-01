@@ -244,12 +244,12 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({ onSuccess }) =
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
             transition={{ type: 'spring', duration: 0.5 }}
-            className="relative w-full max-w-lg bg-white/80 dark:bg-[#1E293B]/80 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl border border-white/20 z-10 space-y-6 flex flex-col"
+            className="relative w-full max-w-lg bg-white dark:bg-[#111827] rounded-3xl p-6 md:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 z-10 space-y-6 flex flex-col modal-container"
           >
             {/* Header */}
             <div className="text-center space-y-1">
-              <h2 className="text-xl font-black text-slate-800 dark:text-white">Mark Today's Attendance</h2>
-              <p className="text-xs text-[#6D7A79] dark:text-[#94A3B8] font-medium">Please mark your attendance before starting today's work.</p>
+              <h2 className="text-2xl font-bold text-[#0B1C30] dark:text-[#F8FAFC] modal-title">Mark Today's Attendance</h2>
+              <p className="text-[15px] text-[#334155] dark:text-[#CBD5E1] font-medium modal-description">Please mark your attendance before starting today's work.</p>
             </div>
 
             {/* Profile Row */}

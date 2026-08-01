@@ -7,6 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'smartops_super_secret_key_123!';
 export interface AuthRequest extends Request {
   userId?: string;
   userRole?: string;
+  companyId?: string;
 }
 
 /**
@@ -61,6 +62,7 @@ export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunct
   // Token is cryptographically valid — extract payload
   req.userId = decoded.id;
   req.userRole = decoded.role;
+  req.companyId = decoded.companyId || undefined;
 
   // Attempt optional DB verification (email-verification enforcement)
   // Use a short timeout so a slow/disconnected DB does NOT block authenticated requests

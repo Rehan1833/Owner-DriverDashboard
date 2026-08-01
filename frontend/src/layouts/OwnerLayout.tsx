@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Navbar } from '../components/layout/Navbar';
@@ -13,7 +13,9 @@ export const OwnerLayout: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role === 'Driver') {
+  const userRole = (user.role || '').toLowerCase();
+
+  if (userRole === 'driver') {
     return <Navigate to="/driver" replace />;
   }
 

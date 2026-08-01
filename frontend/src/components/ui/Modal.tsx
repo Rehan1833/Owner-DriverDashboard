@@ -1,4 +1,4 @@
-﻿import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
@@ -17,15 +17,19 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   size = 'md'
 }) => {
-  // Prevent body scroll when open
+  // Prevent body scroll when open; restore on close
   useEffect(() => {
     if (isOpen) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     };
   }, [isOpen]);
 
@@ -39,7 +43,7 @@ export const Modal: React.FC<ModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -51,6 +55,8 @@ export const Modal: React.FC<ModalProps> = ({
 
           {/* Modal Content */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
             initial={{ 
               opacity: 0, 
               y: window.innerWidth < 640 ? '100%' : 15,
@@ -67,26 +73,27 @@ export const Modal: React.FC<ModalProps> = ({
               scale: window.innerWidth < 640 ? 1 : 0.98
             }}
             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className={`relative w-full bg-white dark:bg-[#1E293B] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden ${sizes[size]} z-10 border border-[#E5EEFF] dark:border-[#334155]`}
+            className={`relative w-full bg-white dark:bg-[#111827] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden ${sizes[size]} z-10 border border-slate-200 dark:border-slate-800 modal-container`}
           >
             {/* Mobile Swipe Bar */}
             <div className="sm:hidden w-full flex justify-center pt-3 pb-1">
-              <div className="w-12 h-1.5 bg-[#CBDBF5] dark:bg-[#334155] rounded-full" onClick={onClose} />
+              <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full" onClick={onClose} />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4.5 border-b border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#1E293B]">
-              <h3 className="text-base font-bold text-[#0B1C30] dark:text-[#F8FAFC]">{title}</h3>
+            <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827]">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#F8FAFC] tracking-tight modal-title">{title}</h2>
               <button
                 onClick={onClose}
-                className="text-[#6D7A79] hover:text-[#0B1C30] dark:hover:text-white p-1.5 hover:bg-[#EFF4FF] dark:hover:bg-slate-800/60 rounded-lg transition-colors cursor-pointer"
+                aria-label="Close dialog"
+                className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-400"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-5 text-sm text-[#545F73] dark:text-[#CBD5E1]">
+            <div className="flex-1 overflow-y-auto px-6 py-5 text-[15px] text-[#334155] dark:text-[#CBD5E1] modal-body">
               {children}
             </div>
           </motion.div>

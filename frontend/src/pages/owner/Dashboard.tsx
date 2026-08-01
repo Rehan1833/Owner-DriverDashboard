@@ -32,44 +32,55 @@ import {
   MapPin,
   Calendar
 } from 'lucide-react';
-import { Task, SystemNotification, InventoryItem, AttendanceRecord, Vehicle, Trip, ActivityItem } from '../../types';
+import { SystemNotification, InventoryItem, AttendanceRecord, Vehicle, Trip, ActivityItem } from '../../types';
 
-// Sparkline Mini Chart Renderer with Soft Gradient
-const Sparkline: React.FC<{ data: number[]; color: string; id: string }> = ({ data, color, id }) => {
-  const width = 110;
-  const height = 36;
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min;
-  
-  const points = data
-    .map((val, idx) => {
-      const x = (idx / (data.length - 1)) * width;
-      const y = height - ((val - min) / (range || 1)) * (height - 6) - 3;
-      return `${x},${y}`;
-    })
-    .join(' ');
+// Circular Progress Ring Component
+const ProgressRing: React.FC<{
+  progress: number;
+  color: string;
+  size?: number;
+  strokeWidth?: number;
+}> = ({ progress, color, size = 42, strokeWidth = 4 }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (Math.min(Math.max(progress, 0), 100) / 100) * circumference;
 
-  const areaPoints = `${points} ${width},${height} 0,${height}`;
+  const isClassColor = color.startsWith('text-');
 
   return (
-    <svg width={width} height={height} className="overflow-visible">
-      <defs>
-        <linearGradient id={`sparkline-grad-${id}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity={0.15} />
-          <stop offset="100%" stopColor={color} stopOpacity={0.0} />
-        </linearGradient>
-      </defs>
-      <polygon points={areaPoints} fill={`url(#sparkline-grad-${id})`} />
-      <polyline
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        points={points}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <div className="relative flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        {/* Track circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          className="stroke-slate-100/50 dark:stroke-slate-800/40"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+        />
+        {/* Progress circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={isClassColor ? undefined : color}
+          className={`transition-all duration-500 ease-out ${isClassColor ? color.replace('text-', 'stroke-') : ''}`}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+        />
+      </svg>
+      {/* Percentage label in the center - uses matching dynamic color */}
+      <span 
+        className={`absolute text-[9px] font-extrabold ${isClassColor ? color : ''}`}
+        style={{ color: isClassColor ? undefined : color }}
+      >
+        {Math.round(progress)}%
+      </span>
+    </div>
   );
 };
 
@@ -81,39 +92,55 @@ const KPICard: React.FC<{
   change: string;
   isPositive: boolean;
   icon: React.ComponentType<any>;
-  sparklineData: number[];
+  progress: number;
   color: string;
   description: string;
   onClick?: () => void;
-}> = ({ id, title, value, change, isPositive, icon: Icon, sparklineData, color, description, onClick }) => {
+}> = ({ id, title, value, change, isPositive, icon: Icon, progress, color, description, onClick }) => {
   return (
     <div 
       onClick={onClick}
-      className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] p-6 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between items-stretch gap-4 group cursor-pointer text-left"
+      className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] p-5 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between items-stretch gap-4 group cursor-pointer text-left min-h-[175px] w-full overflow-hidden"
     >
-      <div className="flex justify-between items-start">
-        <div className="space-y-1 min-w-0">
-          <span className="text-[15px] font-semibold text-[#6D7A79] dark:text-[#94A3B8] tracking-tight block whitespace-normal break-words leading-tight">{title}</span>
-          <h4 className="text-[40px] font-extrabold text-[#0B1C30] dark:text-white leading-none tracking-tight">{value}</h4>
-        </div>
-        <div className="p-3 rounded-xl transition-all duration-300 shrink-0" style={{ backgroundColor: `${color}12`, color }}>
-          <Icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+      {/* Top Row: Title & Icon */}
+      <div className="flex justify-between items-start gap-2 min-w-0">
+        <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight whitespace-normal break-words leading-tight flex-1">
+          {title}
+        </span>
+        <div className="p-2 rounded-lg transition-all duration-300 shrink-0" style={{ backgroundColor: `${color}12`, color }}>
+          <Icon className="h-4.5 w-4.5 transition-transform duration-300 group-hover:scale-110" />
         </div>
       </div>
-      <div className="flex items-end justify-between pt-1">
-        <div className="space-y-1">
-          <div className="flex items-center gap-1">
-            {isPositive ? (
-              <ArrowUpRight className="h-4 w-4 text-[#10B981] shrink-0" />
-            ) : (
-              <ArrowDownRight className="h-4 w-4 text-[#EF4444] shrink-0" />
-            )}
-            <span className={`text-[13px] font-bold ${isPositive ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>{change}</span>
-          </div>
-          <p className="text-[13px] font-medium text-[#6D7A79] dark:text-[#94A3B8] whitespace-normal break-words leading-tight max-w-[150px]">{description}</p>
+
+      {/* Middle Row: Large Value */}
+      <div className="min-w-0 py-0.5">
+        <h4 
+          className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tight truncate w-full"
+          title={String(value)}
+        >
+          {value}
+        </h4>
+      </div>
+
+      {/* Bottom Row: Trend/Description & Progress Ring */}
+      <div className="flex items-end justify-between gap-2 pt-1 mt-auto">
+        <div className="min-w-0 flex-1">
+          {change && (
+            <div className="flex items-center gap-0.5 mb-0.5">
+              {isPositive ? (
+                <ArrowUpRight className="h-3.5 w-3.5 text-[#10B981] shrink-0" />
+              ) : (
+                <ArrowDownRight className="h-3.5 w-3.5 text-[#EF4444] shrink-0" />
+              )}
+              <span className={`text-[12px] font-bold ${isPositive ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>{change}</span>
+            </div>
+          )}
+          <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 leading-tight line-clamp-2" title={description}>
+            {description}
+          </p>
         </div>
-        <div className="shrink-0 pl-2">
-          <Sparkline id={id} data={sparklineData} color={color} />
+        <div className="shrink-0 pl-1">
+          <ProgressRing progress={progress} color={color} size={42} strokeWidth={4} />
         </div>
       </div>
     </div>
@@ -123,15 +150,14 @@ const KPICard: React.FC<{
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const {
-    user,
     vehicles,
     trips,
+    inventory,
     payroll,
     attendance,
-    inventory,
     activities,
+    user,
     notifications,
-    createTask,
     triggerNotification,
     addActivity
   } = useOperations();
@@ -139,7 +165,7 @@ export const Dashboard: React.FC = () => {
   const handleCardClick = (id: string) => {
     switch (id) {
       case 'rev':
-        navigate('/owner/analytics');
+        navigate('/owner/reports');
         break;
       case 'fleet':
         navigate('/owner/fleet');
@@ -160,7 +186,7 @@ export const Dashboard: React.FC = () => {
         navigate('/owner/fleet');
         break;
       case 'alerts':
-        navigate('/owner/notifications');
+        navigate('/owner/operations');
         break;
       case 'salary':
         navigate('/owner/payroll');
@@ -177,11 +203,7 @@ export const Dashboard: React.FC = () => {
   const [activeChartTab, setActiveChartTab] = useState<'Inventory' | 'Revenue' | 'Attendance' | 'Fleet' | 'Stock'>('Revenue');
 
   // Modals state
-  const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskAssigned, setNewTaskAssigned] = useState('Amit Patel (Supervisor)');
-  const [newTaskPriority, setNewTaskPriority] = useState<Task['priority']>('High');
 
   // Multi-table selection
   const [activeTableTab, setActiveTableTab] = useState<'Inventory' | 'Attendance' | 'Fleet' | 'Activities' | 'Notifications' | 'Orders'>('Inventory');
@@ -250,6 +272,50 @@ export const Dashboard: React.FC = () => {
     return safePayroll.reduce((sum, record) => sum + (record?.finalSalary ?? 0), 0);
   }, [safePayroll]);
 
+  // Calculate dynamic progress percentages for circular rings
+  const revenueProgress = useMemo(() => {
+    return totalInventoryRevenue > 0 ? Math.min(Math.round((totalInventoryRevenue / 500000) * 100), 100) : 0;
+  }, [totalInventoryRevenue]);
+
+  const activeVehiclesProgress = useMemo(() => {
+    return safeVehicles.length > 0 ? Math.round((activeVehiclesCount / safeVehicles.length) * 100) : 0;
+  }, [activeVehiclesCount, safeVehicles.length]);
+
+  const lowStockProgress = useMemo(() => {
+    return safeInventory.length > 0 ? Math.round((lowStockCount / safeInventory.length) * 100) : 0;
+  }, [lowStockCount, safeInventory.length]);
+
+  const attendanceProgress = useMemo(() => {
+    return totalEmployeesCount > 0 ? Math.round((presentCount / totalEmployeesCount) * 100) : 0;
+  }, [presentCount, totalEmployeesCount]);
+
+  const completedTripsProgress = useMemo(() => {
+    const completedCount = safeTrips.filter(t => t.status === 'Completed').length;
+    return safeTrips.length > 0 ? Math.round((completedCount / safeTrips.length) * 100) : 0;
+  }, [safeTrips]);
+
+  const pendingTripsProgress = useMemo(() => {
+    return safeTrips.length > 0 ? Math.round((pendingTripsCount / safeTrips.length) * 100) : 0;
+  }, [pendingTripsCount, safeTrips.length]);
+
+  const unreadNotificationsCount = safeNotifications.filter(n => !n.read).length;
+  const notificationsProgress = useMemo(() => {
+    return safeNotifications.length > 0 ? Math.round((unreadNotificationsCount / safeNotifications.length) * 100) : 0;
+  }, [unreadNotificationsCount, safeNotifications.length]);
+
+  const payrollProgress = useMemo(() => {
+    return safePayroll.length > 0 ? Math.round((processedPayrollCount / safePayroll.length) * 100) : 0;
+  }, [processedPayrollCount, safePayroll.length]);
+
+  const incidentsCount = useMemo(() => {
+    return safeActivities.filter(a => a.action.toLowerCase().includes('failed') || a.action.toLowerCase().includes('alert')).length;
+  }, [safeActivities]);
+
+  const incidentProgress = useMemo(() => {
+    return incidentsCount === 0 ? 100 : Math.max(100 - incidentsCount * 20, 0);
+  }, [incidentsCount]);
+
+
   const revenueChartData = useMemo(() => {
     const totalCost = totalInventoryCost + totalPayrollCost;
     const factors = [0.15, 0.18, 0.20, 0.16, 0.22, 0.05, 0.04];
@@ -309,21 +375,6 @@ export const Dashboard: React.FC = () => {
 
 
   // Actions
-  const handleCreateTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTaskTitle.trim()) return;
-
-    createTask({
-      title: newTaskTitle,
-      description: 'Critical business variance resolution duty.',
-      priority: newTaskPriority,
-      assignedTo: newTaskAssigned,
-      deadline: '2026-07-22'
-    });
-    setNewTaskTitle('');
-    setTaskModalOpen(false);
-    triggerAudio('Success');
-  };
 
   const handleExport = (format: 'PDF' | 'Excel') => {
     let headers: string[] = [];
@@ -419,27 +470,19 @@ export const Dashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-[#0B1C30] via-[#0D2A4A] to-[#0A1828] p-8 md:p-10 rounded-[24px] text-white shadow-lg border border-[#E5EEFF]/80 dark:border-[#334155]/60 text-left animate-fade-in">
         <div className="space-y-2">
           <span className="text-[13px] font-bold text-[#14B8A6] tracking-widest uppercase">Admin Executive Console</span>
-          <h2 className="text-[42px] font-extrabold tracking-tight leading-none text-white">Welcome back, {user?.fullName || 'Owner'}</h2>
-          <p className="text-slate-400 text-[15px] leading-relaxed max-w-2xl font-medium pt-1">
-            Role: <span className="text-[#14B8A6] font-bold">{user?.role || 'Owner'}</span> · Email: <span className="text-white font-semibold">{user?.email || 'rehanchaudhari181133@gmail.com'}</span>
+          <h2 className="text-[42px] font-extrabold tracking-tight leading-none text-[#FFFFFF]">Welcome back, {user?.fullName || 'Owner'}</h2>
+          <p className="text-[#FFFFFF] text-[15px] leading-relaxed max-w-2xl font-medium pt-1">
+            Role: <span className="text-[#14B8A6] font-bold">{user?.role || 'Owner'}</span> · Email: <span className="text-[#FFFFFF] font-semibold">{user?.email || ''}</span>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 shrink-0">
           <Button
-            variant="outline"
-            className="text-white border-slate-700 hover:bg-slate-800 bg-transparent text-xs py-2 rounded-xl flex items-center gap-1.5 cursor-pointer"
-            onClick={() => setReportModalOpen(true)}
-          >
-            <FileDown className="h-4 w-4 text-slate-400" />
-            Generate Report
-          </Button>
-          <Button
             variant="primary"
             className="text-xs py-2 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-lg shadow-teal-900/20"
-            onClick={() => setTaskModalOpen(true)}
+            onClick={() => setReportModalOpen(true)}
           >
-            <Plus className="h-4 w-4" />
-            Create Task
+            <FileDown className="h-4 w-4" />
+            Generate Report
           </Button>
         </div>
       </div>
@@ -454,7 +497,7 @@ export const Dashboard: React.FC = () => {
           change=""
           isPositive={true}
           icon={DollarSign}
-          sparklineData={[0, 0, 0, 0, 0, 0, totalInventoryRevenue]}
+          progress={revenueProgress}
           color="#10B981"
           onClick={() => handleCardClick('rev')}
         />
@@ -466,7 +509,7 @@ export const Dashboard: React.FC = () => {
           change=""
           isPositive={true}
           icon={Truck}
-          sparklineData={[0, 0, 0, 0, 0, 0, activeVehiclesCount]}
+          progress={activeVehiclesProgress}
           color="#006A6A"
           onClick={() => handleCardClick('fleet')}
         />
@@ -478,7 +521,7 @@ export const Dashboard: React.FC = () => {
           change=""
           isPositive={true}
           icon={Package}
-          sparklineData={[0, 0, 0, 0, 0, 0, lowStockCount]}
+          progress={lowStockProgress}
           color="#F59E0B"
           onClick={() => handleCardClick('stock')}
         />
@@ -490,7 +533,7 @@ export const Dashboard: React.FC = () => {
           change=""
           isPositive={true}
           icon={Users}
-          sparklineData={[0, 0, 0, 0, 0, 0, presentCount]}
+          progress={attendanceProgress}
           color="#14B8A6"
           onClick={() => handleCardClick('att')}
         />
@@ -502,7 +545,7 @@ export const Dashboard: React.FC = () => {
           change=""
           isPositive={true}
           icon={Users}
-          sparklineData={[0, 0, 0, 0, 0, 0, totalEmployeesCount]}
+          progress={100}
           color="#8B5CF6"
           onClick={() => handleCardClick('total')}
         />
@@ -514,7 +557,7 @@ export const Dashboard: React.FC = () => {
           change=""
           isPositive={true}
           icon={CheckCircle}
-          sparklineData={[0, 0, 0, 0, 0, 0, trips.filter(t => t.status === 'Completed').length]}
+          progress={completedTripsProgress}
           color="#10B981"
           onClick={() => handleCardClick('del')}
         />
@@ -526,7 +569,7 @@ export const Dashboard: React.FC = () => {
           change=""
           isPositive={false}
           icon={ShoppingCart}
-          sparklineData={[0, 0, 0, 0, 0, 0, pendingTripsCount]}
+          progress={pendingTripsProgress}
           color="#3b82f6"
           onClick={() => handleCardClick('ship')}
         />
@@ -538,7 +581,7 @@ export const Dashboard: React.FC = () => {
           change=""
           isPositive={true}
           icon={Bell}
-          sparklineData={[0, 0, 0, 0, 0, 0, notifications.filter(n => !n.read).length]}
+          progress={notificationsProgress}
           color="#EF4444"
           onClick={() => handleCardClick('alerts')}
         />
@@ -550,7 +593,7 @@ export const Dashboard: React.FC = () => {
           change=""
           isPositive={true}
           icon={Wallet}
-          sparklineData={[0, 0, 0, 0, 0, 0, processedPayrollCount]}
+          progress={payrollProgress}
           color="#EC4899"
           onClick={() => handleCardClick('salary')}
         />
@@ -562,7 +605,7 @@ export const Dashboard: React.FC = () => {
           change=""
           isPositive={true}
           icon={CheckCircle}
-          sparklineData={[0, 0, 0, 0, 0, 0, 0]}
+          progress={incidentProgress}
           color="#10B981"
           onClick={() => handleCardClick('inc')}
         />
@@ -586,7 +629,7 @@ export const Dashboard: React.FC = () => {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     activeChartTab === tab
                       ? 'bg-[#006A6A] text-white shadow-sm'
-                      : 'text-[#6D7A79] hover:text-[#545F73] dark:hover:text-slate-200'
+                      : 'text-slate-400 hover:text-[#545F73] dark:hover:text-slate-200'
                   }`}
                 >
                   {tab}
@@ -755,7 +798,7 @@ export const Dashboard: React.FC = () => {
                 className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTableTab === tab
                     ? 'bg-[#006A6A] text-white shadow-sm'
-                    : 'text-[#6D7A79] hover:text-[#545F73] dark:hover:text-slate-200'
+                    : 'text-slate-400 hover:text-[#545F73] dark:hover:text-slate-200'
                 }`}
               >
                 {tab} Ledgers
@@ -992,60 +1035,7 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Task Creation Modal */}
-      <Modal isOpen={taskModalOpen} onClose={() => setTaskModalOpen(false)} title="Create Operations Task">
-        <form onSubmit={handleCreateTask} className="space-y-5 text-left">
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase tracking-wide">Task Name</label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Verify gate 2 vehicle logs"
-              value={newTaskTitle}
-              onChange={e => setNewTaskTitle(e.target.value)}
-              className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-[#F8FAFC] transition-all shadow-sm font-medium"
-            />
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase tracking-wide">Assigned Staff</label>
-              <select
-                value={newTaskAssigned}
-                onChange={e => setNewTaskAssigned(e.target.value)}
-                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] transition-all bg-white dark:bg-[#0F172A] text-slate-700 dark:text-[#F8FAFC] cursor-pointer shadow-sm font-medium"
-              >
-                <option>Amit Patel (Supervisor)</option>
-                <option>Vikram Singh (Fleet Manager)</option>
-                <option>Sanjay Dutt (Technician)</option>
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase tracking-wide">Priority Rating</label>
-              <select
-                value={newTaskPriority}
-                onChange={e => setNewTaskPriority(e.target.value as Task['priority'])}
-                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] transition-all bg-white dark:bg-[#0F172A] text-slate-700 dark:text-[#F8FAFC] cursor-pointer shadow-sm font-medium"
-              >
-                <option value="Low">Low Priority</option>
-                <option value="Medium">Medium Priority</option>
-                <option value="High">High Priority</option>
-                <option value="Critical">Critical Priority</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 mt-4">
-            <Button type="button" variant="outline" onClick={() => setTaskModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary">
-              Assign Task
-            </Button>
-          </div>
-        </form>
-      </Modal>
 
       {/* Reports Generator Modal */}
       <Modal isOpen={reportModalOpen} onClose={() => setReportModalOpen(false)} title="Generate Corporate Report">

@@ -17,62 +17,104 @@ import {
 } from 'recharts';
 import { AttendanceRecord, Trip, Vehicle, PayrollRecord } from '../../types';
 
-// Helper component for KPI Cards with mini sparkline graphs
+// Circular Progress Ring Component
+const ProgressRing: React.FC<{
+  progress: number;
+  color: string;
+  size?: number;
+  strokeWidth?: number;
+}> = ({ progress, color, size = 38, strokeWidth = 3.5 }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (Math.min(Math.max(progress, 0), 100) / 100) * circumference;
+
+  const isClassColor = color.startsWith('text-');
+
+  return (
+    <div className="relative flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        {/* Track circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          className="stroke-slate-100/50 dark:stroke-slate-800/40"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+        />
+        {/* Progress circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={isClassColor ? undefined : color}
+          className={`transition-all duration-500 ease-out ${isClassColor ? color.replace('text-', 'stroke-') : ''}`}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+        />
+      </svg>
+      {/* Percentage label in the center - uses matching dynamic color */}
+      <span 
+        className={`absolute text-[8px] font-extrabold ${isClassColor ? color : ''}`}
+        style={{ color: isClassColor ? undefined : color }}
+      >
+        {Math.round(progress)}%
+      </span>
+    </div>
+  );
+};
+
+// Helper component for KPI Cards with circular progress rings
 const MetricCard: React.FC<{
   title: string;
   value: string | number;
   change: string;
   isPositive: boolean;
   icon: React.ComponentType<any>;
-  sparklineData: number[];
+  progress: number;
   color: string;
   bgColor: string;
-}> = ({ title, value, change, isPositive, icon: Icon, sparklineData, color, bgColor }) => {
-  const width = 80;
-  const height = 30;
-  const min = Math.min(...sparklineData);
-  const max = Math.max(...sparklineData);
-  const range = max - min;
-  const points = sparklineData
-    .map((val, idx) => {
-      const x = (idx / (sparklineData.length - 1)) * width;
-      const y = height - ((val - min) / (range || 1)) * height + 2;
-      return `${x},${y}`;
-    })
-    .join(' ');
-
+}> = ({ title, value, change, isPositive, icon: Icon, progress, color, bgColor }) => {
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex justify-between items-center group transition-all duration-300"
+      className="bg-white dark:bg-[#1E293B] rounded-2xl p-5 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex flex-col justify-between items-stretch gap-4 group transition-all duration-300 min-h-[160px] w-full overflow-hidden text-left"
     >
-      <div className="space-y-2">
-        <span className="text-[13px] font-semibold text-[#6D7A79] dark:text-[#6D7A79] uppercase tracking-tight block">{title}</span>
-        <h4 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-slate-100 leading-none">{value}</h4>
-        <div className="flex items-center gap-1 mt-1">
-          {isPositive ? (
-            <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-          ) : (
-            <ArrowDownRight className="h-3.5 w-3.5 text-red-500" />
-          )}
-          <span className={`text-xs font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>{change}</span>
+      {/* Top Row: Title & Icon */}
+      <div className="flex justify-between items-start gap-2 min-w-0">
+        <span className="text-[12px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase whitespace-normal break-words leading-tight flex-1">
+          {title}
+        </span>
+        <div className={`p-2 rounded-lg transition-all duration-300 shrink-0 ${bgColor} ${color}`}>
+          <Icon className="h-4.5 w-4.5 group-hover:scale-105 transition-transform duration-200" />
         </div>
       </div>
-      <div className="flex flex-col items-end gap-3 shrink-0">
-        <div className={`p-3.5 rounded-xl ${bgColor} ${color} group-hover:scale-105 transition-transform duration-200`}>
-          <Icon className="h-5 w-5" />
+
+      {/* Middle Row: Value */}
+      <div className="min-w-0 py-0.5">
+        <h4 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 leading-none tracking-tight truncate w-full" title={String(value)}>
+          {value}
+        </h4>
+      </div>
+
+      {/* Bottom Row: Trend & Progress Ring */}
+      <div className="flex items-end justify-between gap-2 pt-1 mt-auto">
+        <div className="flex items-center gap-1 min-w-0">
+          {isPositive ? (
+            <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          ) : (
+            <ArrowDownRight className="h-4 w-4 text-red-500 shrink-0" />
+          )}
+          <span className={`text-[12px] font-bold truncate ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+            {change}
+          </span>
         </div>
-        <svg width={width} height={height} className="overflow-visible mt-1.5 opacity-80">
-          <polyline
-            fill="none"
-            stroke="currentColor"
-            className={color}
-            strokeWidth="2"
-            points={points}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <div className="shrink-0 pl-1">
+          <ProgressRing progress={progress} color={color} size={38} strokeWidth={3.5} />
+        </div>
       </div>
     </motion.div>
   );
@@ -106,6 +148,37 @@ export const Attendance: React.FC = () => {
   const activeTripsCount = trips.filter(t => t.status !== 'Completed').length;
   const completedTripsCount = trips.filter(t => t.status === 'Completed').length;
 
+  // Calculate dynamic progress percentages for circular rings in Attendance
+  const presentDriversProgress = useMemo(() => {
+    return totalDriversCount > 0 ? Math.round((presentDriversCount / totalDriversCount) * 100) : 0;
+  }, [presentDriversCount, totalDriversCount]);
+
+  const absentDriversProgress = useMemo(() => {
+    return totalDriversCount > 0 ? Math.round((absentDriversCount / totalDriversCount) * 100) : 0;
+  }, [absentDriversCount, totalDriversCount]);
+
+  const lateDriversProgress = useMemo(() => {
+    return presentDriversCount > 0 ? Math.round((lateCheckInCount / presentDriversCount) * 100) : 0;
+  }, [lateCheckInCount, presentDriversCount]);
+
+  const checkedOutDriversProgress = useMemo(() => {
+    return presentDriversCount > 0 ? Math.round((checkedOutDriversCount / presentDriversCount) * 100) : 0;
+  }, [checkedOutDriversCount, presentDriversCount]);
+
+  const overtimeProgress = useMemo(() => {
+    return presentDriversCount > 0 ? Math.round((overtimeCount / presentDriversCount) * 100) : 0;
+  }, [overtimeCount, presentDriversCount]);
+
+  const activeTransitProgress = useMemo(() => {
+    return totalDriversCount > 0 ? Math.round((activeTripsCount / totalDriversCount) * 100) : 0;
+  }, [activeTripsCount, totalDriversCount]);
+
+  const completedDeliveryProgress = useMemo(() => {
+    const totalRuns = activeTripsCount + completedTripsCount;
+    return totalRuns > 0 ? Math.round((completedTripsCount / totalRuns) * 100) : 0;
+  }, [activeTripsCount, completedTripsCount]);
+
+
   // Mock Notifications for alerts strip
   const systemAlerts = useMemo(() => {
     return notifications.map(n => ({
@@ -115,24 +188,7 @@ export const Attendance: React.FC = () => {
     }));
   }, [notifications]);
 
-  // 2. MAP TRAJECTORY COORDINATES (Simulated vector paths)
-  const mapDrivers = useMemo(() => {
-    return attendance.map((att, idx) => ({
-      id: att.driverId || `drv-${idx}`,
-      name: att.driverName || att.employeeName,
-      vehicle: att.vehicleNumber || 'Vehicle Yard',
-      status: att.currentStatus || att.status,
-      location: att.checkInWarehouse || att.address || 'Yard Location',
-      lat: 150 + (idx * 60) % 250,
-      lng: 120 + (idx * 40) % 200,
-      dest: 'Destination Terminal',
-      progress: att.tripsCompleted ? 100 : 50,
-      eta: 'In Transit',
-      color: att.currentStatus === 'On Duty' ? 'var(--color-success)' : 'var(--color-primary)'
-    }));
-  }, [attendance]);
-
-  // 3. TABLE FILTERING LOGIC
+  // 2. TABLE FILTERING LOGIC
   const filteredAttendance = useMemo(() => {
     return attendance.filter(row => {
       // Search
@@ -237,7 +293,7 @@ export const Attendance: React.FC = () => {
           change="Daily presence logs"
           isPositive={true}
           icon={UserCheck}
-          sparklineData={[0, 0, 0, 0, 0, 0, presentDriversCount]}
+          progress={presentDriversProgress}
           color="text-blue-600"
           bgColor="bg-blue-50 dark:bg-blue-950/20"
         />
@@ -247,7 +303,7 @@ export const Attendance: React.FC = () => {
           change="Awaiting clock-in"
           isPositive={false}
           icon={UserX}
-          sparklineData={[0, 0, 0, 0, 0, 0, absentDriversCount]}
+          progress={absentDriversProgress}
           color="text-[#6D7A79]"
           bgColor="bg-[#F8F9FF] dark:bg-[#0F172A]/20"
         />
@@ -257,7 +313,7 @@ export const Attendance: React.FC = () => {
           change="Checked-in after 08:30"
           isPositive={false}
           icon={AlertTriangle}
-          sparklineData={[0, 0, 0, 0, 0, 0, lateCheckInCount]}
+          progress={lateDriversProgress}
           color="text-amber-500"
           bgColor="bg-amber-50 dark:bg-amber-950/20"
         />
@@ -267,7 +323,7 @@ export const Attendance: React.FC = () => {
           change="Shift completed"
           isPositive={true}
           icon={CheckCircle2}
-          sparklineData={[0, 0, 0, 0, 0, 0, checkedOutDriversCount]}
+          progress={checkedOutDriversProgress}
           color="text-emerald-600"
           bgColor="bg-emerald-50 dark:bg-emerald-950/20"
         />
@@ -277,7 +333,7 @@ export const Attendance: React.FC = () => {
           change="Operators rostered"
           isPositive={true}
           icon={Users}
-          sparklineData={[0, 0, 0, 0, 0, 0, totalDriversCount]}
+          progress={100}
           color="text-violet-600"
           bgColor="bg-violet-50 dark:bg-violet-950/20"
         />
@@ -287,7 +343,7 @@ export const Attendance: React.FC = () => {
           change="Shift overtime logs"
           isPositive={true}
           icon={Clock}
-          sparklineData={[0, 0, 0, 0, 0, 0, overtimeCount]}
+          progress={overtimeProgress}
           color="text-rose-600"
           bgColor="bg-rose-50 dark:bg-rose-950/20"
         />
@@ -297,7 +353,7 @@ export const Attendance: React.FC = () => {
           change="Live consignments"
           isPositive={true}
           icon={Truck}
-          sparklineData={[0, 0, 0, 0, 0, 0, activeTripsCount]}
+          progress={activeTransitProgress}
           color="text-sky-600"
           bgColor="bg-sky-50 dark:bg-sky-950/20"
         />
@@ -307,143 +363,10 @@ export const Attendance: React.FC = () => {
           change="SLA target tracking"
           isPositive={true}
           icon={TrendingUp}
-          sparklineData={[0, 0, 0, 0, 0, 0, completedTripsCount]}
+          progress={completedDeliveryProgress}
           color="text-indigo-600"
           bgColor="bg-indigo-50 dark:bg-indigo-950/20"
         />
-      </div>
-
-      {/* Telemetry section: Live Map + Live driver status */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Live Map vector tracking */}
-        <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm xl:col-span-2 space-y-4">
-          <div className="flex justify-between items-center border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-3">
-            <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 flex items-center gap-2">
-              <Navigation className="h-4 w-4 text-[#006A6A] dark:text-[#14B8A6] animate-spin-slow" /> Interactive Route Telemetry Tracking Map
-            </h3>
-            <span className="flex items-center gap-1.5 text-xs text-[#10B981] font-bold">
-              <span className="w-2 h-2 bg-[#10B981] rounded-full animate-ping" /> Live Tracking
-            </span>
-          </div>
-
-          <div className="h-72 bg-[#0B1C30] rounded-xl relative overflow-hidden border border-slate-800 flex flex-col justify-between p-4 shadow-inner">
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
-            
-            {/* SVG Path Route Pune to Mumbai */}
-             <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 600 350">
-              <path
-                d="M 60,280 L 160,220 L 260,180 L 360,120 L 480,80 L 540,40"
-                fill="none"
-                stroke="rgba(255,255,255,0.08)"
-                strokeWidth="6"
-                strokeLinecap="round"
-              />
-              <path
-                d="M 60,280 L 160,220 L 260,180"
-                fill="none"
-                stroke="#006A6A"
-                strokeWidth="4"
-                strokeLinecap="round"
-              />
-              {/* Bengaluru to Chennai path */}
-              <path
-                d="M 120,320 L 280,290 L 390,260 L 520,240"
-                fill="none"
-                stroke="rgba(255,255,255,0.08)"
-                strokeWidth="5"
-                strokeLinecap="round"
-              />
-              <path
-                d="M 120,320 L 280,290"
-                fill="none"
-                stroke="#10B981"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-              />
-              <circle cx="60" cy="280" r="5" fill="#667085" />
-              <circle cx="260" cy="180" r="5" fill="#006A6A" />
-              <circle cx="540" cy="40" r="6" fill="#10B981" />
-              <circle cx="120" cy="320" r="5" fill="#667085" />
-              <circle cx="520" cy="240" r="6" fill="#10B981" />
-            </svg>
-
-            <div className="absolute bottom-16 left-12 text-[10px] text-slate-400 font-bold">Pune Hub</div>
-            <div className="absolute top-12 right-20 text-[10px] text-emerald-400 font-bold">Mumbai DC</div>
-            <div className="absolute bottom-10 left-36 text-[10px] text-slate-400 font-bold">Bengaluru Yd</div>
-            <div className="absolute bottom-24 right-20 text-[10px] text-emerald-400 font-bold">Chennai Terminal</div>
-
-            {/* Active Driver Pins */}
-            {mapDrivers.map(drv => (
-              <div
-                key={drv.id}
-                className="absolute flex flex-col items-center select-none"
-                style={{ top: drv.lat, left: drv.lng }}
-              >
-                <div className="bg-slate-900/95 text-white font-mono font-bold text-[9px] px-1.5 py-0.5 rounded shadow border border-slate-700 whitespace-nowrap">
-                  {drv.name} ({(drv.vehicle || '').split('-')[0] || drv.vehicle})
-                </div>
-                <div
-                  className="w-5 h-5 rounded-full text-white flex items-center justify-center border border-white shadow-lg animate-bounce mt-1"
-                  style={{ backgroundColor: drv.color === 'var(--color-success)' ? '#10B981' : drv.color === 'var(--color-primary)' ? '#006A6A' : '#F59E0B' }}
-                >
-                  <Navigation className="h-3 w-3 rotate-45" />
-                </div>
-              </div>
-            ))}
-
-            {/* Float Info Map Overlay */}
-            <div className="relative z-10 bg-slate-900/90 backdrop-blur-md rounded-xl p-3.5 text-white border border-slate-800 flex justify-between items-center text-xs shadow-lg">
-              <div>
-                <p className="text-[10px] text-slate-400 uppercase font-semibold">Active Telemetry Tracker</p>
-                <p className="font-bold text-slate-200">
-                  {mapDrivers[0] ? `${mapDrivers[0].vehicle} • ${mapDrivers[0].name}` : 'No active driver telemetry'}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] text-slate-400 uppercase font-semibold">ETA to Destination</p>
-                <p className="font-bold font-mono text-[#14B8A6]">{mapDrivers[0]?.eta || '--'}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Live Driver Status Board */}
-        <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-4 flex flex-col justify-between">
-          <div>
-            <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-slate-100 pb-3 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 flex items-center gap-1.5">
-              <Activity className="h-4 w-4 text-[#006A6A] dark:text-[#14B8A6]" /> Live Driver Status Board
-            </h3>
-            
-            <div className="space-y-3 pt-4">
-              {attendance.length === 0 ? (
-                <p className="text-xs text-[#6D7A79] font-medium py-4 text-center">No drivers currently on duty.</p>
-              ) : (
-                attendance.map((driver, index) => (
-                  <div key={driver.id || index} className="flex justify-between items-center text-xs p-3 border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 rounded-xl hover:bg-[#F8F9FF]/50 transition-colors shadow-sm">
-                    <div className="space-y-1 text-left">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                        <p className="font-bold text-slate-800 dark:text-[#F8FAFC]">{driver.driverName || driver.employeeName}</p>
-                      </div>
-                      <p className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] font-semibold">{driver.vehicleNumber || 'MH-12'} • {driver.checkInWarehouse || 'Yard'}</p>
-                    </div>
-                    <div className="text-right space-y-1">
-                      <Badge variant="success">{driver.currentStatus || driver.status}</Badge>
-                      <p className="text-[10px] text-[#6D7A79] dark:text-[#6D7A79] font-bold block">{driver.checkInTime || driver.checkIn}</p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="bg-[#F8F9FF] dark:bg-[#0F172A] p-4 border border-[#E5EEFF]/80 dark:border-[#334155]/60 rounded-xl text-xs space-y-2 shadow-sm text-left">
-            <h5 className="font-bold text-[#0B1C30] dark:text-[#F8FAFC] flex items-center gap-1.5"><Award className="h-4 w-4 text-emerald-600" /> Fleet Safety Rating</h5>
-            <p className="text-[11px] text-[#6D7A79] dark:text-[#94A3B8] leading-relaxed font-semibold">
-              Average safety index rating is currently at <span className="text-emerald-600 font-bold">94.8%</span>. No speed infractions logged in the last 24 hours.
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* Main Professional Attendance Table */}

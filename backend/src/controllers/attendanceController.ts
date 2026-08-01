@@ -1,56 +1,68 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Attendance from '../models/Attendance';
+import User from '../models/User';
+import { AuthRequest } from '../middleware/authMiddleware';
 import { emitTelemetryUpdate } from '../sockets/telemetrySocket';
 
-export const getAttendance = async (req: Request, res: Response) => {
+export const getAttendance = async (req: any, res: any) => {
   try {
-    const logs = await Attendance.find().sort({ date: -1, createdAt: -1 });
+    const filter: any = {};
+    if (req.companyId) filter.companyId = req.companyId;
+    const logs = await Attendance.find(filter).sort({ date: -1, createdAt: -1 });
     res.json(logs);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }
 };
 
-export const getHistory = async (req: Request, res: Response) => {
+export const getHistory = async (req: any, res: any) => {
   try {
-    const logs = await Attendance.find().sort({ createdAt: -1 });
+    const filter: any = {};
+    if (req.companyId) filter.companyId = req.companyId;
+    const logs = await Attendance.find(filter).sort({ createdAt: -1 });
     res.json(logs);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }
 };
 
-export const getLive = async (req: Request, res: Response) => {
+export const getLive = async (req: any, res: any) => {
   try {
-    const logs = await Attendance.find({
+    const filter: any = {
       currentStatus: { $in: ['On Duty', 'On Trip', 'On Break', 'Emergency'] }
-    });
+    };
+    if (req.companyId) filter.companyId = req.companyId;
+    const logs = await Attendance.find(filter);
     res.json(logs);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }
 };
 
-export const getAnalytics = async (req: Request, res: Response) => {
+export const getAnalytics = async (req: any, res: any) => {
   try {
-    const logs = await Attendance.find();
+    const filter: any = {};
+    if (req.companyId) filter.companyId = req.companyId;
+    const logs = await Attendance.find(filter);
     res.json(logs);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }
 };
 
-export const getByDriverId = async (req: Request, res: Response) => {
+export const getByDriverId = async (req: any, res: any) => {
   try {
-    const logs = await Attendance.find({ driverId: req.params.driverId }).sort({ date: -1 });
+    const filter: any = { driverId: req.params.driverId };
+    if (req.companyId) filter.companyId = req.companyId;
+    const logs = await Attendance.find(filter).sort({ date: -1 });
     res.json(logs);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
   }
 };
 
-export const startDuty = async (req: Request, res: Response) => {
+export const startDuty = async (req: any, res: any) => {
   try {
     const { 
       driverId, 
@@ -88,11 +100,19 @@ export const startDuty = async (req: Request, res: Response) => {
       attendanceStatus = 'Late';
     }
 
+    // Get driver's companyId
+    let companyId = req.companyId;
+    if (!companyId && driverId) {
+      const driverUser = await User.findOne({ $or: [{ _id: mongoose.Types.ObjectId.isValid(driverId) ? driverId : undefined }, { driverId }] }).select('companyId');
+      if (driverUser) companyId = driverUser.companyId;
+    }
+
     const attendanceObjectId = new mongoose.Types.ObjectId();
 
     record = new Attendance({
       _id: attendanceObjectId,
       attendanceId: attendanceObjectId.toString(),
+      companyId,
       employeeName: employeeName || driverName || 'Driver Operator',
       driverName: driverName || employeeName || 'Driver Operator',
       driverId,
@@ -142,7 +162,7 @@ export const startDuty = async (req: Request, res: Response) => {
   }
 };
 
-export const startBreak = async (req: Request, res: Response) => {
+export const startBreak = async (req: any, res: any) => {
   try {
     const { driverId, type, remarks, gps } = req.body;
     const todayStr = new Date().toISOString().split('T')[0];
@@ -177,7 +197,7 @@ export const startBreak = async (req: Request, res: Response) => {
   }
 };
 
-export const endBreak = async (req: Request, res: Response) => {
+export const endBreak = async (req: any, res: any) => {
   try {
     const { driverId, gps } = req.body;
     const todayStr = new Date().toISOString().split('T')[0];
@@ -226,7 +246,7 @@ export const endBreak = async (req: Request, res: Response) => {
   }
 };
 
-export const endDuty = async (req: Request, res: Response) => {
+export const endDuty = async (req: any, res: any) => {
   try {
     const { driverId, checkOutGPS, tripsCompleted, distanceCovered, fuelUsed, checkOutTime, latitude, longitude, address } = req.body;
     const todayStr = new Date().toISOString().split('T')[0];
@@ -287,7 +307,7 @@ export const endDuty = async (req: Request, res: Response) => {
   }
 };
 
-export const updateAttendance = async (req: Request, res: Response) => {
+export const updateAttendance = async (req: any, res: any) => {
   try {
     const updated = await Attendance.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(updated);
@@ -296,7 +316,7 @@ export const updateAttendance = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteAttendance = async (req: Request, res: Response) => {
+export const deleteAttendance = async (req: any, res: any) => {
   try {
     await Attendance.findByIdAndDelete(req.params.id);
     res.json({ message: 'Attendance log deleted.' });

@@ -11,6 +11,9 @@ export interface ISalary extends Document {
   finalSalary: number;
   paymentStatus: 'Pending' | 'Paid';
   paymentDate?: string;
+  // Multi-tenant isolation
+  companyId?: string;
+  ownerId?: string;
 }
 
 const SalarySchema = new Schema<ISalary>({
@@ -23,7 +26,10 @@ const SalarySchema = new Schema<ISalary>({
   tax: { type: Number, required: true, default: 0 },
   finalSalary: { type: Number, required: true },
   paymentStatus: { type: String, enum: ['Pending', 'Paid'], default: 'Pending' },
-  paymentDate: { type: String }
+  paymentDate: { type: String },
+  // Multi-tenant isolation
+  companyId: { type: String, index: true, sparse: true },
+  ownerId: { type: String, index: true, sparse: true },
 }, {
   timestamps: true
 });

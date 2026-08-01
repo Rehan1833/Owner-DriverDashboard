@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { User, Vehicle, Trip, Task, InventoryItem, PayrollRecord, AttendanceRecord, PODRecord, DriverRecord } from '../types';
-import { mockVehicles, mockTrips, mockTasks, mockInventory, mockPayroll, mockAttendance } from './mockData';
+import { User, Vehicle, Trip, InventoryItem, PayrollRecord, AttendanceRecord, PODRecord, DriverRecord, Company } from '../types';
+import { mockVehicles, mockTrips, mockInventory, mockPayroll, mockAttendance } from './mockData';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -24,7 +24,7 @@ axiosInstance.interceptors.request.use((config: any) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || (error.response?.status === 404 && error.response?.data?.message === 'User not found.')) {
       // Token is invalid or expired — clear session and redirect to login
       const currentToken = localStorage.getItem('smartops_jwt');
       // Only auto-redirect if there was actually a token (avoid redirect loops on login page)
@@ -69,73 +69,34 @@ class LocalStorageFallback {
 export const api = {
   // 1. AUTH API
   auth: {
-    login: async (email: string, role: string, password?: string): Promise<{ token: string; user: User }> => {
+    login: async (email: string, _role: string, password?: string): Promise<{ token: string; user: User }> => {
       try {
         const res = await axiosInstance.post('/auth/login', { email, password: password || '' });
-        // Validate the token is a real JWT before storing
         const receivedToken: string = res.data.token || '';
-        if (receivedToken && receivedToken !== 'mock_jwt_token_payload') {
+        if (receivedToken) {
           localStorage.setItem('smartops_jwt', receivedToken);
+        }
+        if (res.data.user) {
+          localStorage.setItem('smartops_user', JSON.stringify(res.data.user));
         }
         return res.data;
       } catch (err: any) {
-        // If the backend returned an HTTP error response (400, 401, 404, 500, etc.),
-        // always propagate it — NEVER fall back to mock. Only the catch block for
-        // network-level failures (no response at all) may use offline mode.
-        if (err.response) {
-          throw err;
-        }
-        // Network-level failure only (no response = backend truly unreachable)
-        console.warn('[SmartOps Auth] Backend unreachable. Offline mode activated.');
-        const isOwner = role === 'Owner';
-        const mockUser: User = {
-          id: isOwner ? 'u-owner-rehan' : 'u-driver',
-          fullName: isOwner ? 'Rehan Chaudhari' : email.split('@')[0],
-          email: isOwner ? 'rehanchaudhari181133@gmail.com' : email,
-          mobileNumber: '9999999999',
-          role: role as any,
-          companyName: isOwner ? 'SmartOps Manufacturing Ltd.' : undefined,
-          driverId: role === 'Driver' ? `DRV-${Date.now().toString().slice(-4)}` : undefined,
-          vehicleNumber: role === 'Driver' ? 'MH-12-QW-9874' : undefined,
-          licenseNumber: role === 'Driver' ? 'DL-MH12-9988' : undefined,
-          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(isOwner ? 'Rehan Chaudhari' : email)}&backgroundColor=2563EB`
-        };
-        // IMPORTANT: Do NOT store 'mock_jwt_token_payload' — store empty string so
-        // authenticated endpoints get a clean 401 rather than a confusing 403.
-        // The offline session still works for non-authenticated features.
-        localStorage.removeItem('smartops_jwt');
-        return { token: '', user: mockUser };
+        // ALWAYS propagate authentication errors — never inject fake users or hardcoded accounts
+        throw err;
       }
     },
     register: async (payload: any): Promise<{ success?: boolean; message: string; otpCode?: string; token?: string; user?: User }> => {
-      if (payload.role === 'Owner' && payload.email.toLowerCase().trim() !== 'rehanchaudhari181133@gmail.com') {
-        throw { response: { data: { message: 'Only rehanchaudhari181133@gmail.com is authorized as Owner. Additional owner accounts are disabled.' } } };
-      }
       try {
         const res = await axiosInstance.post('/auth/register', payload);
         if (res.data.token) {
           localStorage.setItem('smartops_jwt', res.data.token);
         }
+        if (res.data.user) {
+          localStorage.setItem('smartops_user', JSON.stringify(res.data.user));
+        }
         return res.data;
       } catch (err: any) {
-        if (err.response) {
-          throw err;
-        }
-        console.warn('Backend Auth Offline. Registering user in local session.');
-        const mockUser: User = {
-          id: `u-${Date.now()}`,
-          fullName: payload.fullName,
-          email: payload.email,
-          mobileNumber: payload.mobileNumber,
-          role: payload.role,
-          companyName: payload.companyName,
-          driverId: payload.driverId,
-          vehicleNumber: payload.vehicleNumber,
-          licenseNumber: payload.licenseNumber,
-          avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(payload.fullName)}`
-        };
-        localStorage.setItem('smartops_jwt', 'mock_jwt_token_payload');
-        return { message: 'Registration initiated.', token: 'mock_jwt_token_payload', user: mockUser };
+        throw err;
       }
     },
     verifyOTP: async (payload: { email?: string; mobileNumber?: string; channel?: 'email' | 'mobile'; otpCode: string }): Promise<{ message: string; token?: string; user?: User }> => {
@@ -185,16 +146,29 @@ export const api = {
         return { message: 'Password has been updated successfully.' };
       }
     },
-    googleAuth: async (_googleToken: string, _role: string): Promise<{ token: string; user: User }> => {
-      throw new Error('Google authentication is temporarily disabled.');
-      /*
-      // TEMPORARILY DISABLED GOOGLE OAUTH API CALL
-      const res = await axiosInstance.post('/auth/google', { idToken: _googleToken, googleToken: _googleToken, role: _role });
-      if (res.data.token) {
-        localStorage.setItem('smartops_jwt', res.data.token);
+    updateProfile: async (payload: {
+      fullName?: string;
+      email?: string;
+      mobileNumber?: string;
+      companyName?: string;
+      avatarUrl?: string;
+    }): Promise<{ success: boolean; message: string; user: User }> => {
+      try {
+        const res = await axiosInstance.put('/users/profile', payload);
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        const saved = localStorage.getItem('smartops_user');
+        const currentUser = saved ? JSON.parse(saved) : {};
+        const updatedUser = {
+          ...currentUser,
+          ...payload
+        };
+        localStorage.setItem('smartops_user', JSON.stringify(updatedUser));
+        return { success: true, message: 'Profile updated in offline mode.', user: updatedUser };
       }
-      return res.data;
-      */
     }
   },
 
@@ -1076,16 +1050,11 @@ export const api = {
     }
   },
 
-  // 9. DRIVERS API — Owner-only, database-driven (NO localStorage fallback)
+  // 9. DRIVERS API — Database-first with Resilient LocalStorage Fallback
   drivers: {
     /**
-     * Fetch all registered Driver accounts from MongoDB.
-     * Throws on any error so the caller can render the proper error state.
-     *
-     * @param params.search  - partial match on name, email, mobile
-     * @param params.status  - 'Active' | 'Inactive' | 'All'
-     * @param params.page    - page number (default 1)
-     * @param params.limit   - page size (default 20)
+     * Fetch all registered Driver accounts.
+     * Tries backend first; if server is unreachable (offline mode), falls back to local storage.
      */
     getAll: async (params?: {
       search?: string;
@@ -1093,23 +1062,81 @@ export const api = {
       page?: number;
       limit?: number;
     }): Promise<{ data: DriverRecord[]; pagination: { page: number; limit: number; total: number; pages: number } }> => {
-      const res = await axiosInstance.get('/users/drivers', { params });
-      return res.data;
+      try {
+        const res = await axiosInstance.get('/users/drivers', { params });
+        if (Array.isArray(res.data?.data)) {
+          LocalStorageFallback.set('smartops_drivers', res.data.data);
+        }
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        console.warn('[SmartOps Drivers API] Server unreachable. Returning offline local drivers.');
+        let rawLocal = LocalStorageFallback.get<DriverRecord>('smartops_drivers', []);
+        // Purge legacy seed mock drivers so only genuine drivers are shown
+        let local = rawLocal.filter(d => 
+          !['drv-1', 'drv-2', 'drv-3'].includes(d.id) && 
+          !['harpreet.singh@smartops.com', 'rajesh.kumar@smartops.com', 'vikram.sharma@smartops.com'].includes(d.email)
+        );
+        if (local.length !== rawLocal.length) {
+          LocalStorageFallback.set('smartops_drivers', local);
+        }
+        
+        if (params?.search) {
+          const s = params.search.toLowerCase();
+          local = local.filter(d => 
+            d.fullName.toLowerCase().includes(s) || 
+            d.email.toLowerCase().includes(s) || 
+            d.mobileNumber.toLowerCase().includes(s)
+          );
+        }
+
+        if (params?.status && params.status !== 'All') {
+          local = local.filter(d => d.status === params.status);
+        }
+
+        const page = params?.page || 1;
+        const limit = params?.limit || 20;
+        const start = (page - 1) * limit;
+        const paged = local.slice(start, start + limit);
+
+        return {
+          data: paged,
+          pagination: {
+            page,
+            limit,
+            total: local.length,
+            pages: Math.ceil(local.length / limit) || 1
+          }
+        };
+      }
     },
 
     /**
      * Soft-deactivate or reactivate a driver.
-     * Sets isEmailVerified to true (active) or false (inactive) in MongoDB.
      */
     updateStatus: async (id: string, status: 'active' | 'inactive'): Promise<DriverRecord> => {
-      const res = await axiosInstance.patch(`/users/drivers/${id}/status`, { status });
-      return res.data.data as DriverRecord;
+      try {
+        const res = await axiosInstance.patch(`/users/drivers/${id}/status`, { status });
+        return res.data.data as DriverRecord;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        const local = LocalStorageFallback.get<DriverRecord>('smartops_drivers', []);
+        const updated = local.map(d => d.id === id ? {
+          ...d,
+          status: status === 'active' ? ('Active' as const) : ('Inactive' as const),
+          isEmailVerified: status === 'active'
+        } : d);
+        LocalStorageFallback.set('smartops_drivers', updated);
+        return updated.find(d => d.id === id) as DriverRecord;
+      }
     },
 
     /**
-     * Register a new driver via the existing auth endpoint.
-     * Delegates to POST /api/auth/register with role=Driver.
-     * On success the driver will immediately be visible in getAll().
+     * Register a new driver.
      */
     register: async (payload: {
       fullName: string;
@@ -1119,12 +1146,70 @@ export const api = {
       driverId?: string;
       vehicleNumber?: string;
       licenseNumber?: string;
+      companyId?: string;
+      companyName?: string;
     }): Promise<{ success?: boolean; message: string; user?: User }> => {
-      const res = await axiosInstance.post('/auth/register', {
-        ...payload,
-        role: 'Driver',
-      });
-      return res.data;
+      try {
+        const res = await axiosInstance.post('/auth/register', {
+          ...payload,
+          role: 'Driver',
+        });
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        const local = LocalStorageFallback.get<DriverRecord>('smartops_drivers', []);
+        const newDriver: DriverRecord = {
+          id: `drv-${Date.now()}`,
+          fullName: payload.fullName,
+          email: payload.email,
+          mobileNumber: payload.mobileNumber || '',
+          role: 'Driver',
+          driverId: payload.driverId || `DRV-${Date.now().toString().slice(-4)}`,
+          vehicleNumber: payload.vehicleNumber || null,
+          licenseNumber: payload.licenseNumber || null,
+          isEmailVerified: true,
+          isPhoneVerified: true,
+          status: 'Active',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        LocalStorageFallback.set('smartops_drivers', [newDriver, ...local]);
+        return { success: true, message: 'Driver registered successfully.' };
+      }
+    },
+  },
+
+  // COMPANY API
+  company: {
+    /**
+     * Public — checks if a company name is already taken.
+     * Used for real-time validation on the Owner Registration form.
+     */
+    check: async (name: string): Promise<{ available: boolean; message: string }> => {
+      try {
+        const res = await axiosInstance.get('/company/check', { params: { name } });
+        return res.data;
+      } catch (err: any) {
+        if (err.response) {
+          throw err;
+        }
+        // Network offline — assume available so registration can proceed
+        return { available: true, message: 'Offline — name check skipped.' };
+      }
+    },
+
+    /**
+     * Protected — returns the Company linked to the authenticated user.
+     */
+    getMyCompany: async (): Promise<Company | null> => {
+      try {
+        const res = await axiosInstance.get('/company/me');
+        return res.data.company as Company;
+      } catch (err) {
+        return null;
+      }
     },
   },
 };

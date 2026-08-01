@@ -2,6 +2,8 @@
 
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @import "./variables.css";
 @import "./animations.css";
 @import "./theme.css";
@@ -33,19 +35,10 @@
   --color-border-custom: var(--color-border);
   --color-outline: var(--color-outline);
   
-  /* Tailwind color overrides → mapped to design tokens */
-  --color-white: #FFFFFF;
-  --color-slate-50: var(--color-bg);
-  --color-slate-100: var(--color-surface-low);
-  --color-slate-200: var(--color-surface-dim);
-  --color-slate-300: var(--color-outline-variant);
-  --color-slate-400: var(--color-text-muted);
-  --color-slate-500: var(--color-text-secondary);
-  --color-slate-600: var(--color-text-secondary);
-  --color-slate-700: var(--color-text-primary);
-  --color-slate-800: var(--color-text-primary);
-  --color-slate-900: #0F172A;
-  --color-slate-950: #090D16;
+  /* Custom brand color tokens */
+  --color-brand-primary: #006A6A;
+  --color-brand-primary-hover: #005555;
+  --color-navy-dark: #0B1C30;
   
   --color-gray-50: var(--color-surface-low);
   --color-gray-100: var(--color-border);
@@ -93,6 +86,50 @@
   --shadow-lg: 0 10px 25px -5px rgba(11, 28, 48, 0.06), 0 8px 10px -6px rgba(11, 28, 48, 0.02);
   --shadow-xl: 0 20px 40px -10px rgba(11, 28, 48, 0.08), 0 10px 15px -8px rgba(11, 28, 48, 0.03);
   --shadow-2xl: 0 25px 60px -12px rgba(11, 28, 48, 0.15);
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+html:not(.dark) {
+  color-scheme: light;
+}
+
+/* Chrome Force Dark Mode & High Contrast Safeguards */
+@media (forced-colors: active) {
+  * {
+    forced-color-adjust: auto;
+  }
+}
+
+/* Chrome Force Dark Mode Protection for arbitrary hardcoded dark hex colors */
+.text-\[\#0B1C30\] {
+  color: var(--color-text-primary) !important;
+}
+
+.dark .text-\[\#0B1C30\] {
+  color: #F8FAFC !important;
+}
+
+.text-\[\#545F73\] {
+  color: var(--color-text-secondary) !important;
+}
+
+.dark .text-\[\#545F73\] {
+  color: #CBD5E1 !important;
+}
+
+.text-\[\#6D7A79\] {
+  color: var(--color-text-muted) !important;
+}
+
+.dark .text-\[\#6D7A79\] {
+  color: #94A3B8 !important;
 }
 
 @layer base {
