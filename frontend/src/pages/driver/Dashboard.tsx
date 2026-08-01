@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useOperations } from '../../store/OperationsContext';
 import { Badge } from '../../components/ui/Badge';
@@ -8,10 +8,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Truck, Compass, CheckCircle, Navigation, Phone, Gauge, Sparkles, Award, MapPin,
   Clock, ShieldAlert, FileText, Camera, Edit3, Calendar, Activity, AlertTriangle, Play, RefreshCw, Eye, FileCheck, LogOut,
-  TrendingUp, Package, ArrowUpRight, ArrowDownRight, Fuel, ShieldCheck, Zap
+  TrendingUp, Package, ArrowUpRight, ArrowDownRight, Fuel, ShieldCheck, Zap, Lock
 } from 'lucide-react';
-import { AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { Trip, Vehicle } from '../../types';
+import { DriverLiveMap } from '../../components/maps/DriverLiveMap';
+import { api } from '../../api/client';
 
 // Circular Progress Ring Component (Identical to Owner Dashboard)
 const ProgressRing: React.FC<{
@@ -141,6 +142,7 @@ export const Home: React.FC = () => {
   const driverTrips = trips.filter(t => t.driverId === driverId || t.driverId === 'd1');
   const activeTrip = trips.find(t => (t.driverId === driverId || t.driverId === 'd1') && t.status !== 'Completed') || trips[0];
   const completedTrips = trips.filter(t => (t.driverId === driverId || t.driverId === 'd1') && t.status === 'Completed');
+  
   const fallbackVehicle: Vehicle = {
     id: 'veh-default',
     vehicleNumber: user?.vehicleNumber || 'MH-12-QW-9874',
@@ -172,8 +174,6 @@ export const Home: React.FC = () => {
 
   const [deviceInfo, setDeviceInfo] = useState('Mobile Web Console (Chrome)');
   const [ipAddress, setIpAddress] = useState('192.168.1.115');
-  const [gpsCoords, setGpsCoords] = useState('18.5204, 73.8567');
-  const [address, setAddress] = useState('Warehouse A (Pune)');
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [showCheckInSuccess, setShowCheckInSuccess] = useState(false);
   const [breakModalOpen, setBreakModalOpen] = useState(false);
@@ -183,7 +183,52 @@ export const Home: React.FC = () => {
   const [showCheckOutSuccess, setShowCheckOutSuccess] = useState(false);
   const [liveWorkingTime, setLiveWorkingTime] = useState('00h 00m 00s');
 
-  // Initialize client telemetry info
+  // ── 🎯 ENTERPRISE REAL-TIME GPS WATCHER STATES ──
+  const [watchLat, setWatchLat] = useState<number>(18.5204);
+  const [watchLng, setWatchLng] = useState<number>(73.8567);
+  const [watchAccuracy, setWatchAccuracy] = useState<number>(6);
+  const [watchSpeed, setWatchSpeed] = useState<number>(45);
+  const [watchHeading, setWatchHeading] = useState<number>(90);
+  const [watchAddress, setWatchAddress] = useState<string>('Pune Logistics Hub Terminal A');
+  const [gpsStatusBadge, setGpsStatusBadge] = useState<'LIVE' | 'SEARCHING' | 'DISABLED' | 'OFFLINE' | 'SYNCING'>('SEARCHING');
+  const [gpsPermissionState, setGpsPermissionState] = useState<'granted' | 'prompt' | 'denied'>('prompt');
+  const [lastGpsSyncTime, setLastGpsSyncTime] = useState<string>('Just now');
+  const lastSentPosRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
+
+  // Haversine distance calculator helper (in meters)
+  const calculateDistanceMeters = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371e3;
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  };
+
+  // Reverse Geocoding helper
+  const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, {
+        headers: { 'User-Agent': 'SmartOpsLogisticsApp/1.0' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.display_name) {
+          return data.display_name;
+        }
+      }
+    } catch (e) {}
+    if (lat > 18.9) return 'Mumbai DC Gate 2, Port Area';
+    return 'Pune Logistics Hub Terminal A';
+  };
+
+  // Initialize navigator.geolocation.watchPosition()
   useEffect(() => {
     const ua = navigator.userAgent;
     let dev = 'Desktop Browser';
@@ -193,24 +238,84 @@ export const Home: React.FC = () => {
     else if (/win/i.test(ua)) dev = 'Windows Desktop';
     setDeviceInfo(dev);
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          const lat = pos.coords.latitude.toFixed(5);
-          const lng = pos.coords.longitude.toFixed(5);
-          setGpsCoords(`${lat}, ${lng}`);
-          if (pos.coords.latitude > 18.9) {
-            setAddress('Mumbai DC Gate 2, Port Area');
-          } else {
-            setAddress('Pune Logistics Hub Terminal A');
-          }
-        },
-        err => {
-          console.warn('Geolocation capture failed', err);
-        }
-      );
+    if (!navigator.geolocation) {
+      setGpsPermissionState('denied');
+      setGpsStatusBadge('DISABLED');
+      return;
     }
-  }, []);
+
+    setGpsStatusBadge('SEARCHING');
+
+    const watchId = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const accuracy = pos.coords.accuracy || 5;
+        const speed = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0;
+        const heading = pos.coords.heading || 0;
+
+        setWatchLat(lat);
+        setWatchLng(lng);
+        setWatchAccuracy(accuracy);
+        if (speed > 0) setWatchSpeed(speed);
+        if (heading > 0) setWatchHeading(heading);
+        setGpsPermissionState('granted');
+        setGpsStatusBadge('LIVE');
+        setLastGpsSyncTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+
+        // Distance & Throttling Check (Every 20 meters moved OR > 8 seconds elapsed)
+        const now = Date.now();
+        let shouldSend = false;
+
+        if (!lastSentPosRef.current) {
+          shouldSend = true;
+        } else {
+          const dist = calculateDistanceMeters(lastSentPosRef.current.lat, lastSentPosRef.current.lng, lat, lng);
+          const timeElapsed = now - lastSentPosRef.current.time;
+          if (dist >= 20 || timeElapsed >= 8000) {
+            shouldSend = true;
+          }
+        }
+
+        if (shouldSend) {
+          lastSentPosRef.current = { lat, lng, time: now };
+          const resolvedAddr = await reverseGeocode(lat, lng);
+          setWatchAddress(resolvedAddr);
+
+          // Dispatch to Backend POST /api/driver/location
+          api.driver.sendLocation({
+            driverId,
+            tripId: activeTrip?.id || activeTrip?.tripNumber,
+            latitude: lat,
+            longitude: lng,
+            accuracy,
+            speed,
+            heading,
+            address: resolvedAddr,
+            timestamp: new Date().toISOString()
+          });
+        }
+      },
+      (err) => {
+        console.warn('Geolocation watchPosition error:', err);
+        if (err.code === err.PERMISSION_DENIED) {
+          setGpsPermissionState('denied');
+          setGpsStatusBadge('DISABLED');
+        } else {
+          setGpsStatusBadge('SEARCHING');
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 5000,
+        timeout: 10000
+      }
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [driverId, activeTrip]);
 
   // Live Timer for Working Hours
   useEffect(() => {
@@ -273,8 +378,8 @@ export const Home: React.FC = () => {
           driverId,
           driverName: user?.fullName || 'Rajesh Kumar',
           employeeName: user?.fullName || 'Rajesh Kumar',
-          checkInGPS: gpsCoords,
-          checkInWarehouse: address,
+          checkInGPS: `${watchLat.toFixed(5)}, ${watchLng.toFixed(5)}`,
+          checkInWarehouse: watchAddress,
           checkInDeviceInfo: deviceInfo,
           checkInInternetStatus: `IP: ${ipAddress} (Online)`
         };
@@ -297,7 +402,7 @@ export const Home: React.FC = () => {
         driverId,
         type: breakType,
         remarks: breakRemarks,
-        gps: '18.7502, 73.4501'
+        gps: `${watchLat.toFixed(5)}, ${watchLng.toFixed(5)}`
       });
       setBreakModalOpen(false);
       setBreakRemarks('');
@@ -310,7 +415,7 @@ export const Home: React.FC = () => {
     try {
       await driverEndBreak({
         driverId,
-        gps: '18.7502, 73.4501'
+        gps: `${watchLat.toFixed(5)}, ${watchLng.toFixed(5)}`
       });
     } catch (err) {
       console.error(err);
@@ -319,75 +424,24 @@ export const Home: React.FC = () => {
 
   const handleEndDuty = async () => {
     setIsEndingDuty(true);
-
-    const performCheckout = async (coords?: { latitude: number; longitude: number; address: string }) => {
-      try {
-        const checkOutTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-        
-        let gps = '19.0760, 72.8777';
-        let lat = 19.0760;
-        let lng = 72.8777;
-        let addr = 'Mumbai DC Gate 2, Port Area';
-        
-        if (coords) {
-          gps = `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`;
-          lat = coords.latitude;
-          lng = coords.longitude;
-          addr = coords.address;
-        }
-
-        await driverEndDuty({
-          driverId,
-          checkOutGPS: gps,
-          latitude: lat,
-          longitude: lng,
-          address: addr,
-          checkOutTime,
-          tripsCompleted: completedTrips.length || 1,
-          distanceCovered: 148,
-          fuelUsed: 24
-        });
-        
-        setIsEndingDuty(false);
-        setShowCheckOutSuccess(true);
-      } catch (err) {
-        setIsEndingDuty(false);
-        console.error(err);
-      }
-    };
-
-    const getCheckoutAddr = async (latitude: number, longitude: number): Promise<string> => {
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`, {
-          headers: { 'User-Agent': 'SmartOpsAttendanceApp/1.0' }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.display_name) {
-            return data.display_name;
-          }
-        }
-      } catch (e) {}
-      if (latitude > 18.9) return "Mumbai DC Gate 2, Port Area";
-      return "Pune Warehouse Yard A";
-    };
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          const resolvedAddr = await getCheckoutAddr(lat, lng);
-          performCheckout({ latitude: lat, longitude: lng, address: resolvedAddr });
-        },
-        async (err) => {
-          console.warn('Geolocation failed during checkout, using fallback', err);
-          performCheckout();
-        },
-        { timeout: 5000 }
-      );
-    } else {
-      performCheckout();
+    try {
+      const checkOutTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+      await driverEndDuty({
+        driverId,
+        checkOutGPS: `${watchLat.toFixed(5)}, ${watchLng.toFixed(5)}`,
+        latitude: watchLat,
+        longitude: watchLng,
+        address: watchAddress,
+        checkOutTime,
+        tripsCompleted: completedTrips.length || 1,
+        distanceCovered: 148,
+        fuelUsed: 24
+      });
+      setIsEndingDuty(false);
+      setShowCheckOutSuccess(true);
+    } catch (err) {
+      setIsEndingDuty(false);
+      console.error(err);
     }
   };
 
@@ -588,7 +642,7 @@ export const Home: React.FC = () => {
         <KPICard
           id="fuel"
           title="Fuel Efficiency"
-          value={`${driverVehicle.mileage || 4.8} km/L`}
+          value={`${driverVehicle?.mileage || 4.8} km/L`}
           description="Current fuel rating"
           progress={88}
           color="#8B5CF6"
@@ -616,8 +670,8 @@ export const Home: React.FC = () => {
         <KPICard
           id="vehicle"
           title="Vehicle Status"
-          value={driverVehicle.status || 'Moving'}
-          description={driverVehicle.vehicleNumber || 'MH-12-QW-9874'}
+          value={driverVehicle?.status || 'Moving'}
+          description={driverVehicle?.vehicleNumber || user?.vehicleNumber || 'MH-12-QW-9874'}
           progress={95}
           color="#10B981"
           icon={Gauge}
@@ -667,7 +721,7 @@ export const Home: React.FC = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
                 <div className="p-3 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
                   <span className="text-[10px] text-slate-400 font-bold block">Vehicle</span>
-                  <span className="font-bold text-[#0B1C30] dark:text-[#F8FAFC] mt-0.5 block">{activeTrip.vehicleNumber}</span>
+                  <span className="font-bold text-[#0B1C30] dark:text-[#F8FAFC] mt-0.5 block">{activeTrip.vehicleNumber || driverVehicle?.vehicleNumber || 'MH-12-QW-9874'}</span>
                 </div>
                 <div className="p-3 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
                   <span className="text-[10px] text-slate-400 font-bold block">Cargo Weight</span>
@@ -721,44 +775,54 @@ export const Home: React.FC = () => {
         </div>
       )}
 
-      {/* ── 4. LIVE LOCATION & TELEMETRY CARD ── */}
+      {/* ── 4. ENTERPRISE LIVE GPS MAP & TELEMETRY SECTION ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-4 lg:col-span-2 text-left">
-          <div className="flex justify-between items-center pb-3 border-b border-[#E5EEFF] dark:border-[#334155]">
-            <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC] flex items-center gap-2">
-              <Compass className="h-4 w-4 text-[#006A6A] dark:text-[#7DF5F5]" /> Live GPS Telemetry Stream
-            </h3>
-            <span className="flex items-center gap-1.5 text-xs text-[#10B981] font-bold">
-              <span className="w-2 h-2 bg-[#10B981] rounded-full animate-ping" /> LIVE GPS ACTIVE
-            </span>
-          </div>
+        <div className="lg:col-span-2 space-y-4">
+          {/* GPS Permission Denied Alert Banner */}
+          {gpsPermissionState === 'denied' && (
+            <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-300 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-rose-500/20 rounded-xl text-rose-400">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-white text-sm">Location Access Required</h4>
+                  <p className="text-[11px] text-slate-300">
+                    Location access is required during an active delivery. Please enable browser GPS permissions to continue live trip tracking.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-3 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow cursor-pointer whitespace-nowrap"
+              >
+                Retry Permission
+              </button>
+            </div>
+          )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
-              <span className="text-[10px] text-slate-400 font-bold uppercase block">Latitude</span>
-              <span className="font-mono font-bold text-[#0B1C30] dark:text-[#F8FAFC] text-sm block mt-0.5">{gpsCoords.split(',')[0] || '18.5204'}° N</span>
-            </div>
-            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
-              <span className="text-[10px] text-slate-400 font-bold uppercase block">Longitude</span>
-              <span className="font-mono font-bold text-[#0B1C30] dark:text-[#F8FAFC] text-sm block mt-0.5">{gpsCoords.split(',')[1] || '73.8567'}° E</span>
-            </div>
-            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
-              <span className="text-[10px] text-slate-400 font-bold uppercase block">Speed</span>
-              <span className="font-mono font-bold text-[#10B981] text-sm block mt-0.5">58 km/h</span>
-            </div>
-            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
-              <span className="text-[10px] text-slate-400 font-bold uppercase block">Heading</span>
-              <span className="font-mono font-bold text-[#0B1C30] dark:text-[#F8FAFC] text-sm block mt-0.5">NW (312°)</span>
-            </div>
-          </div>
-
-          <div className="p-4 bg-[#0F172A] rounded-xl text-white font-mono text-xs flex justify-between items-center shadow-inner">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-[#7DF5F5] shrink-0" />
-              <span className="truncate">{address}</span>
-            </div>
-            <span className="text-[10px] text-slate-400 font-bold shrink-0">Updated: Just now</span>
-          </div>
+          {/* Reusable DriverLiveMap Component */}
+          <DriverLiveMap
+            latitude={watchLat}
+            longitude={watchLng}
+            accuracy={watchAccuracy}
+            speed={watchSpeed}
+            heading={watchHeading}
+            address={watchAddress}
+            vehicleNumber={activeTrip?.vehicleNumber || driverVehicle?.vehicleNumber || user?.vehicleNumber || 'MH-12-QW-9874'}
+            statusBadge={gpsStatusBadge}
+            lastUpdatedText={lastGpsSyncTime}
+            onRefreshLocation={() => {
+              if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                  setWatchLat(pos.coords.latitude);
+                  setWatchLng(pos.coords.longitude);
+                  setWatchAccuracy(pos.coords.accuracy || 5);
+                  setLastGpsSyncTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+                });
+              }
+            }}
+          />
         </div>
 
         {/* Vehicle Health & Compliance */}

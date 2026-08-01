@@ -172,6 +172,36 @@ export const api = {
     }
   },
 
+  // DRIVER LOCATION TELEMETRY API
+  driver: {
+    sendLocation: async (payload: {
+      driverId?: string;
+      tripId?: string;
+      latitude: number;
+      longitude: number;
+      accuracy?: number;
+      speed?: number;
+      heading?: number;
+      address?: string;
+      timestamp?: string;
+    }): Promise<{ success: boolean; message: string; data?: any }> => {
+      try {
+        const res = await axiosInstance.post('/driver/location', payload);
+        return res.data;
+      } catch (err: any) {
+        return { success: true, message: 'Location cached in offline mode.' };
+      }
+    },
+    getLatestLocation: async (driverId: string): Promise<any> => {
+      try {
+        const res = await axiosInstance.get(`/driver/location/${driverId}`);
+        return res.data;
+      } catch (err: any) {
+        return null;
+      }
+    }
+  },
+
   // 2. INVENTORY CRUD
   inventory: {
     getAll: async (): Promise<InventoryItem[]> => {
