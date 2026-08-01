@@ -21,6 +21,21 @@ const normalizeRole = (role?: string): 'Owner' | 'Driver' => {
 };
 
 /**
+ * Normalizes email strings, fixing common typos like @gamil.com -> @gmail.com
+ */
+const normalizeEmail = (raw?: string): string => {
+  if (!raw) return '';
+  let str = String(raw).toLowerCase().trim();
+  str = str
+    .replace('@gamil.com', '@gmail.com')
+    .replace('@gmial.com', '@gmail.com')
+    .replace('@gmai.com', '@gmail.com')
+    .replace('@yaho.com', '@yahoo.com')
+    .replace('@hotmial.com', '@hotmail.com');
+  return str;
+};
+
+/**
  * Generates a cryptographically secure 6-digit numeric OTP string
  */
 export const generateSecureOTP = (): string => {
@@ -432,10 +447,15 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Email address and password are required.' });
     }
 
+    const rawEmail = String(email).trim();
+    const cleanedEmail = normalizeEmail(rawEmail);
+
     const user = await User.findOne({
       $or: [
-        { email: email.toLowerCase().trim() },
-        { mobileNumber: String(email).trim() }
+        { email: cleanedEmail },
+        { email: rawEmail.toLowerCase() },
+        { mobileNumber: rawEmail },
+        { driverId: rawEmail }
       ]
     });
 

@@ -7,7 +7,7 @@ import { User, Phone, Mail, Award, Lock, LogOut, ShieldAlert } from 'lucide-reac
 export const Profile: React.FC = () => {
   const { vehicles, user, logout, triggerNotification } = useOperations();
   const navigate = useNavigate();
-  const driverVehicle = vehicles[0]; // container MH-12
+  const driverVehicle = vehicles[0] || { vehicleNumber: user?.vehicleNumber || 'MH-12-QW-9874' };
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',

@@ -31,11 +31,9 @@ const OwnerOperations = lazy(() => import('./pages/owner/Operations').then(m => 
 const OwnerInventory = lazy(() => import('./pages/owner/Inventory').then(m => ({ default: m.Inventory })));
 const OwnerAttendance = lazy(() => import('./pages/owner/Attendance').then(m => ({ default: m.Attendance })));
 const OwnerFleet = lazy(() => import('./pages/owner/Fleet').then(m => ({ default: m.Fleet })));
-const OwnerTasks = lazy(() => import('./pages/owner/Tasks').then(m => ({ default: m.Tasks })));
 const OwnerPayroll = lazy(() => import('./pages/owner/Payroll').then(m => ({ default: m.Payroll })));
 const OwnerReports = lazy(() => import('./pages/owner/Reports').then(m => ({ default: m.Reports })));
 const OwnerSettings = lazy(() => import('./pages/owner/Settings').then(m => ({ default: m.Settings })));
-const OwnerNotifications = lazy(() => import('./pages/owner/Notifications').then(m => ({ default: m.Notifications })));
 const OwnerWorkers = lazy(() => import('./pages/owner/Workers').then(m => ({ default: m.Workers })));
 const OwnerProfile = lazy(() => import('./pages/owner/Profile').then(m => ({ default: m.Profile })));
 const OwnerPOD = lazy(() => import('./pages/owner/POD').then(m => ({ default: m.POD })));
@@ -57,12 +55,15 @@ const NotFound = lazy(() => import('./pages/errors/NotFound').then(m => ({ defau
 const Unauthorized = lazy(() => import('./pages/errors/Unauthorized').then(m => ({ default: m.Unauthorized })));
 const ServerError = lazy(() => import('./pages/errors/ServerError').then(m => ({ default: m.ServerError })));
 
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+
 const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <OperationsProvider>
-        <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <OperationsProvider>
+          <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Auth Layout Wrapper */}
               <Route element={<AuthLayout />}>
@@ -81,11 +82,9 @@ const App: React.FC = () => {
                   <Route path="inventory" element={<OwnerInventory />} />
                   <Route path="attendance" element={<OwnerAttendance />} />
                   <Route path="fleet" element={<OwnerFleet />} />
-                  <Route path="tasks" element={<OwnerTasks />} />
                   <Route path="payroll" element={<OwnerPayroll />} />
                   <Route path="reports" element={<OwnerReports />} />
                   <Route path="settings" element={<OwnerSettings />} />
-                  <Route path="notifications" element={<OwnerNotifications />} />
                   <Route path="workers" element={<OwnerWorkers />} />
                   <Route path="profile" element={<OwnerProfile />} />
                   <Route path="pod" element={<OwnerPOD />} />
@@ -122,6 +121,7 @@ const App: React.FC = () => {
         </BrowserRouter>
       </OperationsProvider>
     </ThemeProvider>
+  </ErrorBoundary>
   );
 };
 

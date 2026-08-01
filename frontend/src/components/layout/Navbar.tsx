@@ -83,8 +83,6 @@ export const Navbar: React.FC = () => {
     setShowNotifications(false);
     if (isDriver) {
       navigate('/driver/notifications');
-    } else {
-      navigate('/owner/notifications');
     }
   };
 
@@ -234,12 +232,14 @@ export const Navbar: React.FC = () => {
                     >
                       Mark all read
                     </button>
-                    <button
-                      onClick={handleNotificationsClick}
-                      className="text-[#4B5563] dark:text-[#CBD5E1] hover:text-[#111827] dark:hover:text-white cursor-pointer"
-                    >
-                      View all →
-                    </button>
+                    {isDriver && (
+                      <button
+                        onClick={handleNotificationsClick}
+                        className="text-[#4B5563] dark:text-[#CBD5E1] hover:text-[#111827] dark:hover:text-white cursor-pointer"
+                      >
+                        View all →
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               </>

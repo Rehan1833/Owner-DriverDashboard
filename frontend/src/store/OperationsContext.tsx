@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole, Vehicle, Trip, Task, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord, Company } from '../types';
-import { mockTasks, mockNotifications, mockActivities } from '../api/mockData';
+import { User, UserRole, Vehicle, Trip, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord, Company } from '../types';
+import { mockNotifications, mockActivities } from '../api/mockData';
 import { api } from '../api/client';
 import { io } from 'socket.io-client';
 import { LogoutConfirmationModal } from '../components/common/LogoutConfirmationModal';
@@ -10,7 +10,6 @@ interface OperationsContextType {
   company: Company | null;
   vehicles: Vehicle[];
   trips: Trip[];
-  tasks: Task[];
   inventory: InventoryItem[];
   payroll: PayrollRecord[];
   attendance: AttendanceRecord[];
@@ -77,8 +76,6 @@ interface OperationsContextType {
   cancelTrip: (tripId: string) => Promise<void>;
   updateTripStatus: (tripId: string, status: Trip['status'], details?: { stopReason?: string; signatureData?: string; photo?: string; deliveryPhoto?: string[] }) => Promise<void>;
 
-  // Dashboard compatibility helpers
-  createTask: (task: Omit<Task, 'id' | 'status' | 'progress'>) => void;
   approvePayroll: (id: string) => Promise<void>;
   // Helpers
   addActivity: (action: string, details: string, category: ActivityItem['category']) => void;
@@ -103,7 +100,6 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [payroll, setPayroll] = useState<PayrollRecord[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
@@ -275,7 +271,6 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setCompany(null);
       setVehicles([]);
       setTrips([]);
-      setTasks([]);
       setInventory([]);
       setPayroll([]);
       setAttendance([]);
@@ -540,18 +535,6 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return () => clearInterval(interval);
   }, [user, trips]);
 
-  const createTask = (taskData: Omit<Task, 'id' | 'status' | 'progress'>) => {
-    const newTask: Task = {
-      ...taskData,
-      id: `tk-${Date.now()}`,
-      status: 'Pending',
-      progress: 0
-    };
-    setTasks(prev => [newTask, ...prev]);
-    addActivity('Task Created', `Created task "${newTask.title}" for ${newTask.assignedTo}`, 'task');
-    triggerNotification('Task Assigned', 'New Operational Task', `Task "${newTask.title}" assigned to ${newTask.assignedTo}.`, 'Info');
-  };
-
   const approvePayroll = async (id: string) => {
     await updateSalary(id, { paymentStatus: 'Paid' });
   };
@@ -563,7 +546,6 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         company,
         vehicles,
         trips,
-        tasks,
         inventory,
         payroll,
         attendance,
@@ -598,7 +580,6 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         createTrip,
         cancelTrip,
         updateTripStatus,
-        createTask,
         approvePayroll,
         addActivity,
         triggerNotification,

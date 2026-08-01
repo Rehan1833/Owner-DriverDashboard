@@ -32,7 +32,7 @@ import {
   MapPin,
   Calendar
 } from 'lucide-react';
-import { Task, SystemNotification, InventoryItem, AttendanceRecord, Vehicle, Trip, ActivityItem } from '../../types';
+import { SystemNotification, InventoryItem, AttendanceRecord, Vehicle, Trip, ActivityItem } from '../../types';
 
 // Circular Progress Ring Component
 const ProgressRing: React.FC<{
@@ -150,15 +150,14 @@ const KPICard: React.FC<{
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const {
-    user,
     vehicles,
     trips,
+    inventory,
     payroll,
     attendance,
-    inventory,
     activities,
+    user,
     notifications,
-    createTask,
     triggerNotification,
     addActivity
   } = useOperations();
@@ -187,7 +186,7 @@ export const Dashboard: React.FC = () => {
         navigate('/owner/fleet');
         break;
       case 'alerts':
-        navigate('/owner/notifications');
+        navigate('/owner/operations');
         break;
       case 'salary':
         navigate('/owner/payroll');
@@ -204,11 +203,7 @@ export const Dashboard: React.FC = () => {
   const [activeChartTab, setActiveChartTab] = useState<'Inventory' | 'Revenue' | 'Attendance' | 'Fleet' | 'Stock'>('Revenue');
 
   // Modals state
-  const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskAssigned, setNewTaskAssigned] = useState('Amit Patel (Supervisor)');
-  const [newTaskPriority, setNewTaskPriority] = useState<Task['priority']>('High');
 
   // Multi-table selection
   const [activeTableTab, setActiveTableTab] = useState<'Inventory' | 'Attendance' | 'Fleet' | 'Activities' | 'Notifications' | 'Orders'>('Inventory');
@@ -380,21 +375,6 @@ export const Dashboard: React.FC = () => {
 
 
   // Actions
-  const handleCreateTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTaskTitle.trim()) return;
-
-    createTask({
-      title: newTaskTitle,
-      description: 'Critical business variance resolution duty.',
-      priority: newTaskPriority,
-      assignedTo: newTaskAssigned,
-      deadline: '2026-07-22'
-    });
-    setNewTaskTitle('');
-    setTaskModalOpen(false);
-    triggerAudio('Success');
-  };
 
   const handleExport = (format: 'PDF' | 'Excel') => {
     let headers: string[] = [];
@@ -503,14 +483,6 @@ export const Dashboard: React.FC = () => {
           >
             <FileDown className="h-4 w-4" />
             Generate Report
-          </Button>
-          <Button
-            variant="primary"
-            className="text-xs py-2 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-lg shadow-teal-900/20"
-            onClick={() => setTaskModalOpen(true)}
-          >
-            <Plus className="h-4 w-4" />
-            Create Task
           </Button>
         </div>
       </div>
@@ -1063,60 +1035,7 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Task Creation Modal */}
-      <Modal isOpen={taskModalOpen} onClose={() => setTaskModalOpen(false)} title="Create Operations Task">
-        <form onSubmit={handleCreateTask} className="space-y-5 text-left">
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase tracking-wide">Task Name</label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Verify gate 2 vehicle logs"
-              value={newTaskTitle}
-              onChange={e => setNewTaskTitle(e.target.value)}
-              className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] bg-white dark:bg-[#0F172A] text-slate-700 dark:text-[#F8FAFC] transition-all shadow-sm font-medium"
-            />
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase tracking-wide">Assigned Staff</label>
-              <select
-                value={newTaskAssigned}
-                onChange={e => setNewTaskAssigned(e.target.value)}
-                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] transition-all bg-white dark:bg-[#0F172A] text-slate-700 dark:text-[#F8FAFC] cursor-pointer shadow-sm font-medium"
-              >
-                <option>Amit Patel (Supervisor)</option>
-                <option>Vikram Singh (Fleet Manager)</option>
-                <option>Sanjay Dutt (Technician)</option>
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase tracking-wide">Priority Rating</label>
-              <select
-                value={newTaskPriority}
-                onChange={e => setNewTaskPriority(e.target.value as Task['priority'])}
-                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] transition-all bg-white dark:bg-[#0F172A] text-slate-700 dark:text-[#F8FAFC] cursor-pointer shadow-sm font-medium"
-              >
-                <option value="Low">Low Priority</option>
-                <option value="Medium">Medium Priority</option>
-                <option value="High">High Priority</option>
-                <option value="Critical">Critical Priority</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 mt-4">
-            <Button type="button" variant="outline" onClick={() => setTaskModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary">
-              Assign Task
-            </Button>
-          </div>
-        </form>
-      </Modal>
 
       {/* Reports Generator Modal */}
       <Modal isOpen={reportModalOpen} onClose={() => setReportModalOpen(false)} title="Generate Corporate Report">

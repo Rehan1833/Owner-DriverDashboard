@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { User, Vehicle, Trip, Task, InventoryItem, PayrollRecord, AttendanceRecord, PODRecord, DriverRecord, Company } from '../types';
-import { mockVehicles, mockTrips, mockTasks, mockInventory, mockPayroll, mockAttendance } from './mockData';
+import { User, Vehicle, Trip, InventoryItem, PayrollRecord, AttendanceRecord, PODRecord, DriverRecord, Company } from '../types';
+import { mockVehicles, mockTrips, mockInventory, mockPayroll, mockAttendance } from './mockData';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 

@@ -1,12 +1,11 @@
 import React from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
   Activity,
   Warehouse,
   Truck,
-  CheckSquare,
   Users,
   CreditCard,
   FileText,
@@ -16,7 +15,7 @@ import {
   ChevronRight,
   ShieldCheck,
   Bell,
-  LineChart
+  User
 } from 'lucide-react';
 import { useOperations } from '../../store/OperationsContext';
 
@@ -27,7 +26,6 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { logout, user } = useOperations();
 
   const isDriver = user?.role === 'Driver';
@@ -67,24 +65,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
           ],
         },
         {
-          title: 'Management',
+          title: 'Management & Reports',
           items: [
             { name: 'Inventory Logs', path: '/owner/inventory', icon: Warehouse },
-            { name: 'Task Board', path: '/owner/tasks', icon: CheckSquare },
             { name: 'Payroll & Salary', path: '/owner/payroll', icon: CreditCard },
-          ],
-        },
-        {
-          title: 'Analytics & Alerts',
-          items: [
             { name: 'Reports Desk', path: '/owner/reports', icon: FileText },
-            { name: 'Business Analytics', path: '/owner/analytics', icon: LineChart },
-            { name: 'Notifications Log', path: '/owner/notifications', icon: Bell },
           ],
         },
         {
           title: 'Account Settings',
           items: [
+            { name: 'Profile Settings', path: '/owner/profile', icon: User },
             { name: 'System Settings', path: '/owner/settings', icon: Settings },
           ],
         },
@@ -186,31 +177,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
         ))}
       </nav>
 
-      {/* Footer Profile & Logout */}
-      <div className="p-3 border-t border-[#334155]/60 shrink-0 space-y-2 bg-[#17202E]">
-        <div className={`flex items-center gap-3 p-2.5 rounded-xl bg-[#0F172A]/50 border border-[#334155]/60 hover:bg-[#0F172A]/80 transition-colors overflow-hidden ${isCollapsed ? 'justify-center p-2' : ''}`}>
-          <img
-            src={user?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.fullName || 'SmartOps'}&backgroundColor=006A6A`}
-            alt="Avatar"
-            className="w-8 h-8 rounded-full bg-[#0F172A] shrink-0 border border-[#334155]"
-          />
-          {!isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.12 }}
-              className="flex-1 min-w-0"
-            >
-              <p className="text-xs font-bold text-[#F8FAFC] truncate leading-tight">{user?.fullName || 'User'}</p>
-              <p className="text-[10px] font-semibold text-[#7DF5F5] uppercase tracking-wider truncate leading-tight mt-0.5">{user?.role || 'Driver'}</p>
-            </motion.div>
-          )}
-        </div>
+      {/* Footer Logout Button Only (No profile card below or above) */}
+      <div className="p-3 border-t border-[#334155]/60 shrink-0 bg-[#17202E]">
         <button
           onClick={handleLogout}
           title={isCollapsed ? 'Logout' : undefined}
           aria-label="Logout"
-          className={`flex items-center gap-3 w-full px-3 py-2.5 text-xs text-[#CBD5E1] hover:text-rose-400 bg-[#0F172A]/50 hover:bg-rose-500/15 border border-[#334155]/60 hover:border-rose-500/30 rounded-xl transition-all duration-200 font-semibold group cursor-pointer ${isCollapsed ? 'justify-center' : ''}`}
+          className={`flex items-center gap-3 w-full px-3.5 py-2.5 text-xs text-[#CBD5E1] hover:text-rose-400 bg-[#0F172A]/70 hover:bg-rose-500/15 border border-[#334155]/60 hover:border-rose-500/30 rounded-xl transition-all duration-200 font-semibold group cursor-pointer ${isCollapsed ? 'justify-center' : ''}`}
         >
           <LogOut className="h-4 w-4 shrink-0 text-[#94A3B8] group-hover:text-rose-400 transition-colors" />
           {!isCollapsed && (

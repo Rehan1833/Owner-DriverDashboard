@@ -1,17 +1,124 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useOperations } from '../../store/OperationsContext';
-import { Table } from '../../components/tables/Table';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Truck, Compass, CheckCircle, Navigation, Phone, Gauge, Sparkles, Award, MapPin,
-  Clock, ShieldAlert, FileText, Camera, Edit3, Calendar, Activity, AlertTriangle, Play, RefreshCw, Eye, FileCheck, LogOut
+  Clock, ShieldAlert, FileText, Camera, Edit3, Calendar, Activity, AlertTriangle, Play, RefreshCw, Eye, FileCheck, LogOut,
+  TrendingUp, Package, ArrowUpRight, ArrowDownRight, Fuel, ShieldCheck, Zap
 } from 'lucide-react';
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { Trip, Vehicle } from '../../types';
+
+// Circular Progress Ring Component (Identical to Owner Dashboard)
+const ProgressRing: React.FC<{
+  progress: number;
+  color: string;
+  size?: number;
+  strokeWidth?: number;
+}> = ({ progress, color, size = 42, strokeWidth = 4 }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (Math.min(Math.max(progress, 0), 100) / 100) * circumference;
+
+  const isClassColor = color.startsWith('text-');
+
+  return (
+    <div className="relative flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          className="stroke-slate-100/50 dark:stroke-slate-800/40"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={isClassColor ? undefined : color}
+          className={`transition-all duration-500 ease-out ${isClassColor ? color.replace('text-', 'stroke-') : ''}`}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+        />
+      </svg>
+      <span 
+        className={`absolute text-[9px] font-extrabold ${isClassColor ? color : ''}`}
+        style={{ color: isClassColor ? undefined : color }}
+      >
+        {Math.round(progress)}%
+      </span>
+    </div>
+  );
+};
+
+// Executive KPI Card (Identical to Owner Dashboard)
+const KPICard: React.FC<{
+  id: string;
+  title: string;
+  value: string | number;
+  change?: string;
+  isPositive?: boolean;
+  icon: React.ComponentType<any>;
+  progress: number;
+  color: string;
+  description: string;
+  onClick?: () => void;
+}> = ({ id, title, value, change, isPositive = true, icon: Icon, progress, color, description, onClick }) => {
+  return (
+    <div 
+      onClick={onClick}
+      className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] p-5 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between items-stretch gap-4 group cursor-pointer text-left min-h-[175px] w-full overflow-hidden"
+    >
+      <div className="flex justify-between items-start gap-2 min-w-0">
+        <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-tight whitespace-normal break-words leading-tight flex-1">
+          {title}
+        </span>
+        <div className="p-2 rounded-lg transition-all duration-300 shrink-0" style={{ backgroundColor: `${color}12`, color }}>
+          <Icon className="h-4.5 w-4.5 transition-transform duration-300 group-hover:scale-110" />
+        </div>
+      </div>
+
+      <div className="min-w-0 py-0.5">
+        <h4 
+          className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tight truncate w-full"
+          title={String(value)}
+        >
+          {value}
+        </h4>
+      </div>
+
+      <div className="flex items-end justify-between gap-2 pt-1 mt-auto">
+        <div className="min-w-0 flex-1">
+          {change && (
+            <div className="flex items-center gap-0.5 mb-0.5">
+              {isPositive ? (
+                <ArrowUpRight className="h-3.5 w-3.5 text-[#10B981] shrink-0" />
+              ) : (
+                <ArrowDownRight className="h-3.5 w-3.5 text-[#EF4444] shrink-0" />
+              )}
+              <span className={`text-[12px] font-bold ${isPositive ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>{change}</span>
+            </div>
+          )}
+          <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 leading-tight line-clamp-2" title={description}>
+            {description}
+          </p>
+        </div>
+        <div className="shrink-0 pl-1">
+          <ProgressRing progress={progress} color={color} size={42} strokeWidth={4} />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const Home: React.FC = () => {
   const {
@@ -29,12 +136,34 @@ export const Home: React.FC = () => {
   } = useOperations();
   const navigate = useNavigate();
 
-  // Active Trip for Driver Rajesh (DRV-9041)
+  // Active Trip for Driver
   const driverId = user?.driverId || 'DRV-9041';
   const driverTrips = trips.filter(t => t.driverId === driverId || t.driverId === 'd1');
   const activeTrip = trips.find(t => (t.driverId === driverId || t.driverId === 'd1') && t.status !== 'Completed') || trips[0];
   const completedTrips = trips.filter(t => (t.driverId === driverId || t.driverId === 'd1') && t.status === 'Completed');
-  const driverVehicle = vehicles.find(v => v.driver?.toLowerCase().includes('rajesh') || v.driver?.toLowerCase().includes('d1') || v.driver?.toLowerCase().includes('drv-9041')) || vehicles[0];
+  const fallbackVehicle: Vehicle = {
+    id: 'veh-default',
+    vehicleNumber: user?.vehicleNumber || 'MH-12-QW-9874',
+    vehicleType: 'Container Truck (18T)',
+    status: 'Moving',
+    driver: user?.fullName || 'Driver Operator',
+    rcNumber: 'RC-MH12-9988-ABC',
+    insurance: '2026-12-31',
+    permit: '2027-06-30',
+    fitness: '2026-10-15',
+    fuelType: 'Diesel',
+    fuelLevel: 78,
+    odometer: 48200,
+    mileage: 4.8,
+    currentLocation: 'Pune Logistics Hub'
+  };
+
+  const driverVehicle = vehicles.find(v => 
+    (v.driver && user?.fullName && v.driver.toLowerCase().includes(user.fullName.toLowerCase())) ||
+    (v.driver && user?.driverId && v.driver.toLowerCase().includes(user.driverId.toLowerCase())) ||
+    v.driver?.toLowerCase().includes('rajesh') ||
+    v.driver?.toLowerCase().includes('d1')
+  ) || vehicles[0] || fallbackVehicle;
 
   // Shift Duty States
   const todayStr = new Date().toISOString().split('T')[0];
@@ -135,7 +264,7 @@ export const Home: React.FC = () => {
     return () => clearInterval(interval);
   }, [todayRecord]);
 
-  // Start Duty handler
+  // Handlers
   const handleStartDuty = async () => {
     setIsCheckingIn(true);
     setTimeout(async () => {
@@ -162,7 +291,6 @@ export const Home: React.FC = () => {
     }, 1000);
   };
 
-  // Start Break handler
   const handleStartBreak = async () => {
     try {
       await driverStartBreak({
@@ -178,7 +306,6 @@ export const Home: React.FC = () => {
     }
   };
 
-  // End Break handler
   const handleEndBreak = async () => {
     try {
       await driverEndBreak({
@@ -190,7 +317,6 @@ export const Home: React.FC = () => {
     }
   };
 
-  // End Duty handler (Location Enabled Check-Out)
   const handleEndDuty = async () => {
     setIsEndingDuty(true);
 
@@ -198,7 +324,7 @@ export const Home: React.FC = () => {
       try {
         const checkOutTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
         
-        let gps = '19.0760, 72.8777'; // Fallback
+        let gps = '19.0760, 72.8777';
         let lat = 19.0760;
         let lng = 72.8777;
         let addr = 'Mumbai DC Gate 2, Port Area';
@@ -265,7 +391,6 @@ export const Home: React.FC = () => {
     }
   };
 
-  // Quick action state triggers
   const handleStatusTransition = () => {
     if (!activeTrip) return;
     let nextStatus: any = 'Assigned';
@@ -285,87 +410,6 @@ export const Home: React.FC = () => {
   const [stopModalOpen, setStopModalOpen] = useState(false);
   const [selectedReason, setSelectedReason] = useState('Traffic Congestion');
 
-  // Dynamic Recharts datasets
-  const driverAttendanceRecords = useMemo(() => {
-    return attendance.filter(a => a.driverId === driverId);
-  }, [attendance, driverId]);
-
-  const weeklyDistData = useMemo(() => {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const dists = [0, 0, 0, 0, 0, 0, 0];
-    driverAttendanceRecords.forEach(rec => {
-      if (rec.date && rec.distanceCovered) {
-        const dayIdx = new Date(rec.date).getDay();
-        const targetIdx = dayIdx === 0 ? 6 : dayIdx - 1;
-        dists[targetIdx] += rec.distanceCovered;
-      }
-    });
-    return days.map((day, idx) => ({
-      day,
-      distance: dists[idx] || 0
-    }));
-  }, [driverAttendanceRecords]);
-
-  const monthlyTripsData = useMemo(() => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const currentMonthIdx = new Date().getMonth();
-    const displayMonths: string[] = [];
-    for (let i = 5; i >= 0; i--) {
-      let mIdx = currentMonthIdx - i;
-      if (mIdx < 0) mIdx += 12;
-      displayMonths.push(months[mIdx]);
-    }
-
-    const runsCount = displayMonths.map(() => 0);
-    completedTrips.forEach(t => {
-      const date = t.timestamp ? new Date(t.timestamp) : new Date();
-      const mName = months[date.getMonth()];
-      const idx = displayMonths.indexOf(mName);
-      if (idx !== -1) {
-        runsCount[idx] += 1;
-      }
-    });
-
-    return displayMonths.map((month, idx) => ({
-      month,
-      runs: runsCount[idx] || 0
-    }));
-  }, [completedTrips]);
-
-  const fuelConsumptionData = useMemo(() => {
-    const totalFuel = driverAttendanceRecords.reduce((sum, rec) => sum + (rec.fuelUsed || 0), 0);
-    const weeks = ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'];
-    const factors = [0.22, 0.28, 0.20, 0.30];
-    return weeks.map((week, idx) => ({
-      week,
-      usage: Math.round(totalFuel * factors[idx])
-    }));
-  }, [driverAttendanceRecords]);
-
-  const performanceScoreData = useMemo(() => {
-    const total = driverTrips.length;
-    if (total === 0) {
-      return [
-        { name: 'On Time Delivery', value: 100, color: '#006A6A' },
-        { name: 'Delayed Delivery', value: 0, color: '#F59E0B' },
-        { name: 'Failed Delivery', value: 0, color: '#EF4444' }
-      ];
-    }
-    const completedCount = driverTrips.filter(t => t.status === 'Completed').length;
-    const delayedCount = driverTrips.filter(t => t.status === 'Delayed').length;
-
-    const onTimePercent = Math.round((completedCount / total) * 100);
-    const delayedPercent = Math.round((delayedCount / total) * 100);
-    const failedPercent = Math.max(0, 100 - onTimePercent - delayedPercent);
-
-    return [
-      { name: 'On Time Delivery', value: onTimePercent, color: '#006A6A' },
-      { name: 'Delayed Delivery', value: delayedPercent, color: '#F59E0B' },
-      { name: 'Failed Delivery', value: failedPercent, color: '#EF4444' }
-    ];
-  }, [driverTrips]);
-
-  const isOffDuty = currentDutyStatus === 'Off Duty' && !todayRecord?.checkOut;
   const isDutyEnded = todayRecord && todayRecord.checkOut;
 
   if (isDutyEnded) {
@@ -380,8 +424,8 @@ export const Home: React.FC = () => {
             <CheckCircle className="h-10 w-10 text-emerald-500" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-[#0B1C30] dark:text-slate-100 animate-fade-in">Check-Out Successful</h3>
-            <p className="text-xs text-[#6D7A79]">Shift log processed. Metrics synced to Owner Dashboard.</p>
+            <h3 className="text-xl font-bold text-[#0B1C30] dark:text-slate-100 animate-fade-in">Shift Check-Out Complete</h3>
+            <p className="text-xs text-[#6D7A79] dark:text-[#94A3B8]">Shift log processed. Metrics synced to SmartOps Owner Dashboard.</p>
           </div>
 
           <div className="grid grid-cols-3 gap-4 text-left">
@@ -398,11 +442,11 @@ export const Home: React.FC = () => {
               <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.breakDuration} mins</span>
             </div>
             <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
-              <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-bold block">Distance covered</span>
+              <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-bold block">Distance</span>
               <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.distanceCovered} km</span>
             </div>
             <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
-              <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-bold block">Fuel Consumed</span>
+              <span className="text-[10px] text-[#6D7A79] dark:text-[#94A3B8] uppercase font-bold block">Fuel Used</span>
               <span className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] block mt-1">{todayRecord.fuelUsed} L</span>
             </div>
             <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/40 border border-[#E5EEFF] dark:border-[#334155] rounded-xl">
@@ -421,8 +465,8 @@ export const Home: React.FC = () => {
             </Badge>
           </div>
 
-          <div className="pt-2 text-slate-400 text-xs">
-            Shift is closed. You are logged off from duty telemetry tracking.
+          <div className="pt-2 text-slate-400 text-xs font-medium">
+            Shift closed. Telemetry sync complete.
           </div>
         </motion.div>
       </div>
@@ -431,571 +475,386 @@ export const Home: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in text-left">
-
-      {/* ── 1. Prominent Welcome Header (Always Visible) ── */}
-      <div className="bg-gradient-to-r from-[#006A6A] via-[#005757] to-[#0B1C30] dark:from-[#1E293B] dark:via-[#0F172A] dark:to-[#111827] text-white rounded-2xl p-6 md:p-8 shadow-md border border-teal-800/30 dark:border-[#334155] relative overflow-hidden">
-        {/* Subtle truck icon background element */}
-        <div className="absolute right-0 top-0 bottom-0 opacity-10 pointer-events-none flex items-center pr-6">
-          <Truck className="w-64 h-64 text-white" />
+      {/* ── 1. EXECUTIVE CONSOLE HERO BANNER (Identical to Owner Dashboard) ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-[#0B1C30] via-[#0D2A4A] to-[#0A1828] p-8 md:p-10 rounded-[24px] text-white shadow-lg border border-[#E5EEFF]/80 dark:border-[#334155]/60 text-left animate-fade-in relative overflow-hidden">
+        <div className="space-y-2 z-10">
+          <span className="text-[13px] font-bold text-[#14B8A6] tracking-widest uppercase flex items-center gap-2">
+            <Zap className="h-4 w-4 text-[#14B8A6]" /> DRIVER LOGISTICS CONSOLE
+          </span>
+          <h2 className="text-[36px] sm:text-[42px] font-extrabold tracking-tight leading-none text-[#FFFFFF]">
+            Welcome back, {user?.fullName || 'Rajesh Kumar'}
+          </h2>
+          <p className="text-[#FFFFFF] text-[14px] sm:text-[15px] leading-relaxed max-w-2xl font-medium pt-1">
+            Role: <span className="text-[#14B8A6] font-bold">Driver</span> · ID: <span className="text-[#FFFFFF] font-semibold">{driverId}</span> · Vehicle: <span className="text-[#FFFFFF] font-semibold">{user?.vehicleNumber || driverVehicle?.vehicleNumber || 'MH-12-QW-9874'}</span> · Duty: <span className="text-[#14B8A6] font-bold">{currentDutyStatus}</span>
+          </p>
         </div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-3 py-1 bg-white/15 dark:bg-teal-500/20 backdrop-blur-md rounded-full text-xs font-extrabold uppercase tracking-wider text-teal-100 dark:text-teal-300 border border-white/20">
-                Good Afternoon 👋
-              </span>
-              <span className="px-3 py-1 bg-emerald-500/20 rounded-full text-xs font-extrabold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5 border border-emerald-400/30">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" /> {currentDutyStatus}
-              </span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white leading-tight">
-              Welcome back, {user?.fullName || 'Rajesh Kumar'}
-            </h1>
-            <p className="text-teal-100 dark:text-slate-300 text-sm max-w-2xl font-medium">
-              Today's goal: <span className="text-white font-extrabold">Complete deliveries safely.</span>
-            </p>
-          </div>
-
-          {/* Quick Metrics Pills */}
-          <div className="grid grid-cols-3 gap-3 shrink-0">
-            <div className="bg-white/10 dark:bg-slate-800/80 backdrop-blur-md p-3.5 rounded-xl border border-white/15 dark:border-slate-700/60">
-              <span className="text-[10px] text-teal-100 dark:text-slate-400 font-extrabold uppercase block">Vehicle</span>
-              <span className="text-xs font-extrabold text-white font-mono block mt-0.5">{driverVehicle?.vehicleNumber || 'MH-12-QW-9874'}</span>
-            </div>
-            <div className="bg-white/10 dark:bg-slate-800/80 backdrop-blur-md p-3.5 rounded-xl border border-white/15 dark:border-slate-700/60">
-              <span className="text-[10px] text-teal-100 dark:text-slate-400 font-extrabold uppercase block">Status</span>
-              <span className="text-xs font-extrabold text-emerald-300 block mt-0.5">{currentDutyStatus}</span>
-            </div>
-            <div className="bg-white/10 dark:bg-slate-800/80 backdrop-blur-md p-3.5 rounded-xl border border-white/15 dark:border-slate-700/60">
-              <span className="text-[10px] text-teal-100 dark:text-slate-400 font-extrabold uppercase block">Weather</span>
-              <span className="text-xs font-extrabold text-white block mt-0.5">28°C Sunny ☀️</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── 2. Real-time Duty Tracking Status Strip ── */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] rounded-2xl p-5 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className={`p-2.5 rounded-xl shrink-0 ${
-            currentDutyStatus === 'On Duty' ? 'bg-[#ECFDF5] dark:bg-[#064E3B]/40 text-[#059669] dark:text-[#34D399]' :
-            currentDutyStatus === 'On Trip' ? 'bg-[#F0F9FF] dark:bg-blue-950/20 text-[#006A6A] dark:text-[#7DF5F5]' :
-            currentDutyStatus === 'On Break' ? 'bg-[#FEF3C7] dark:bg-amber-950/20 text-[#D97706] dark:text-[#FBBF24]' : 'bg-[#FFDAD4] dark:bg-red-950/20 text-[#BA1A1A] dark:text-[#FCA5A5]'
-          }`}>
-            <Activity className="h-5 w-5 animate-pulse" />
-          </div>
-          <div>
-            <span className="text-[11px] font-extrabold text-[#6B7280] dark:text-[#94A3B8] uppercase block">Duty Status</span>
-            <span className="font-extrabold text-[#111827] dark:text-white text-sm">{currentDutyStatus}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-[#F3F4F6] dark:bg-[#111827] text-[#4B5563] dark:text-[#94A3B8] shrink-0 border border-[#E5E7EB] dark:border-[#334155]">
-            <Clock className="h-5 w-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-extrabold text-[#6B7280] dark:text-[#94A3B8] uppercase block">Check-In Time</span>
-            <span className="font-bold text-[#111827] dark:text-white text-sm font-mono">{todayRecord?.checkIn || '--'}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-[#F3F4F6] dark:bg-[#111827] text-[#4B5563] dark:text-[#94A3B8] shrink-0 border border-[#E5E7EB] dark:border-[#334155]">
-            <Gauge className="h-5 w-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-extrabold text-[#6B7280] dark:text-[#94A3B8] uppercase block">Break Duration</span>
-            <span className="font-bold text-[#111827] dark:text-white text-sm font-mono">{todayRecord?.breakDuration || 0} mins</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 justify-end">
-          {currentDutyStatus === 'On Break' ? (
+        <div className="flex flex-wrap items-center gap-3 shrink-0 z-10">
+          {currentDutyStatus === 'Off Duty' ? (
             <Button
-              onClick={handleEndBreak}
               variant="primary"
-              className="text-xs py-2 px-4 rounded-xl font-bold"
+              className="text-xs py-2.5 px-4 rounded-xl flex items-center gap-2 cursor-pointer shadow-lg shadow-teal-900/30"
+              onClick={handleStartDuty}
+              disabled={isCheckingIn}
             >
-              Resume Duty
+              <Play className="h-4 w-4 text-white" />
+              {isCheckingIn ? 'Starting Shift...' : 'Start Shift Duty'}
             </Button>
           ) : (
-            <div className="flex items-center gap-2.5">
+            <>
+              {currentDutyStatus === 'On Break' ? (
+                <Button
+                  variant="primary"
+                  className="text-xs py-2.5 px-4 rounded-xl flex items-center gap-2 cursor-pointer shadow-lg shadow-teal-900/30"
+                  onClick={handleEndBreak}
+                >
+                  <Play className="h-4 w-4 text-white" />
+                  End Break
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="text-xs py-2.5 px-4 rounded-xl flex items-center gap-2 cursor-pointer bg-white/10 hover:bg-white/20 text-white border-white/20"
+                  onClick={() => setBreakModalOpen(true)}
+                >
+                  <Clock className="h-4 w-4 text-amber-300" />
+                  Take Break
+                </Button>
+              )}
               <Button
-                onClick={() => setBreakModalOpen(true)}
                 variant="outline"
-                className="text-xs py-2 px-4 rounded-xl bg-white dark:bg-[#1E293B] border border-[#E5E7EB] dark:border-[#334155] text-[#374151] dark:text-[#CBD5E1] hover:bg-[#F3F4F6] dark:hover:bg-[#111827] font-bold"
-              >
-                Start Break
-              </Button>
-              <Button
+                className="text-xs py-2.5 px-4 rounded-xl flex items-center gap-2 cursor-pointer bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border-rose-500/30"
                 onClick={handleEndDuty}
-                isLoading={isEndingDuty}
-                variant="danger"
-                className="text-xs py-2 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold"
+                disabled={isEndingDuty}
               >
-                End Duty
+                <LogOut className="h-4 w-4 text-rose-400" />
+                {isEndingDuty ? 'Checking Out...' : 'End Shift Duty'}
               </Button>
-            </div>
+            </>
           )}
+
+          <Button
+            variant="primary"
+            className="text-xs py-2.5 px-4 rounded-xl flex items-center gap-2 cursor-pointer shadow-lg shadow-teal-900/30"
+            onClick={() => navigate('/driver/pod')}
+          >
+            <Camera className="h-4 w-4 text-white" />
+            Upload POD
+          </Button>
         </div>
       </div>
 
-      {/* ── 3. Shift Action Card & Today's Attendance Card ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Active Operational Consignment Card (2/3 width) */}
-        <div className="lg:col-span-2 flex flex-col justify-between bg-white dark:bg-[#1E293B] p-6 md:p-8 rounded-2xl text-[#111827] dark:text-white border border-[#E5E7EB] dark:border-[#334155] shadow-sm min-h-[220px]">
-          <div className="space-y-2 text-left">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] bg-teal-50 dark:bg-teal-950/40 text-[#006A6A] dark:text-[#7DF5F5] border border-[#006A6A]/20 px-2.5 py-0.5 rounded-full font-extrabold uppercase tracking-wider">
-                Operator Shift Active
-              </span>
-              <span className="flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Telemetry
-              </span>
-            </div>
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight leading-tight text-[#111827] dark:text-white">Assigned Freight Consignment</h2>
-            <p className="text-[#4B5563] dark:text-[#CBD5E1] text-[13px] leading-relaxed max-w-2xl font-medium">
-              You are assigned to container vehicle <span className="text-[#111827] dark:text-white font-extrabold">{driverVehicle?.vehicleNumber || 'MH-12-QW-9874'}</span>. 
-              GPS tracking loop and automatic checkpoint verification logs are active.
-            </p>
-          </div>
+      {/* ── 2. ENTERPRISE DRIVER KPI METRIC CARDS ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <KPICard
+          id="trips"
+          title="Today's Assigned Trips"
+          value={driverTrips.length}
+          description="Total dispatches for today"
+          progress={driverTrips.length ? 100 : 0}
+          color="#00A3A3"
+          icon={Truck}
+          onClick={() => navigate('/driver/trips')}
+        />
+        <KPICard
+          id="completed"
+          title="Completed Deliveries"
+          value={completedTrips.length}
+          description="Verified PODs uploaded"
+          progress={completedTrips.length ? 100 : 0}
+          color="#10B981"
+          icon={CheckCircle}
+          onClick={() => navigate('/driver/trips')}
+        />
+        <KPICard
+          id="pending"
+          title="Pending Shipments"
+          value={Math.max(0, driverTrips.length - completedTrips.length)}
+          description="In transit or scheduled"
+          progress={Math.max(0, driverTrips.length - completedTrips.length) ? 50 : 0}
+          color="#F59E0B"
+          icon={Package}
+          onClick={() => navigate('/driver/active-trip')}
+        />
+        <KPICard
+          id="distance"
+          title="Distance Covered"
+          value="148 km"
+          description="Shift GPS telemetry"
+          progress={74}
+          color="#3B82F6"
+          icon={Navigation}
+        />
+        <KPICard
+          id="fuel"
+          title="Fuel Efficiency"
+          value={`${driverVehicle.mileage || 4.8} km/L`}
+          description="Current fuel rating"
+          progress={88}
+          color="#8B5CF6"
+          icon={Fuel}
+        />
+        <KPICard
+          id="hours"
+          title="Worked Shift Time"
+          value={liveWorkingTime}
+          description={`Duty: ${currentDutyStatus}`}
+          progress={currentDutyStatus === 'On Duty' ? 100 : 0}
+          color="#10B981"
+          icon={Clock}
+        />
+        <KPICard
+          id="pod"
+          title="Uploaded PODs"
+          value={`${completedTrips.length}/1`}
+          description="Owner verified receipts"
+          progress={completedTrips.length ? 100 : 0}
+          color="#14B8A6"
+          icon={FileCheck}
+          onClick={() => navigate('/driver/pod')}
+        />
+        <KPICard
+          id="vehicle"
+          title="Vehicle Status"
+          value={driverVehicle.status || 'Moving'}
+          description={driverVehicle.vehicleNumber || 'MH-12-QW-9874'}
+          progress={95}
+          color="#10B981"
+          icon={Gauge}
+          onClick={() => navigate('/driver/fleet')}
+        />
+      </div>
 
-          <div className="flex flex-wrap items-center gap-3 shrink-0 mt-6">
-            <Button
-              onClick={handleStatusTransition}
-              disabled={!activeTrip}
-              variant="primary"
-              className="text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-sm font-bold"
-            >
-              <Play className="h-4 w-4" /> Start/Next Step
-            </Button>
-            <Button
-              onClick={() => setStopModalOpen(true)}
-              disabled={!activeTrip || activeTrip.status !== 'In Transit'}
-              variant="outline"
-              className="text-xs py-2.5 px-4 rounded-xl border border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#1E293B] text-[#374151] dark:text-[#CBD5E1] hover:bg-[#F3F4F6] dark:hover:bg-[#111827] flex items-center gap-1.5 font-bold"
-            >
-              <AlertTriangle className="h-4 w-4 text-amber-500" /> Log Delay Stop
-            </Button>
-            <a href="#pod-section">
-              <Button variant="primary" className="text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-sm font-bold">
-                <FileText className="h-4 w-4" /> Upload POD
-              </Button>
-            </a>
-          </div>
-        </div>
-
-        {/* Today's Attendance Card (1/3 width) */}
-        <div className="bg-white dark:bg-[#1E293B] p-6 rounded-2xl border border-[#E5E7EB] dark:border-[#334155] shadow-sm flex flex-col justify-between min-h-[220px]">
-          <div className="space-y-3.5 text-left">
-            <div className="flex justify-between items-center pb-2.5 border-b border-[#E5E7EB] dark:border-[#334155]">
-              <span className="text-[13px] font-extrabold text-[#111827] dark:text-white uppercase tracking-wider block">Today's Attendance</span>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#059669] dark:text-[#34D399] text-[10px] font-extrabold flex items-center gap-1 border border-[#10B981]/25">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping" /> Present
-              </span>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs">
+      {/* ── 3. ACTIVE TRIP ENTERPRISE CONSOLE ── */}
+      {activeTrip && (
+        <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-6 text-left">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b border-[#E5EEFF] dark:border-[#334155]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#006A6A]/10 text-[#006A6A] dark:text-[#7DF5F5] flex items-center justify-center font-bold">
+                <Truck className="h-5 w-5" />
+              </div>
               <div>
-                <span className="text-[10px] text-[#6B7280] dark:text-[#94A3B8] uppercase font-extrabold block">Status</span>
-                <span className="font-extrabold text-[#111827] dark:text-[#F8FAFC] flex items-center gap-1 mt-0.5">
-                  Present
-                </span>
-              </div>
-              
-              <div>
-                <span className="text-[10px] text-[#6B7280] dark:text-[#94A3B8] uppercase font-extrabold block">Check-In</span>
-                <span className="font-bold text-[#374151] dark:text-[#CBD5E1] block mt-0.5 font-mono">
-                  {todayRecord?.checkInTime || todayRecord?.checkIn || '09:05 AM'}
-                </span>
-              </div>
-              
-              <div className="col-span-2">
-                <span className="text-[10px] text-[#6B7280] dark:text-[#94A3B8] uppercase font-extrabold block">Working Hours</span>
-                <span className="font-black text-[#006A6A] dark:text-[#7DF5F5] block mt-0.5 font-mono text-sm tracking-tight">
-                  {liveWorkingTime}
-                </span>
-              </div>
-
-              <div className="col-span-2">
-                <span className="text-[10px] text-[#6B7280] dark:text-[#94A3B8] uppercase font-extrabold block">Location</span>
-                <span className="font-bold text-[#374151] dark:text-[#CBD5E1] block mt-0.5 whitespace-normal break-words leading-snug" title={todayRecord?.address || todayRecord?.checkInWarehouse || 'Pune Warehouse'}>
-                  {todayRecord?.checkInWarehouse || todayRecord?.address || 'Pune Warehouse'}
-                </span>
+                <span className="text-[10px] font-bold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">Active Delivery Trip</span>
+                <h3 className="text-lg font-extrabold text-[#0B1C30] dark:text-[#F8FAFC] leading-tight">
+                  {activeTrip.tripNumber} · {activeTrip.customerName}
+                </h3>
               </div>
             </div>
-          </div>
-
-          <div className="mt-4">
-            {todayRecord && !todayRecord.checkOut ? (
+            <div className="flex items-center gap-2">
+              <Badge variant={activeTrip.status === 'In Transit' ? 'success' : 'info'}>
+                {activeTrip.status}
+              </Badge>
               <Button
-                onClick={handleEndDuty}
-                isLoading={isEndingDuty}
-                variant="danger"
-                className="w-full text-xs py-2.5 rounded-xl shadow-md bg-red-600 hover:bg-red-700 text-white font-bold"
+                variant="primary"
+                className="text-xs py-2 rounded-xl"
+                onClick={() => navigate('/driver/active-trip')}
               >
-                <LogOut className="h-4 w-4 animate-pulse" /> End Duty
+                View Console & Map →
               </Button>
-            ) : (
-              <div className="text-center py-2.5 text-xs font-bold text-[#6B7280] dark:text-[#94A3B8] bg-[#F9FAFB] dark:bg-slate-800/40 border border-[#E5E7EB] dark:border-[#334155] rounded-xl">
-                Shift Duty Completed
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Route Timeline */}
+            <div className="space-y-4 md:col-span-2">
+              <div className="flex items-center justify-between text-xs font-semibold text-[#64748B] dark:text-[#94A3B8]">
+                <span>Origin: <strong className="text-[#0B1C30] dark:text-[#F8FAFC]">{activeTrip.pickupLocation}</strong></span>
+                <span>Destination: <strong className="text-[#0B1C30] dark:text-[#F8FAFC]">{activeTrip.dropLocation}</strong></span>
               </div>
-            )}
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden relative">
+                <div className="bg-gradient-to-r from-[#006A6A] to-[#10B981] h-full rounded-full transition-all duration-500" style={{ width: activeTrip.status === 'In Transit' ? '70%' : activeTrip.status === 'Completed' ? '100%' : '30%' }} />
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
+                <div className="p-3 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
+                  <span className="text-[10px] text-slate-400 font-bold block">Vehicle</span>
+                  <span className="font-bold text-[#0B1C30] dark:text-[#F8FAFC] mt-0.5 block">{activeTrip.vehicleNumber}</span>
+                </div>
+                <div className="p-3 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
+                  <span className="text-[10px] text-slate-400 font-bold block">Cargo Weight</span>
+                  <span className="font-bold text-[#0B1C30] dark:text-[#F8FAFC] mt-0.5 block">{activeTrip.weight || '12.5 Tons'}</span>
+                </div>
+                <div className="p-3 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
+                  <span className="text-[10px] text-slate-400 font-bold block">Invoice No</span>
+                  <span className="font-bold text-[#0B1C30] dark:text-[#F8FAFC] mt-0.5 block">{activeTrip.invoiceNumber}</span>
+                </div>
+                <div className="p-3 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
+                  <span className="text-[10px] text-slate-400 font-bold block">ETA</span>
+                  <span className="font-bold text-[#006A6A] dark:text-[#7DF5F5] mt-0.5 block">{activeTrip.eta || '1h 45m'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions Panel */}
+            <div className="bg-[#F8F9FF] dark:bg-[#0F172A]/50 p-4 rounded-xl border border-[#E5EEFF] dark:border-[#334155] space-y-3 flex flex-col justify-between">
+              <div>
+                <h4 className="text-xs font-bold text-[#0B1C30] dark:text-[#F8FAFC] uppercase tracking-wider mb-2">Trip Control Actions</h4>
+                <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] leading-tight">Update dispatch state in real-time to alert Owner telemetry console.</p>
+              </div>
+
+              <div className="space-y-2">
+                <Button
+                  variant="primary"
+                  className="w-full text-xs py-2 rounded-xl justify-center cursor-pointer"
+                  onClick={handleStatusTransition}
+                >
+                  Update Trip: {activeTrip.status} →
+                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="outline"
+                    className="text-[11px] py-1.5 rounded-xl justify-center cursor-pointer text-amber-600 border-amber-300 dark:border-amber-700 hover:bg-amber-50"
+                    onClick={() => setStopModalOpen(true)}
+                  >
+                    Report Delay
+                  </Button>
+                  <a
+                    href={`tel:${activeTrip.customerPhone || '9876543210'}`}
+                    className="flex items-center justify-center gap-1 text-[11px] font-bold py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-[#F8FAFC] hover:bg-slate-50 transition-colors"
+                  >
+                    <Phone className="h-3 w-3 text-emerald-500" />
+                    Call Owner
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* ── 4. KPI Cards Grid ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { name: "Today's Assignments", val: driverTrips.length, sub: "Cargo runs", trend: "Live state", color: "text-[#006A6A] dark:text-[#7DF5F5]", bg: "bg-[#F0F9FF] dark:bg-slate-800" },
-          { name: "Completed Runs", val: completedTrips.length, sub: "Deliveries closed", trend: "Live state", color: "text-[#059669] dark:text-[#34D399]", bg: "bg-[#ECFDF5] dark:bg-emerald-950/20" },
-          { name: "Active Run Status", val: activeTrip ? activeTrip.status : 'None', sub: activeTrip?.tripNumber || '--', trend: "Real-time updates", color: "text-[#D97706] dark:text-[#FBBF24]", bg: "bg-[#FEF3C7] dark:bg-amber-950/20" },
-          { name: "Distance Covered", val: `${todayRecord?.distanceCovered || 0} km`, sub: "Shift distance log", trend: "Live log", color: "text-[#006A6A] dark:text-[#7DF5F5]", bg: "bg-[#006A6A]/10 dark:bg-[#006A6A]/20" },
-          { name: "Fuel Remaining", val: `${driverVehicle?.fuelLevel || 100}%`, sub: "Vehicle status", trend: "Live level", color: "text-[#D97706] dark:text-[#FBBF24]", bg: "bg-[#FEF3C7] dark:bg-amber-950/20" },
-          { name: "Duty Hours", val: `${todayRecord?.workingHours || 0} hrs`, sub: "Shift time logging", trend: "Duty active", color: "text-[#0284C7] dark:text-[#38BDF8]", bg: "bg-[#E0F2FE] dark:bg-sky-950/20" },
-          { name: "Deliveries Completed", val: completedTrips.length, sub: "Consignments handed", trend: "Live state", color: "text-[#059669] dark:text-[#34D399]", bg: "bg-[#ECFDF5] dark:bg-emerald-950/20" },
-          { name: "Pending Deliveries", val: driverTrips.filter(t => t.status !== 'Completed').length, sub: "Awaiting dispatch", trend: "Action required", color: "text-[#BA1A1A] dark:text-[#FCA5A5]", bg: "bg-[#FFDAD4] dark:bg-red-950/20" },
-        ].map((card, idx) => (
-          <div key={idx} className="bg-white dark:bg-[#1E293B] rounded-2xl p-5 border border-[#E5E7EB] dark:border-[#334155] shadow-sm flex items-center gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default">
-            <div className={`p-3 rounded-xl shrink-0 ${card.bg} ${card.color}`}>
-              <Truck className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-tight block">{card.name}</span>
-              <h4 className="text-[17px] font-black text-slate-900 dark:text-slate-50 mt-0.5 whitespace-normal break-words leading-tight">{card.val}</h4>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 font-semibold">{card.sub} • <span className="text-emerald-600 dark:text-emerald-400 font-bold">{card.trend}</span></p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── 5. GPS Vector Map & Telemetry Panel ── */}
+      {/* ── 4. LIVE LOCATION & TELEMETRY CARD ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* GPS map container */}
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm lg:col-span-2 space-y-4">
-          <div className="flex justify-between items-center border-b border-[#E5E7EB] dark:border-[#334155] pb-3 text-left">
-            <h4 className="text-[15px] font-extrabold text-[#111827] dark:text-slate-100 flex items-center gap-2">
-              <Compass className="h-5 w-5 text-[#006A6A] animate-spin-slow" /> Interactive Route Navigation
-            </h4>
-            <Badge variant="info">Speed: 64 km/h</Badge>
+        <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-4 lg:col-span-2 text-left">
+          <div className="flex justify-between items-center pb-3 border-b border-[#E5EEFF] dark:border-[#334155]">
+            <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC] flex items-center gap-2">
+              <Compass className="h-4 w-4 text-[#006A6A] dark:text-[#7DF5F5]" /> Live GPS Telemetry Stream
+            </h3>
+            <span className="flex items-center gap-1.5 text-xs text-[#10B981] font-bold">
+              <span className="w-2 h-2 bg-[#10B981] rounded-full animate-ping" /> LIVE GPS ACTIVE
+            </span>
           </div>
 
-          <div className="h-72 bg-[#0B1C30] rounded-xl relative overflow-hidden border border-slate-800 flex flex-col justify-between p-4 shadow-inner">
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:28px_28px] opacity-25" />
-            
-            {/* SVG Path Route Pune to Mumbai */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 500 350">
-              <path
-                d="M 50,300 L 150,250 L 250,150 L 350,120 L 450,50"
-                fill="none"
-                stroke="rgba(255,255,255,0.08)"
-                strokeWidth="6"
-                strokeLinecap="round"
-              />
-              <path
-                d="M 50,300 L 150,250 L 250,150"
-                fill="none"
-                stroke="#006A6A"
-                strokeWidth="4"
-                strokeLinecap="round"
-              />
-              <circle cx="50" cy="300" r="5" fill="#667085" />
-              <circle cx="150" cy="250" r="5" fill="#006A6A" />
-              <circle cx="250" cy="150" r="5" fill="#EF4444" />
-              <circle cx="350" cy="120" r="5" fill="#64748B" />
-              <circle cx="450" cy="50" r="6" fill="#10B981" />
-            </svg>
-
-            {/* Labels floating */}
-            <div className="absolute bottom-16 left-8 text-[10px] text-slate-400 font-bold">Pune Whse A</div>
-            <div className="absolute top-16 right-16 text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-              <MapPin className="h-4 w-4" /> Mumbai terminal
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Latitude</span>
+              <span className="font-mono font-bold text-[#0B1C30] dark:text-[#F8FAFC] text-sm block mt-0.5">{gpsCoords.split(',')[0] || '18.5204'}° N</span>
             </div>
-
-            {/* Live truck pointer */}
-            <div className="absolute top-36 left-48 flex flex-col items-center">
-              <span className="bg-slate-900 text-white font-mono font-bold text-[9px] px-1.5 py-0.5 rounded border border-slate-700 shadow">
-                {driverVehicle?.vehicleNumber || 'MH-12'}
-              </span>
-              <div className="w-5 h-5 rounded-full bg-[#006A6A] text-white flex items-center justify-center border border-white shadow-lg animate-bounce mt-1">
-                <Navigation className="h-3 w-3 rotate-45" />
-              </div>
+            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Longitude</span>
+              <span className="font-mono font-bold text-[#0B1C30] dark:text-[#F8FAFC] text-sm block mt-0.5">{gpsCoords.split(',')[1] || '73.8567'}° E</span>
             </div>
-
-            <div className="relative z-10 bg-slate-900/90 backdrop-blur-md rounded-xl p-3.5 text-white border border-slate-800 flex justify-between items-center text-left">
-              <div className="text-xs">
-                <p className="text-[10px] text-slate-400 font-bold">Destination Point</p>
-                <p className="font-extrabold whitespace-normal break-words leading-tight max-w-[220px]">{activeTrip?.dropLocation || 'Distribution Center'}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] text-slate-400 font-bold">ETA Clock</p>
-                <p className="font-extrabold font-mono text-[#14B8A6]">{activeTrip?.eta || '16:45 PM'}</p>
-              </div>
+            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Speed</span>
+              <span className="font-mono font-bold text-[#10B981] text-sm block mt-0.5">58 km/h</span>
             </div>
+            <div className="p-3.5 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155]">
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Heading</span>
+              <span className="font-mono font-bold text-[#0B1C30] dark:text-[#F8FAFC] text-sm block mt-0.5">NW (312°)</span>
+            </div>
+          </div>
+
+          <div className="p-4 bg-[#0F172A] rounded-xl text-white font-mono text-xs flex justify-between items-center shadow-inner">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-[#7DF5F5] shrink-0" />
+              <span className="truncate">{address}</span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-bold shrink-0">Updated: Just now</span>
           </div>
         </div>
 
-        {/* Telemetry panel */}
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-5 flex flex-col justify-between">
+        {/* Vehicle Health & Compliance */}
+        <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-4 text-left flex flex-col justify-between">
           <div>
-            <h4 className="text-[15px] font-extrabold text-[#111827] dark:text-slate-100 mb-4 pb-3 border-b border-[#E5E7EB] dark:border-[#334155] flex items-center gap-2 text-left uppercase tracking-wide">
-              <Activity className="h-5 w-5 text-[#006A6A]" /> Active Trip Telemetry
-            </h4>
+            <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC] pb-3 border-b border-[#E5EEFF] dark:border-[#334155] flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-emerald-500" /> Vehicle Health & Compliance
+            </h3>
 
-            <div className="space-y-4 text-left">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#4B5563] dark:text-[#94A3B8] font-bold">Consignment Code</span>
-                <span className="font-mono font-extrabold text-[#111827] dark:text-[#CBD5E1]">{activeTrip?.tripNumber || 'None'}</span>
+            <div className="space-y-3 pt-3 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Fuel Level</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">78% (Tank Full)</span>
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#4B5563] dark:text-[#94A3B8] font-bold">Trip Stage Status</span>
-                <Badge variant="warning">{activeTrip?.status || 'Idle'}</Badge>
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div className="bg-emerald-500 h-full rounded-full" style={{ width: '78%' }} />
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#4B5563] dark:text-[#94A3B8] font-bold">Odometer Reading</span>
-                <span className="font-extrabold text-[#111827] dark:text-[#CBD5E1] font-mono">{(driverVehicle?.odometer || 48200).toLocaleString()} km</span>
+
+              <div className="flex justify-between items-center pt-2">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Tyre Pressure</span>
+                <span className="font-bold text-[#0B1C30] dark:text-[#F8FAFC]">32 PSI (Normal)</span>
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#4B5563] dark:text-[#94A3B8] font-bold">Fuel Level</span>
-                <span className="font-extrabold text-[#111827] dark:text-[#CBD5E1] font-mono">{driverVehicle?.fuelLevel || 78}%</span>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Insurance Expiry</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">Valid (Nov 2026)</span>
               </div>
-              <div className="space-y-1.5 pt-2">
-                <div className="flex justify-between text-[11px] font-extrabold text-[#4B5563] dark:text-[#94A3B8]">
-                  <span>Trip Progress</span>
-                  <span>{activeTrip ? `${Math.max(10, 100 - Math.floor(activeTrip.distanceRemaining / 4.8))}%` : '0%'}</span>
-                </div>
-                <div className="w-full h-2 bg-[#F3F4F6] dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-[#006A6A] rounded-full transition-all duration-300"
-                    style={{ width: `${activeTrip ? Math.max(10, 100 - Math.floor(activeTrip.distanceRemaining / 4.8)) : 0}%` }}
-                  />
-                </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">RC Expiry</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">Valid (2031)</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-[#F9FAFB] dark:bg-[#0F172A]/60 rounded-xl p-4 border border-[#E5E7EB] dark:border-[#334155]/60 space-y-2 text-left shadow-sm">
-            <h5 className="text-[11px] font-extrabold text-[#111827] dark:text-[#F8FAFC] flex items-center gap-1.5">
-              <Award className="h-4 w-4 text-emerald-600" /> Safety Score Card
-            </h5>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-[#4B5563] dark:text-[#94A3B8] font-medium">Weekly Driver Rating</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">100% (Class A)</span>
-            </div>
+          <div className="p-3 bg-[#F8F9FF] dark:bg-[#0F172A]/50 rounded-xl border border-[#E5EEFF] dark:border-[#334155] text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+            Vehicle health telemetry synced with SmartOps Fleet Manager.
           </div>
         </div>
       </div>
 
-      {/* ── 6. Today's Dispatch Schedule ── */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-4">
-        <div className="flex justify-between items-center pb-2 border-b border-[#E5E7EB] dark:border-[#334155]">
-          <h4 className="text-[15px] font-extrabold text-[#111827] dark:text-slate-100 uppercase tracking-wide">Today's Dispatch Schedule</h4>
-          <span className="text-[11px] bg-[#F9FAFB] dark:bg-slate-800 border border-[#E5E7EB] dark:border-[#334155] text-[#4B5563] dark:text-[#94A3B8] font-bold px-3 py-1 rounded-full">
-            {driverTrips.length} active assignments
-          </span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {driverTrips.slice(0, 3).map((trip, idx) => (
-            <div key={idx} className="p-4 border border-[#E5E7EB] dark:border-[#334155] rounded-xl space-y-3.5 hover:bg-[#F9FAFB] dark:hover:bg-slate-800/40 transition-colors text-left shadow-sm bg-white dark:bg-[#1E293B]">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-[#111827] dark:text-[#F8FAFC]">{trip.tripNumber}</span>
-                <Badge variant={trip.status === 'Completed' ? 'success' : trip.status === 'In Transit' ? 'info' : 'warning'}>
-                  {trip.status}
-                </Badge>
-              </div>
-              <div className="text-xs space-y-1 text-[#4B5563] dark:text-[#94A3B8]">
-                <p className="font-bold text-[#111827] dark:text-[#CBD5E1] block">{trip.pickupLocation} → {trip.dropLocation}</p>
-                <p className="text-[11px] text-[#6B7280] dark:text-[#94A3B8] font-bold block mt-0.5">Material: {trip.material} ({trip.weight})</p>
-              </div>
-              <div className="flex justify-between items-center pt-2.5 border-t border-[#E5E7EB] dark:border-[#334155] text-[11px] font-bold">
-                <span className="text-[#6B7280] dark:text-[#94A3B8]">ETA: <span className="font-bold font-mono text-[#111827] dark:text-[#CBD5E1]">{trip.eta}</span></span>
-                <a
-                  href={`tel:${trip.customerPhone}`}
-                  className="text-[#006A6A] dark:text-[#7DF5F5] font-extrabold hover:underline flex items-center gap-0.5"
-                >
-                  <Phone className="h-3 w-3" /> Call Client
-                </a>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── 7. Shift Checkpoint Timeline ── */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-6 text-left">
-        <h4 className="text-[15px] font-extrabold text-[#111827] dark:text-slate-100 uppercase tracking-wide">Operator Shift Checkpoint Logs</h4>
-        
-        <div className="relative pl-6 space-y-6">
-          <div className="absolute left-[7px] top-1.5 bottom-1.5 w-[2px] bg-[#E5E7EB] dark:bg-[#334155]" />
-
-          {[
-            { title: "Trip Started", desc: `Departed from Pune Warehouse yard`, time: "08:12 AM", active: true },
-            { title: "Reached Pickup Location", desc: `Arrived at Consignor industrial loading dock`, time: "09:30 AM", active: true },
-            { title: "Cargo Loading & Lashing Completed", desc: `Secured container seals and locked RC manifest`, time: "10:45 AM", active: true },
-            { title: "Transit Highway Run", desc: `Currently at Mumbai-Pune highway coordinates`, time: "In Transit", active: activeTrip?.status === 'In Transit' },
-            { title: "Consignee POD Verification Awaiting", desc: `Signature collection and image uploads pending`, time: "--:--", active: false },
-          ].map((mile, index) => (
-            <div key={index} className="relative flex justify-between items-start gap-4">
-              <span className={`absolute -left-[24px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#1E293B] ${
-                mile.active ? 'bg-[#006A6A] dark:bg-[#7DF5F5] ring-4 ring-[#006A6A]/10 dark:ring-[#7DF5F5]/10' : 'bg-[#F3F4F6] dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#334155]'
-              }`} />
-              <div className="space-y-1 text-left">
-                <h5 className="text-xs font-bold text-[#111827] dark:text-[#F8FAFC]">{mile.title}</h5>
-                <p className="text-[11px] text-[#4B5563] dark:text-[#94A3B8] font-medium">{mile.desc}</p>
-              </div>
-              <span className="text-[10px] text-[#6B7280] dark:text-[#94A3B8] font-mono shrink-0 font-bold">{mile.time}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── 8. Analytics Charts ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Chart 1: Area Chart */}
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm md:col-span-2 space-y-4 text-left">
-          <h5 className="text-[13px] font-extrabold text-[#111827] dark:text-slate-100 uppercase tracking-wide">Weekly Odometer Runs (km)</h5>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={weeklyDistData} margin={{ left: -25, top: 10 }}>
-                <defs>
-                  <linearGradient id="areaColor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#006A6A" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#006A6A" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#4B5563" }} stroke="rgba(0,0,0,0.1)" />
-                <YAxis tick={{ fontSize: 10, fill: "#4B5563" }} stroke="rgba(0,0,0,0.1)" />
-                <Tooltip />
-                <Area type="monotone" dataKey="distance" stroke="#006A6A" fillOpacity={1} fill="url(#areaColor)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Chart 2: Bar Chart */}
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-4 text-left">
-          <h5 className="text-[13px] font-extrabold text-[#111827] dark:text-slate-100 uppercase tracking-wide">Monthly Completed Trips</h5>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyTripsData} margin={{ left: -25, top: 10 }}>
-                <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#4B5563" }} stroke="rgba(0,0,0,0.1)" />
-                <YAxis tick={{ fontSize: 10, fill: "#4B5563" }} stroke="rgba(0,0,0,0.1)" />
-                <Tooltip />
-                <Bar dataKey="runs" fill="#14B8A6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Chart 3: Pie Chart */}
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-4 text-left">
-          <h5 className="text-[13px] font-extrabold text-[#111827] dark:text-slate-100 uppercase tracking-wide">Performance Delivery Score</h5>
-          <div className="h-48 flex justify-center items-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={performanceScoreData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={40}
-                  outerRadius={60}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {performanceScoreData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Delay log stop modal */}
-      <Modal isOpen={stopModalOpen} onClose={() => setStopModalOpen(false)} title="Log Transit Delay Stop" size="md">
+      {/* ── MODALS PRESERVED ── */}
+      {/* Break Modal */}
+      <Modal isOpen={breakModalOpen} onClose={() => setBreakModalOpen(false)} title="Log Shift Break">
         <div className="space-y-4 text-left">
-          <p className="text-xs text-[#4B5563] dark:text-[#94A3B8]">Select the operational block delay reason to log GPS status telemetry.</p>
-          <div className="space-y-1.5 text-left">
-            <label className="text-[13px] font-extrabold text-[#111827] dark:text-[#CBD5E1] uppercase">Reason for Stop</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-600 dark:text-slate-300">Break Reason</label>
             <select
-              value={selectedReason}
-              onChange={e => setSelectedReason(e.target.value)}
-              className="w-full px-4 h-12 text-sm border border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#111827] text-[#111827] dark:text-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
+              value={breakType}
+              onChange={e => setBreakType(e.target.value)}
+              className="w-full h-10 px-3 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-medium"
             >
-              <option>Traffic Congestion</option>
-              <option>Vehicle Servicing / Flat Tyre</option>
-              <option>Octroi / Toll Clearance Block</option>
-              <option>Driver Meal / Rest Break</option>
-              <option>Extreme Weather Halts</option>
+              <option>Lunch Break</option>
+              <option>Rest Stop</option>
+              <option>Refueling Break</option>
+              <option>Vehicle Inspection</option>
             </select>
           </div>
-          <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5E7EB] dark:border-[#334155]">
-            <Button variant="outline" onClick={() => setStopModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              variant="primary" 
-              onClick={() => {
-                if (activeTrip) {
-                  updateTripStatus(activeTrip.id, 'Delayed' as any, { stopReason: selectedReason });
-                  triggerNotification('Trip Started', 'Delay Warning logged', `Reason: ${selectedReason}`, 'Warning');
-                }
-                setStopModalOpen(false);
-              }}
-            >
-              Log Stop Status
-            </Button>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-600 dark:text-slate-300">Remarks (Optional)</label>
+            <input
+              type="text"
+              placeholder="e.g. Highway plaza rest stop"
+              value={breakRemarks}
+              onChange={e => setBreakRemarks(e.target.value)}
+              className="w-full h-10 px-3 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-medium"
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setBreakModalOpen(false)}>Cancel</Button>
+            <Button variant="primary" onClick={handleStartBreak}>Confirm Break</Button>
           </div>
         </div>
       </Modal>
 
-      {/* Break Selection Modal */}
-      <Modal isOpen={breakModalOpen} onClose={() => setBreakModalOpen(false)} title="Start Break Authorization" size="md">
+      {/* Delay Modal */}
+      <Modal isOpen={stopModalOpen} onClose={() => setStopModalOpen(false)} title="Report Route Delay / Incident">
         <div className="space-y-4 text-left">
-          <p className="text-xs text-[#4B5563] dark:text-[#94A3B8]">Select the type of break to capture and log duty tracking telemetry.</p>
-          <div className="space-y-1.5 text-left">
-            <label className="text-[13px] font-extrabold text-[#111827] dark:text-[#CBD5E1] uppercase">Break Category</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-600 dark:text-slate-300">Delay Reason</label>
             <select
-              value={breakType}
-              onChange={e => setBreakType(e.target.value)}
-              className="w-full px-4 h-12 text-sm border border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#111827] text-[#111827] dark:text-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
+              value={selectedReason}
+              onChange={e => setSelectedReason(e.target.value)}
+              className="w-full h-10 px-3 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs font-medium"
             >
-              <option value="Lunch Break">Lunch</option>
-              <option value="Fuel Stop">Fuel Stop</option>
-              <option value="Traffic Jam">Traffic</option>
-              <option value="Vehicle Issue">Vehicle Issue</option>
-              <option value="Rest Break">Rest Break</option>
-              <option value="Emergency Stop">Emergency</option>
-              <option value="Other Stop">Other</option>
+              <option>Traffic Congestion</option>
+              <option>Weather Delay</option>
+              <option>Vehicle Maintenance Check</option>
+              <option>Toll Plaza Delay</option>
             </select>
           </div>
-
-          <div className="space-y-1.5 text-left">
-            <label className="text-[13px] font-extrabold text-[#111827] dark:text-[#CBD5E1] uppercase">Remarks / Notes</label>
-            <textarea
-              value={breakRemarks}
-              onChange={e => setBreakRemarks(e.target.value)}
-              placeholder="Provide context or comments for break log..."
-              rows={2}
-              className="w-full px-4 py-3 text-sm border border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#111827] text-[#111827] dark:text-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium resize-none"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5E7EB] dark:border-[#334155]">
-            <Button variant="outline" onClick={() => setBreakModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleStartBreak}
-            >
-              Authorize Break
-            </Button>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setStopModalOpen(false)}>Cancel</Button>
+            <Button variant="primary" onClick={() => {
+              updateTripStatus(activeTrip?.id || '', 'Delayed', { stopReason: selectedReason });
+              setStopModalOpen(false);
+              triggerNotification('System Alert', 'Delay Logged', `Route delay reported: ${selectedReason}`, 'Warning');
+            }}>Submit Report</Button>
           </div>
         </div>
       </Modal>
@@ -1003,4 +862,4 @@ export const Home: React.FC = () => {
   );
 };
 
-
+export default Home;

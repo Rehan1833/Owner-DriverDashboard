@@ -6,7 +6,7 @@ import { MapPin, Navigation, Compass, AlertTriangle, Clock, Map, Target } from '
 export const GPS: React.FC = () => {
   const { trips, vehicles } = useOperations();
   const activeTrip = trips.find(t => t.driverId === 'd1' && t.status !== 'Completed') || trips[0];
-  const driverVehicle = vehicles[0];
+  const driverVehicle = vehicles[0] || { vehicleNumber: 'MH-12-QW-9874' };
 
   return (
     <div className="space-y-6 text-left animate-fade-in">
