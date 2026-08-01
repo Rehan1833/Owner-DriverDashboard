@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useOperations } from '../../store/OperationsContext';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -547,7 +548,7 @@ export const Attendance: React.FC = () => {
 
       {/* Side Slide-Over Drawer for Driver Details */}
       <AnimatePresence>
-        {drawerOpen && selectedRecord && (
+        {drawerOpen && selectedRecord && createPortal(
           <>
             {/* Drawer Backdrop Overlay */}
             <motion.div
@@ -564,7 +565,7 @@ export const Attendance: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="fixed top-0 right-0 bottom-0 w-full max-w-2xl bg-white dark:bg-[#1E293B] border-l border-gray-100 dark:border-slate-800 shadow-2xl z-50 overflow-y-auto flex flex-col"
+              className="fixed top-0 right-0 bottom-0 w-full max-w-2xl bg-white dark:bg-[#1E293B] border-l border-slate-350 dark:border-slate-700 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_30px_70px_-10px_rgba(0,0,0,0.85)] z-50 overflow-y-auto flex flex-col"
             >
               {/* Header profile block */}
               <div className="p-6 border-b border-gray-100 dark:border-slate-800 bg-gradient-to-r from-slate-900 to-blue-950 text-white flex justify-between items-start shrink-0 relative">
@@ -728,7 +729,8 @@ export const Attendance: React.FC = () => {
                 </div>
               </div>
             </motion.div>
-          </>
+          </>,
+          document.body
         )}
       </AnimatePresence>
 

@@ -164,7 +164,7 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({ onSuccess }) =
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Semi-transparent Backdrop overlay */}
-      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" />
+      <div className="fixed inset-0 bg-transparent animate-fade-in" />
       
       <AnimatePresence mode="wait">
         {isSuccess ? (
@@ -173,7 +173,7 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({ onSuccess }) =
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="relative w-full max-w-md bg-white/90 dark:bg-[#1E293B]/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20 text-center space-y-6 z-10"
+            className="relative w-full max-w-md bg-white dark:bg-[#1E293B] rounded-3xl p-8 shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-6 z-10"
           >
             <div className="w-20 h-20 rounded-full bg-emerald-500/10 text-emerald-550 dark:text-emerald-400 flex items-center justify-center mx-auto ring-8 ring-emerald-500/5 animate-bounce">
               <CheckCircle2 className="h-12 w-12" />
@@ -209,7 +209,7 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({ onSuccess }) =
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="relative w-full max-w-md bg-white/90 dark:bg-[#1E293B]/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20 text-center space-y-6 z-10"
+            className="relative w-full max-w-md bg-white dark:bg-[#1E293B] rounded-3xl p-8 shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-6 z-10"
           >
             <div className="w-20 h-20 rounded-full bg-red-500/10 text-red-500 dark:text-red-400 flex items-center justify-center mx-auto ring-8 ring-red-500/5">
               <AlertOctagon className="h-10 w-10 text-red-500" />

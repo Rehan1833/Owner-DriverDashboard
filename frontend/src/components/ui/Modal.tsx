@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
@@ -19,18 +20,7 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   // Prevent body scroll when open; restore on close
   useEffect(() => {
-    if (isOpen) {
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-    };
+    // Scroll lock removed to allow page to slide up/down
   }, [isOpen]);
 
   const sizes = {
@@ -40,7 +30,7 @@ export const Modal: React.FC<ModalProps> = ({
     xl: 'sm:max-w-xl',
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
@@ -50,7 +40,7 @@ export const Modal: React.FC<ModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-[#0B1C30]/40 backdrop-blur-md"
+            className="fixed inset-0 bg-transparent"
           />
 
           {/* Modal Content */}
@@ -73,7 +63,7 @@ export const Modal: React.FC<ModalProps> = ({
               scale: window.innerWidth < 640 ? 1 : 0.98
             }}
             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className={`relative w-full bg-white dark:bg-[#111827] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden ${sizes[size]} z-10 border border-slate-200 dark:border-slate-800 modal-container`}
+            className={`relative w-full bg-white dark:bg-[#111827] rounded-t-2xl sm:rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_30px_70px_-10px_rgba(0,0,0,0.85)] flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden ${sizes[size]} z-10 border border-slate-350 dark:border-slate-700 modal-container`}
           >
             {/* Mobile Swipe Bar */}
             <div className="sm:hidden w-full flex justify-center pt-3 pb-1">
@@ -99,7 +89,8 @@ export const Modal: React.FC<ModalProps> = ({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 
