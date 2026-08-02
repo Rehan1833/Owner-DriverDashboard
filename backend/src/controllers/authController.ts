@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import Company, { generateCompanyId } from '../models/Company';
 import VerificationCode from '../models/VerificationCode';
+import { getNextSequenceValue } from '../models/Counter';
 import { sendMobileOTP } from '../utils/otpService';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'smartops_super_secret_key_123!';
@@ -346,6 +347,19 @@ export const register = async (req: Request, res: Response) => {
       securityAnswerHash = await bcrypt.hash(String(securityAnswer).toLowerCase().trim(), 10);
     }
 
+    // ── Generate Unique Driver ID for Drivers ──────────────────────────────────
+    let generatedDriverId: string | undefined = undefined;
+    if (normalizedRole === 'Driver') {
+      if (driverId && String(driverId).trim() !== '') {
+        generatedDriverId = String(driverId).trim();
+      } else {
+        const year = new Date().getFullYear();
+        const seq = await getNextSequenceValue(`driver_${year}`);
+        const seqPadded = String(seq).padStart(6, '0');
+        generatedDriverId = `DRV-${year}-${seqPadded}`;
+      }
+    }
+
     // ── Create User ─────────────────────────────────────────────────────────
     const newUser = new User({
       fullName,
@@ -363,9 +377,12 @@ export const register = async (req: Request, res: Response) => {
       companyName: normalizedRole === 'Owner'
         ? (companyName ? String(companyName).trim() : undefined)
         : driverLinkedCompanyName,
-      driverId: normalizedRole === 'Driver' ? (driverId || `DRV-${Date.now().toString().slice(-4)}`) : undefined,
+      driverId: generatedDriverId,
       vehicleNumber,
-      licenseNumber
+      licenseNumber,
+      status: 'Active',
+      isAvailable: true,
+      currentTrip: ''
     });
 
     await newUser.save();

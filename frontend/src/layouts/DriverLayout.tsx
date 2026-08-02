@@ -13,7 +13,7 @@ export const DriverLayout: React.FC = () => {
   // Check if today's attendance exists and is present/late
   const todayStr = new Date().toISOString().split('T')[0];
   const todayRecord = user && user.role === 'Driver'
-    ? attendance.find(a => a.driverId === user.driverId && a.date === todayStr)
+    ? attendance.find(a => a && a.driverId && (a.driverId === user.driverId || a.driverId === user.id) && a.date === todayStr)
     : null;
 
   const isPresent = todayRecord && (todayRecord.attendanceStatus === 'Present' || todayRecord.attendanceStatus === 'Late');

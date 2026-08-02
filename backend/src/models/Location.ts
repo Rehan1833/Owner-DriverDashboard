@@ -3,11 +3,14 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface ILocation extends Document {
   driverId: string;
   tripId?: string;
+  companyId?: string;
   latitude: number;
   longitude: number;
   accuracy?: number;
   speed?: number;
   heading?: number;
+  battery?: number;
+  network?: string;
   address?: string;
   createdAt: Date;
 }
@@ -23,6 +26,11 @@ const LocationSchema = new Schema<ILocation>(
       type: String,
       index: true,
       default: null
+    },
+    companyId: {
+      type: String,
+      index: true,
+      sparse: true
     },
     latitude: {
       type: Number,
@@ -48,6 +56,14 @@ const LocationSchema = new Schema<ILocation>(
       type: Number,
       default: 0
     },
+    battery: {
+      type: Number,
+      default: 100
+    },
+    network: {
+      type: String,
+      default: '4G'
+    },
     address: {
       type: String,
       trim: true,
@@ -67,5 +83,6 @@ const LocationSchema = new Schema<ILocation>(
 // Compound Index for fast range & history queries
 LocationSchema.index({ driverId: 1, createdAt: -1 });
 LocationSchema.index({ tripId: 1, createdAt: -1 });
+LocationSchema.index({ companyId: 1, createdAt: -1 });
 
 export default mongoose.model<ILocation>('Location', LocationSchema);

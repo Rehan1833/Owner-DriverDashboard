@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Table } from '../../components/tables/Table';
 import { Badge } from '../../components/ui/Badge';
@@ -123,14 +123,21 @@ export const Payroll: React.FC = () => {
   const pendingCount = payroll.filter(p => p.paymentStatus === 'Pending').length;
   const approvedCount = payroll.filter(p => p.paymentStatus === 'Paid').length;
 
-  const payrollTrendData = [
-    { month: 'Jan', payroll: 145000 },
-    { month: 'Feb', payroll: 148000 },
-    { month: 'Mar', payroll: 151000 },
-    { month: 'Apr', payroll: 153000 },
-    { month: 'May', payroll: 159000 },
-    { month: 'Jun', payroll: totalPayout || 64200 },
-  ];
+  const payrollTrendData = React.useMemo(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    if (!payroll || payroll.length === 0) {
+      return months.map(month => ({ month, payroll: 0 }));
+    }
+    const monthMap: Record<string, number> = { Jan: 0, Feb: 0, Mar: 0, Apr: 0, May: 0, Jun: 0 };
+    payroll.forEach(p => {
+      const date = p.paymentDate ? new Date(p.paymentDate) : new Date();
+      const mName = months[date.getMonth()] || 'Jun';
+      if (monthMap[mName] !== undefined) {
+        monthMap[mName] += p.finalSalary || 0;
+      }
+    });
+    return months.map(month => ({ month, payroll: monthMap[month] || 0 }));
+  }, [payroll]);
 
   const columns = [
     {

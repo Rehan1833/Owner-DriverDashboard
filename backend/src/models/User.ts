@@ -25,6 +25,13 @@ export interface IUser extends Document {
   vehicleNumber?: string;
   licenseNumber?: string;
   avatarUrl?: string;
+  status?: string;
+  currentTrip?: string;
+  isAvailable?: boolean;
+  currentLocation?: string;
+  lastGpsUpdate?: Date;
+  battery?: number;
+  network?: string;
   comparePassword: (password: string) => Promise<boolean>;
   compareSecurityAnswer: (answer: string) => Promise<boolean>;
 }
@@ -49,7 +56,14 @@ const UserSchema = new Schema<IUser>({
   driverId: { type: String, unique: true, sparse: true },
   vehicleNumber: { type: String },
   licenseNumber: { type: String },
-  avatarUrl: { type: String }
+  avatarUrl: { type: String },
+  status: { type: String, default: 'Active' },
+  currentTrip: { type: String, default: '' },
+  isAvailable: { type: Boolean, default: true },
+  currentLocation: { type: String, default: '' },
+  lastGpsUpdate: { type: Date },
+  battery: { type: Number },
+  network: { type: String }
 }, {
   timestamps: true
 });

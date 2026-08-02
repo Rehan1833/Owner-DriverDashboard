@@ -274,6 +274,7 @@ export interface PODRecord {
   customerName: string;
   customerAddress: string;
   imageUrl: string;
+  images?: string[];
   signatureUrl?: string;
   remarks?: string;
   latitude?: number;

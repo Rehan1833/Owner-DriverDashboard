@@ -169,7 +169,7 @@ export const Home: React.FC = () => {
 
   // Shift Duty States
   const todayStr = new Date().toISOString().split('T')[0];
-  const todayRecord = attendance.find(a => a.driverId === driverId && a.date === todayStr);
+  const todayRecord = attendance.find(a => a && a.driverId === driverId && a.date === todayStr);
   const currentDutyStatus = todayRecord ? todayRecord.currentStatus : 'Off Duty';
 
   const [deviceInfo, setDeviceInfo] = useState('Mobile Web Console (Chrome)');
