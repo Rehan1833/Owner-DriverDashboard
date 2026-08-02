@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useOperations } from '../../store/OperationsContext';
 import { api } from '../../api/client';
 import { PODRecord } from '../../types';
@@ -437,13 +438,13 @@ export const POD: React.FC = () => {
 
       {/* DETAIL MODAL PANEL */}
       <AnimatePresence>
-        {selectedPod && !showRejectModal && (
-          <div className="fixed inset-0 bg-[#0B1C30]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        {selectedPod && !showRejectModal && createPortal(
+          <div className="fixed inset-0 bg-transparent z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-left"
+              className="bg-white dark:bg-[#1E293B] border border-slate-300 dark:border-slate-700 w-full max-w-4xl rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_30px_70px_-10px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[90vh] text-left"
             >
               <div className="px-6 py-4 border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 flex items-center justify-between bg-[#F8F9FF] dark:bg-[#0F172A]">
                 <div className="flex items-center gap-3">
@@ -600,21 +601,22 @@ export const POD: React.FC = () => {
                 </div>
               </div>
             </motion.div>
-          </div>
+          </div>,
+          document.body
         )}
       </AnimatePresence>
 
       {/* REJECTION COMMMENT PROMPT MODAL */}
       <AnimatePresence>
-        {showRejectModal && selectedPod && (
-          <div className="fixed inset-0 bg-[#0B1C30]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        {showRejectModal && selectedPod && createPortal(
+          <div className="fixed inset-0 bg-transparent z-50 flex items-center justify-center p-4">
             <motion.div
               role="dialog"
               aria-modal="true"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-5 text-left modal-container"
+              className="bg-white dark:bg-[#111827] border border-slate-300 dark:border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_30px_70px_-10px_rgba(0,0,0,0.85)] space-y-5 text-left modal-container"
             >
               <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
                 <AlertOctagon className="h-5 w-5 shrink-0" />
@@ -652,14 +654,15 @@ export const POD: React.FC = () => {
                 </Button>
               </div>
             </motion.div>
-          </div>
+          </div>,
+          document.body
         )}
       </AnimatePresence>
 
       {/* FULL LARGE ZOOM MODAL */}
       <AnimatePresence>
-        {zoomedImage && (
-          <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setZoomedImage(null)}>
+        {zoomedImage && createPortal(
+          <div className="fixed inset-0 bg-transparent z-50 flex items-center justify-center p-4" onClick={() => setZoomedImage(null)}>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -667,7 +670,7 @@ export const POD: React.FC = () => {
               className="relative max-w-4xl max-h-[90vh] overflow-hidden"
               onClick={e => e.stopPropagation()}
             >
-              <img src={zoomedImage} alt="Large cargo proof zoom" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-white/10" />
+              <img src={zoomedImage} alt="Large cargo proof zoom" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-[0_30px_80px_rgba(0,0,0,0.6)] border border-white/10" />
               
               <div className="absolute top-4 right-4 flex gap-2">
                 <a
@@ -686,7 +689,8 @@ export const POD: React.FC = () => {
                 </button>
               </div>
             </motion.div>
-          </div>
+          </div>,
+          document.body
         )}
       </AnimatePresence>
 

@@ -42,12 +42,12 @@ export const DriverLayout: React.FC = () => {
   return (
     <div className="flex bg-white dark:bg-[#0F172A] min-h-screen text-[#111827] dark:text-[#F8FAFC] relative transition-colors duration-200">
       {/* Collapsible Sidebar */}
-      <div className={`transition-all duration-300 flex ${showAttendanceModal ? 'filter blur-sm pointer-events-none select-none' : ''}`}>
+      <div className="transition-all duration-300 flex">
         <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       </div>
 
       {/* Main Wrapper */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${showAttendanceModal ? 'filter blur-sm pointer-events-none select-none' : ''}`}>
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
         <Navbar />
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 max-w-[1600px] w-full mx-auto pb-16 bg-white dark:bg-[#0F172A] text-[#111827] dark:text-[#F8FAFC]">

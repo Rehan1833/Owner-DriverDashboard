@@ -112,7 +112,7 @@ export const LogoutConfirmationModal: React.FC = () => {
                 type="button"
                 onClick={performLogout}
                 disabled={isLoggingOut}
-                className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-[15px] font-semibold transition-all shadow-md shadow-red-600/20 focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-2 h-11"
+                className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-[15px] font-semibold transition-all shadow-md shadow-red-600/20 focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed flex items-center gap-2 h-11"
               >
                 {isLoggingOut ? (
                   <>
