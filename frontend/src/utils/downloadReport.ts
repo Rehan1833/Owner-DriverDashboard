@@ -1,5 +1,6 @@
+// Report generation helper using jsPDF & XLSX
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import logoImg from '../assets/logo.png';
 
@@ -81,7 +82,7 @@ export const downloadReport = async ({
       tableRows.push(totals);
     }
 
-    (doc as any).autoTable({
+    const autoTableOptions = {
       head: [headers],
       body: tableRows,
       startY: 75,
@@ -142,7 +143,13 @@ export const downloadReport = async ({
         doc.text('SmartOps Enterprise Platform - Confidential Operations Ledger', 15, 281);
         doc.text(str, 195 - doc.getTextWidth(str), 281);
       }
-    });
+    };
+
+    if (typeof (doc as any).autoTable === 'function') {
+      (doc as any).autoTable(autoTableOptions);
+    } else {
+      autoTable(doc, autoTableOptions);
+    }
 
     // Write metadata details at the top of Page 1 (before table starts)
     doc.setPage(1);
@@ -192,7 +199,7 @@ export const downloadReport = async ({
     const finalPage = doc.getNumberOfPages();
     doc.setPage(finalPage);
     
-    let lastY = (doc as any).lastAutoTable.finalY || 100;
+    let lastY = (doc as any).lastAutoTable?.finalY ?? 100;
     if (lastY > 230) {
       // Create new page for signature if not enough space
       doc.addPage();
