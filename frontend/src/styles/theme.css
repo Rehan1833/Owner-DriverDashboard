@@ -301,7 +301,9 @@ html:not(.dark) :is(body,
   [class*="bg-success"],
   [class*="bg-success"] *,
   [class*="bg-danger"],
-  [class*="bg-danger"] *) {
+  [class*="bg-danger"] *,
+  aside,
+  aside *) {
   color: #000000 !important;
 }
 
@@ -337,7 +339,9 @@ html:not(.dark) :is(body,
   [class*="bg-success"],
   [class*="bg-success"] *,
   [class*="bg-danger"],
-  [class*="bg-danger"] *) {
+  [class*="bg-danger"] *,
+  aside,
+  aside *) {
   color: #4B5563 !important;
 }
 
@@ -536,7 +540,6 @@ html:not(.dark) :is(body,
   aside.bg-\[\#0F172A\] button span {
     color: inherit !important;
   }
-}
 
 /* ==========================================================================
    Premium Form Inputs & Selects Depth System

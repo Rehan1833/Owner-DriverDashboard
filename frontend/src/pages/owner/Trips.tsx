@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useOperations } from '../../store/OperationsContext';
+import { downloadReport } from '../../utils/downloadReport';
 import { Table } from '../../components/tables/Table';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -54,27 +55,24 @@ export const OwnerTrips: React.FC = () => {
 
   // Extract unique drivers for filter dropdown
   const uniqueDrivers = useMemo(() => {
-    return Array.from(new Set(trips.map(t => t.driverName).filter(Boolean)));
+    const list = trips.map(t => t.driverName).filter(Boolean);
+    return Array.from(new Set(list));
   }, [trips]);
 
   // Filtered trips
   const filteredTrips = useMemo(() => {
-    return trips.filter(trip => {
-      const q = searchQuery.toLowerCase();
-      const matchesSearch =
-        !q ||
-        (trip.tripNumber || '').toLowerCase().includes(q) ||
-        (trip.driverId || '').toLowerCase().includes(q) ||
-        (trip.driverName || '').toLowerCase().includes(q) ||
-        (trip.vehicleNumber || '').toLowerCase().includes(q) ||
-        (trip.pickupLocation || '').toLowerCase().includes(q) ||
-        (trip.dropLocation || '').toLowerCase().includes(q) ||
-        (trip.currentAddress || '').toLowerCase().includes(q);
+    return trips.filter(t => {
+      const matchSearch = 
+        t.tripNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.driverName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (t.vehicleNumber && t.vehicleNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (t.pickupLocation && t.pickupLocation.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (t.dropLocation && t.dropLocation.toLowerCase().includes(searchQuery.toLowerCase()));
 
-      const matchesStatus = statusFilter === 'All' || trip.status === statusFilter;
-      const matchesDriver = driverFilter === 'All' || trip.driverName === driverFilter;
+      const matchStatus = statusFilter === 'All' || t.status === statusFilter;
+      const matchDriver = driverFilter === 'All' || t.driverName === driverFilter;
 
-      return matchesSearch && matchesStatus && matchesDriver;
+      return matchSearch && matchStatus && matchDriver;
     });
   }, [trips, searchQuery, statusFilter, driverFilter]);
 
@@ -91,7 +89,7 @@ export const OwnerTrips: React.FC = () => {
 
   const handleExportCSV = () => {
     if (filteredTrips.length === 0) {
-      alert('No trip records available to export.');
+      triggerNotification('System Alert', 'No Data to Export', 'No trip records match the current filters.', 'Warning');
       return;
     }
     const headers = ['Trip Number', 'Driver ID', 'Driver Name', 'Vehicle Number', 'Pickup Location', 'Drop Location', 'Current Location', 'Status', 'Speed (km/h)', 'ETA', 'Distance Remaining (km)', 'Created At'];
@@ -100,9 +98,9 @@ export const OwnerTrips: React.FC = () => {
       t.driverId || 'DRV-2026-000001',
       t.driverName,
       t.vehicleNumber,
-      `"${(t.pickupLocation || '').replace(/"/g, '""')}"`,
-      `"${(t.dropLocation || '').replace(/"/g, '""')}"`,
-      `"${(t.currentAddress || t.currentLocation || '').replace(/"/g, '""')}"`,
+      t.pickupLocation || '',
+      t.dropLocation || '',
+      t.currentAddress || t.currentLocation || '',
       t.status,
       t.speed || 0,
       t.eta || 'N/A',
@@ -110,14 +108,19 @@ export const OwnerTrips: React.FC = () => {
       t.timestamp ? new Date(t.timestamp).toISOString() : new Date().toISOString()
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `SmartOps_Trip_Dispatch_Export_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadReport({
+      fileName: 'smartops_trip_dispatch_ledger',
+      title: 'Consignment Dispatch & Trip Control Ledger',
+      format: 'CSV',
+      headers,
+      rows,
+      summary: 'Logs of active vehicle assignments, driver routing checkpoints, and consignment status updates.',
+      filters: {
+        Search: searchQuery || 'All',
+        Status: statusFilter,
+        Driver: driverFilter
+      }
+    });
   };
 
   const getStatusBadgeStyle = (status: string) => {
@@ -426,13 +429,13 @@ export const OwnerTrips: React.FC = () => {
       <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-4 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-[260px]">
           <div className="relative w-full max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+            <Search className="search-icon-glow absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none z-10" />
             <input
               type="text"
               placeholder="Search by Trip #, Driver, Vehicle, Pickup, Destination..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-slate-50 dark:bg-slate-900 font-medium text-slate-800 dark:text-white"
+              className="navbar-search-input w-full pl-9 pr-3 h-9 text-xs border border-[#E5E7EB] dark:border-[#334155] rounded-full bg-slate-50/50 dark:bg-slate-800/40 text-[#111827] dark:text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#006A6A] focus:border-[#006A6A] transition-all font-medium"
             />
           </div>
         </div>

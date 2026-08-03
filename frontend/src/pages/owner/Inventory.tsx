@@ -1,11 +1,12 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Table } from '../../components/tables/Table';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
-import { AlertCircle, PackageCheck, AlertOctagon, Edit2, Trash2, Plus } from 'lucide-react';
+import { AlertCircle, PackageCheck, AlertOctagon, Edit2, Trash2, Plus, FileSpreadsheet } from 'lucide-react';
 import { InventoryItem } from '../../types';
+import { downloadInventoryExcel } from '../../utils/downloadInventoryReport';
 
 export const Inventory: React.FC = () => {
   const { inventory, createInventory, updateInventory, deleteInventory } = useOperations();
@@ -29,14 +30,25 @@ export const Inventory: React.FC = () => {
     supplier: '',
     batchNumber: '',
     expiryDate: '',
-    description: ''
+    description: '',
+    barcode: '',
+    subCategory: '',
+    brand: '',
+    unit: 'Pieces',
+    storageLocation: 'Warehouse Floor',
+    reservedStock: 0,
+    maximumStockLevel: 1000,
+    reorderLevel: 10,
+    manufacturingDate: '',
+    lastRestockedDate: '',
+    status: 'Active'
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({
       ...prev,
-      [name]: name === 'quantity' || name === 'minimumQuantity' || name === 'purchasePrice' || name === 'sellingPrice' 
+      [name]: name === 'quantity' || name === 'minimumQuantity' || name === 'purchasePrice' || name === 'sellingPrice' || name === 'reservedStock' || name === 'maximumStockLevel' || name === 'reorderLevel'
         ? Number(value) 
         : value
     }));
@@ -63,7 +75,18 @@ export const Inventory: React.FC = () => {
       supplier: item.supplier,
       batchNumber: item.batchNumber || '',
       expiryDate: item.expiryDate || '',
-      description: item.description || ''
+      description: item.description || '',
+      barcode: item.barcode || '',
+      subCategory: item.subCategory || '',
+      brand: item.brand || '',
+      unit: item.unit || 'Pieces',
+      storageLocation: item.storageLocation || 'Warehouse Floor',
+      reservedStock: item.reservedStock || 0,
+      maximumStockLevel: item.maximumStockLevel || 1000,
+      reorderLevel: item.reorderLevel || 10,
+      manufacturingDate: item.manufacturingDate || '',
+      lastRestockedDate: item.lastRestockedDate || '',
+      status: item.status || 'Active'
     });
     setEditModalOpen(true);
   };
@@ -96,7 +119,18 @@ export const Inventory: React.FC = () => {
       supplier: '',
       batchNumber: '',
       expiryDate: '',
-      description: ''
+      description: '',
+      barcode: '',
+      subCategory: '',
+      brand: '',
+      unit: 'Pieces',
+      storageLocation: 'Warehouse Floor',
+      reservedStock: 0,
+      maximumStockLevel: 1000,
+      reorderLevel: 10,
+      manufacturingDate: '',
+      lastRestockedDate: '',
+      status: 'Active'
     });
     setSelectedItem(null);
   };
@@ -210,6 +244,13 @@ export const Inventory: React.FC = () => {
             ))}
           </div>
           <Button
+            onClick={() => downloadInventoryExcel(inventory)}
+            variant="outline"
+            className="text-xs py-2 rounded-xl flex items-center gap-1.5 border border-[#E5EEFF] dark:border-[#334155] text-slate-700 dark:text-slate-200 cursor-pointer"
+          >
+            <FileSpreadsheet className="h-4 w-4 text-[#107C41]" /> Export Enterprise Excel
+          </Button>
+          <Button
             onClick={() => { resetForm(); setCreateModalOpen(true); }}
             variant="primary"
             className="text-xs py-2 rounded-xl flex items-center gap-1.5 shadow-md shadow-teal-900/10 cursor-pointer"
@@ -318,7 +359,72 @@ export const Inventory: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Quantity</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Sub Category</label>
+                <input
+                  type="text"
+                  name="subCategory"
+                  placeholder="e.g. Flat Rolled"
+                  value={form.subCategory}
+                  onChange={handleInputChange}
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Barcode</label>
+                <input
+                  type="text"
+                  name="barcode"
+                  placeholder="Barcode Number"
+                  value={form.barcode}
+                  onChange={handleInputChange}
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Brand</label>
+                <input
+                  type="text"
+                  name="brand"
+                  placeholder="e.g. Tata Steel"
+                  value={form.brand}
+                  onChange={handleInputChange}
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Unit</label>
+                <input
+                  type="text"
+                  name="unit"
+                  placeholder="e.g. Kg, Pieces, Litre"
+                  value={form.unit}
+                  onChange={handleInputChange}
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Status</label>
+                <select
+                  name="status"
+                  value={form.status}
+                  onChange={handleInputChange}
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Current Stock Qty</label>
                 <input
                   type="number"
                   required
@@ -330,12 +436,59 @@ export const Inventory: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Min Quantity</label>
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Reserved Stock</label>
+                <input
+                  type="number"
+                  name="reservedStock"
+                  value={form.reservedStock}
+                  onChange={handleInputChange}
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Min Stock Level</label>
                 <input
                   type="number"
                   required
                   name="minimumQuantity"
                   value={form.minimumQuantity}
+                  onChange={handleInputChange}
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Max Stock Level</label>
+                <input
+                  type="number"
+                  name="maximumStockLevel"
+                  value={form.maximumStockLevel}
+                  onChange={handleInputChange}
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Reorder Level</label>
+                <input
+                  type="number"
+                  name="reorderLevel"
+                  value={form.reorderLevel}
+                  onChange={handleInputChange}
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Storage Location</label>
+                <input
+                  type="text"
+                  name="storageLocation"
+                  placeholder="e.g. Row A, Shelf 2"
+                  value={form.storageLocation}
                   onChange={handleInputChange}
                   className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
@@ -408,7 +561,18 @@ export const Inventory: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Manufacturing Date</label>
+                <input
+                  type="date"
+                  name="manufacturingDate"
+                  value={form.manufacturingDate}
+                  onChange={handleInputChange}
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
+                />
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Expiry Date</label>
                 <input
@@ -421,15 +585,26 @@ export const Inventory: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Material Description</label>
-                <textarea
-                  name="description"
-                  rows={2}
-                  value={form.description}
+                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Last Restocked Date</label>
+                <input
+                  type="date"
+                  name="lastRestockedDate"
+                  value={form.lastRestockedDate}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
                 />
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Remarks / Description</label>
+              <textarea
+                name="description"
+                rows={2}
+                value={form.description}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+              />
             </div>
 
             <div className="flex justify-end gap-2.5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">

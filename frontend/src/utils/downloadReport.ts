@@ -1,140 +1,355 @@
-interface DownloadReportOptions {
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import logoImg from '../assets/logo.png';
+
+export interface DownloadReportOptions {
   fileName: string;
   title: string;
-  format: 'PDF' | 'Excel' | 'CSV';
+  format: 'PDF' | 'Excel' | 'CSV' | 'Print';
   headers: string[];
   rows: (string | number)[][];
   summary?: string;
+  filters?: Record<string, string>;
+  kpis?: Array<{ label: string; value: string | number }>;
+  totals?: (string | number)[];
 }
 
-function escapePdfText(text: string): string {
-  return String(text ?? '')
-    .replace(/\\/g, '\\\\')
-    .replace(/\(/g, '\\(')
-    .replace(/\)/g, '\\)');
-}
+// Convert asset PNG to base64 helper
+const getLogoBase64 = (): Promise<string | null> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } else {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = logoImg;
+  });
+};
 
-function generateValidPDF(
-  title: string,
-  dateStr: string,
-  summary: string | undefined,
-  headers: string[],
-  rows: (string | number)[][]
-): Blob {
-  const lines: string[] = [];
-
-  // Header Title
-  lines.push(`BT /F1 16 Tf 50 750 Td (${escapePdfText(title)}) Tj ET`);
-
-  // Subtitle & Timestamp
-  lines.push(`BT /F2 10 Tf 50 732 Td (Generated on: ${escapePdfText(dateStr)}) Tj ET`);
-  if (summary) {
-    lines.push(`BT /F2 10 Tf 50 718 Td (Summary: ${escapePdfText(summary)}) Tj ET`);
-  }
-
-  // Top Divider Line
-  lines.push('50 706 512 1 re f');
-
-  let y = 686;
-
-  // Table Headers
-  if (headers.length > 0) {
-    const headerStr = headers.join('  |  ');
-    lines.push(`BT /F1 10 Tf 50 ${y} Td (${escapePdfText(headerStr.slice(0, 110))}) Tj ET`);
-    y -= 14;
-    lines.push(`50 ${y} 512 0.5 re f`);
-    y -= 14;
-  }
-
-  // Rows
-  if (rows.length === 0) {
-    lines.push(`BT /F2 10 Tf 50 ${y} Td ([ NO RECORDS FOUND IN SYSTEM DATABASE ]) Tj ET`);
-  } else {
-    rows.forEach((row, i) => {
-      if (y < 50) return;
-      const rowStr = `${i + 1}. ` + row.join('  |  ');
-      lines.push(`BT /F2 9 Tf 50 ${y} Td (${escapePdfText(rowStr.slice(0, 110))}) Tj ET`);
-      y -= 14;
-    });
-  }
-
-  // Footer Divider & Text
-  lines.push('50 42 512 0.5 re f');
-  lines.push('BT /F2 8 Tf 50 28 Td (SmartOps Enterprise Fleet & Telemetry Console - Confidential Report) Tj ET');
-
-  const streamContent = lines.join('\n');
-  const streamLength = streamContent.length;
-
-  const pdfObjects = [
-    `%PDF-1.4`,
-    `1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj`,
-    `2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj`,
-    `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>\nendobj`,
-    `4 0 obj\n<< /Length ${streamLength} >>\nstream\n${streamContent}\nendstream\nendobj`,
-    `5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj`,
-    `6 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj`
-  ];
-
-  let body = pdfObjects[0] + '\n';
-  const offsets: number[] = [0];
-
-  for (let i = 1; i < pdfObjects.length; i++) {
-    offsets.push(body.length);
-    body += pdfObjects[i] + '\n';
-  }
-
-  const startxref = body.length;
-  let xref = `xref\n0 ${pdfObjects.length}\n0000000000 65535 f \n`;
-  for (let i = 1; i < offsets.length; i++) {
-    xref += String(offsets[i]).padStart(10, '0') + ' 00000 n \n';
-  }
-
-  xref += `trailer\n<< /Size ${pdfObjects.length} /Root 1 0 R >>\nstartxref\n${startxref}\n%%EOF`;
-
-  const fullPdf = body + xref;
-  const encoder = new TextEncoder();
-  const uint8Array = encoder.encode(fullPdf);
-
-  return new Blob([uint8Array], { type: 'application/pdf' });
-}
-
-export const downloadReport = ({
+export const downloadReport = async ({
   fileName,
   title,
   format,
   headers,
   rows,
-  summary
+  summary,
+  filters = {},
+  kpis = [],
+  totals
 }: DownloadReportOptions) => {
   const dateStr = new Date().toLocaleString('en-US', {
     dateStyle: 'medium',
     timeStyle: 'medium'
   });
 
+  const userJson = localStorage.getItem('smartops_user');
+  const userObj = userJson ? JSON.parse(userJson) : null;
+  const username = userObj?.fullName || 'System Administrator';
+  const companyName = userObj?.companyName || 'SmartOps Logistics Ltd.';
+
   const sanitizedFileName = fileName
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '_')
     .replace(/_+/g, '_');
 
-  if (format === 'Excel' || format === 'CSV') {
-    // Construct CSV content with UTF-8 BOM so Excel opens it correctly with formatting
+  // 1. PDF / Print Layout Generation
+  if (format === 'PDF' || format === 'Print') {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const logoBase64 = await getLogoBase64();
+
+    // Page decoration / header-footer callback
+    const totalPagesExp = '{total_pages_count_string}';
+    
+    // AutoTable Options
+    const tableRows = [...rows];
+    if (totals) {
+      tableRows.push(totals);
+    }
+
+    (doc as any).autoTable({
+      head: [headers],
+      body: tableRows,
+      startY: 75,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [0, 106, 106], // SmartOps Dark Teal (#006A6A)
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 9,
+        halign: 'left'
+      },
+      bodyStyles: {
+        fontSize: 8,
+        textColor: [51, 65, 85]
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252]
+      },
+      columnStyles: {
+        // Force column wrap
+        0: { cellWidth: 'auto' }
+      },
+      didParseCell: (data: any) => {
+        // Style Totals Row bold at the bottom
+        if (totals && data.row.index === tableRows.length - 1) {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [240, 253, 250]; // Light teal highlight
+          data.cell.styles.textColor = [15, 23, 42];
+        }
+      },
+      margin: { left: 15, right: 15, bottom: 25 },
+      didDrawPage: (data: any) => {
+        // Draw Header on each page
+        if (logoBase64) {
+          doc.addImage(logoBase64, 'PNG', 15, 12, 11, 11);
+        }
+        
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(11, 28, 48); // #0B1C30
+        doc.text(title, 28, 17);
+        
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139);
+        doc.text(`Generated by: ${username}  |  Company: ${companyName}`, 28, 22);
+
+        // Header Border line
+        doc.setDrawColor(229, 238, 255);
+        doc.setLineWidth(0.5);
+        doc.line(15, 26, 195, 26);
+
+        // Draw Footer
+        const str = `Page ${doc.getNumberOfPages()} of ${totalPagesExp}`;
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.line(15, 275, 195, 275);
+        doc.text('SmartOps Enterprise Platform - Confidential Operations Ledger', 15, 281);
+        doc.text(str, 195 - doc.getTextWidth(str), 281);
+      }
+    });
+
+    // Write metadata details at the top of Page 1 (before table starts)
+    doc.setPage(1);
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(71, 85, 105);
+    
+    // Draw info cards (Date & Filters)
+    doc.text(`Report Date: ${dateStr}`, 15, 33);
+    
+    const filterKeys = Object.keys(filters);
+    const filterStr = filterKeys.length > 0 
+      ? filterKeys.map(k => `${k}: ${filters[k]}`).join('  |  ') 
+      : 'None';
+    doc.text(`Active Filters: ${filterStr}`, 15, 38);
+
+    if (summary) {
+      doc.text(`Scope Description: ${summary}`, 15, 43);
+    }
+
+    // KPI Cards Block (draw neat rectangles)
+    if (kpis.length > 0) {
+      let startX = 15;
+      const cardWidth = Math.min(38, 180 / kpis.length);
+      kpis.forEach((kpi) => {
+        // Draw card border
+        doc.setDrawColor(229, 231, 235);
+        doc.setFillColor(249, 250, 251);
+        doc.roundedRect(startX, 48, cardWidth - 2, 18, 2, 2, 'FD');
+        
+        // Draw Text inside card
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(100, 116, 139);
+        doc.text(kpi.label.toUpperCase(), startX + 3, 53);
+        
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(0, 106, 106); // Teal #006A6A
+        doc.text(String(kpi.value), startX + 3, 61);
+        
+        startX += cardWidth;
+      });
+    }
+
+    // Append Signature Box at the end of the PDF
+    const finalPage = doc.getNumberOfPages();
+    doc.setPage(finalPage);
+    
+    let lastY = (doc as any).lastAutoTable.finalY || 100;
+    if (lastY > 230) {
+      // Create new page for signature if not enough space
+      doc.addPage();
+      lastY = 30;
+    }
+
+    // Signature Area
+    const sigY = lastY + 15;
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.2);
+    doc.line(15, sigY + 12, 65, sigY + 12);
+    doc.line(135, sigY + 12, 185, sigY + 12);
+
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    doc.text('Audited / Verified By', 15, sigY + 17);
+    doc.text('Authorized Signature', 135, sigY + 17);
+
+    // Replace total pages placeholder
+    if (typeof (doc as any).putTotalPages === 'function') {
+      (doc as any).putTotalPages(totalPagesExp);
+    }
+
+    if (format === 'Print') {
+      // Print mode: Open PDF print dialog directly
+      doc.autoPrint();
+      window.open(doc.output('bloburl'), '_blank');
+    } else {
+      // Download PDF file
+      doc.save(`${sanitizedFileName}_${Date.now()}.pdf`);
+    }
+  }
+
+  // 2. EXCEL Sheet Generation (True .xlsx Workbook with 3 Sheets)
+  else if (format === 'Excel') {
+    const wb = XLSX.utils.book_new();
+
+    // Sheet 1: Report Summary
+    const summaryData = [
+      ['SMARTOPS ENTERPRISE ERP REPORT LEDGER'],
+      [''],
+      ['Report Name:', title],
+      ['Generated On:', dateStr],
+      ['Generated By:', username],
+      ['Company Name:', companyName],
+      ['Scope / Summary:', summary || 'N/A'],
+      [''],
+      ['APPLIED FILTERS:'],
+    ];
+
+    Object.keys(filters).forEach(k => {
+      summaryData.push([`  - ${k}:`, filters[k]]);
+    });
+
+    if (kpis.length > 0) {
+      summaryData.push(['']);
+      summaryData.push(['KEY PERFORMANCE INDICATORS (KPIs):']);
+      kpis.forEach(kpi => {
+        summaryData.push([`  - ${kpi.label}:`, kpi.value]);
+      });
+    }
+
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Report Summary');
+
+    // Sheet 2: Complete Data
+    const dataRows = [headers, ...rows];
+    if (totals) {
+      dataRows.push(totals);
+    }
+
+    const wsData = XLSX.utils.aoa_to_sheet(dataRows);
+
+    // Freeze first row (headers)
+    wsData['!views'] = [{ state: 'frozen', ySplit: 1 }];
+
+    // Enable Autofilters on complete table
+    wsData['!autofilter'] = {
+      ref: `A1:${XLSX.utils.encode_col(headers.length - 1)}${dataRows.length}`
+    };
+
+    // Calculate auto column widths
+    const colWidths = headers.map((_, colIndex) => {
+      let maxLen = 0;
+      dataRows.forEach(row => {
+        const val = String(row[colIndex] || '');
+        if (val.length > maxLen) maxLen = val.length;
+      });
+      return { wch: Math.max(maxLen + 3, 10) };
+    });
+    wsData['!cols'] = colWidths;
+
+    XLSX.utils.book_append_sheet(wb, wsData, 'Data Ledger');
+
+    // Sheet 3: Analytics Distributions
+    const analyticsData = [
+      ['ANALYTICS & SUMMARY DISTRIBUTIONS'],
+      [''],
+      ['Total Record Count', rows.length]
+    ];
+
+    if (kpis.length > 0) {
+      analyticsData.push(['']);
+      analyticsData.push(['KPI Performance Overview']);
+      kpis.forEach(k => {
+        analyticsData.push([k.label, k.value]);
+      });
+    }
+
+    const wsAnalytics = XLSX.utils.aoa_to_sheet(analyticsData);
+    XLSX.utils.book_append_sheet(wb, wsAnalytics, 'Analytics Summary');
+
+    // Write to file and download
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${sanitizedFileName}_${Date.now()}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  // 3. CSV Export Generation
+  else if (format === 'CSV') {
+    // Add UTF-8 BOM so Excel opens it with proper encoding
     let csv = '\uFEFF';
-    csv += `SmartOps Enterprise Fleet Platform\n`;
+    csv += `SmartOps Enterprise Platform Report\n`;
     csv += `Report Title: ${title}\n`;
-    csv += `Generated Date: ${dateStr}\n`;
-    if (summary) csv += `Summary: ${summary}\n`;
+    csv += `Company Name: ${companyName}\n`;
+    csv += `Generated On: ${dateStr}\n`;
+    csv += `Generated By: ${username}\n`;
+    
+    const filterKeys = Object.keys(filters);
+    if (filterKeys.length > 0) {
+      csv += `Applied Filters: ${filterKeys.map(k => `${k}=${filters[k]}`).join(' | ')}\n`;
+    }
     csv += `\n`;
 
-    // Add headers
+    // Headers
     csv += headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',') + '\n';
 
-    // Add rows or empty message
+    // Rows
     if (rows.length === 0) {
-      csv += `"No records found (Empty dataset)",` + headers.slice(1).map(() => '""').join(',') + '\n';
+      csv += `"No data available for the selected criteria",` + headers.slice(1).map(() => '""').join(',') + '\n';
     } else {
       rows.forEach(row => {
         csv += row.map(val => `"${String(val ?? '').replace(/"/g, '""')}"`).join(',') + '\n';
       });
+    }
+
+    // Totals
+    if (totals) {
+      csv += totals.map(val => `"${String(val ?? '').replace(/"/g, '""')}"`).join(',') + '\n';
     }
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -142,17 +357,6 @@ export const downloadReport = ({
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', `${sanitizedFileName}_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  } else {
-    // Generate valid %PDF-1.4 binary Blob
-    const pdfBlob = generateValidPDF(title, dateStr, summary, headers, rows);
-    const url = URL.createObjectURL(pdfBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${sanitizedFileName}_${Date.now()}.pdf`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

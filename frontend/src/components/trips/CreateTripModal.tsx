@@ -90,7 +90,7 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
 
       // 2. MongoDB Drivers
       try {
-        const dbRes = await api.driver.getDrivers();
+        const dbRes = await api.drivers.getAll();
         const driversData = Array.isArray(dbRes) ? dbRes : dbRes?.data || [];
         driversData.forEach((d: any) => {
           const id = d.driverId || d.id || d._id;

@@ -13,11 +13,11 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck,
   Bell,
   User
 } from 'lucide-react';
 import { useOperations } from '../../store/OperationsContext';
+import { LogoIcon } from '../common/LogoIcon';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -94,8 +94,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
       {/* Brand Header */}
       <div className="flex items-center justify-between h-16 px-4 shrink-0 border-b border-[#334155]/60">
         <div className="flex items-center gap-3 overflow-hidden min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#006A6A] to-[#00A3A3] flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0">
-            <ShieldCheck className="h-4.5 w-4.5 text-white" />
+          <div className="w-10 h-10 flex items-center justify-center shrink-0">
+            <LogoIcon size={40} />
           </div>
           {!isCollapsed && (
             <motion.span

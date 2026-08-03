@@ -18,6 +18,7 @@ import {
   HelpCircle,
   KeyRound
 } from 'lucide-react';
+import { LogoIcon } from '../../components/common/LogoIcon';
 import { GoogleAuthButton } from '../../components/auth/GoogleAuthButton';
 import axios from 'axios';
 
@@ -223,12 +224,10 @@ export const ForgotPassword: React.FC = () => {
           <div style={{ width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 44 }}>
               <div style={{
-                width: 38, height: 38, borderRadius: 10,
-                background: DS.primaryGrad,
+                width: 42, height: 42,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: `0 2px 8px 0 ${DS.primaryShadow}`,
               }}>
-                <ShieldCheck size={18} color="#fff" strokeWidth={2.2} />
+                <LogoIcon size={42} />
               </div>
               <div>
                 <div style={{

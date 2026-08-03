@@ -188,7 +188,7 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 accuracy: data.accuracy,
                 eta: data.eta || t.eta,
                 distanceRemaining: data.distanceRemaining !== undefined ? data.distanceRemaining : t.distanceRemaining,
-                lastGpsUpdate: new Date(data.timestamp || Date.now())
+                lastGpsUpdate: new Date(data.timestamp || Date.now()).toISOString()
               };
             }
             return t;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useOperations } from '../../store/OperationsContext';
+import { downloadReport } from '../../utils/downloadReport';
 import { api } from '../../api/client';
 import { PODRecord } from '../../types';
 import { Badge } from '../../components/ui/Badge';
@@ -13,7 +14,7 @@ import {
 } from 'lucide-react';
 
 export const POD: React.FC = () => {
-  const { user } = useOperations();
+  const { user, triggerNotification } = useOperations();
   const [pods, setPods] = useState<PODRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -103,24 +104,86 @@ export const POD: React.FC = () => {
 
   // Action: Export Excel / CSV Mock
   const handleExportCSV = () => {
-    if (pods.length === 0) return;
-    const headers = 'POD ID,Driver Name,Driver ID,Vehicle,Order,Customer,Address,Status,Remarks,Timestamp\n';
-    const rows = pods.map(p => 
-      `"${p.podId}","${p.driverName}","${p.driverId}","${p.vehicleNumber}","${p.orderNumber}","${p.customerName}","${p.customerAddress}","${p.status}","${p.remarks || ''}","${p.createdAt}"`
-    ).join('\n');
-    
-    const csvContent = 'data:text/csv;charset=utf-8,' + encodeURIComponent(headers + rows);
-    const link = document.createElement('a');
-    link.setAttribute('href', csvContent);
-    link.setAttribute('download', `SmartOps-POD-Ledger-${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (pods.length === 0) {
+      triggerNotification('System Alert', 'No Data to Export', 'No POD logs available to export.', 'Warning');
+      return;
+    }
+    const headers = ['POD ID', 'Driver Name', 'Driver ID', 'Vehicle', 'Order ID', 'Customer', 'Address', 'Status', 'Remarks', 'Uploaded Date'];
+    const rows = pods.map(p => [
+      p.podId,
+      p.driverName,
+      p.driverId,
+      p.vehicleNumber,
+      p.orderNumber,
+      p.customerName,
+      p.customerAddress,
+      p.status,
+      p.remarks || '--',
+      new Date(p.createdAt).toLocaleDateString()
+    ]);
+    downloadReport({
+      fileName: 'smartops_pod_ledger',
+      title: 'Proof of Delivery (POD) Console Ledger',
+      format: 'CSV',
+      headers,
+      rows,
+      summary: 'Logs of verified digital signatures, delivery cargo photographs, and client dispatch handovers.',
+      filters: {
+        Search: searchTerm || 'All',
+        Status: filterStatus,
+        Driver: filterDriver || 'All',
+        Vehicle: filterVehicle || 'All',
+        Customer: filterCustomer || 'All',
+        Date: filterDate || 'All'
+      }
+    });
   };
 
   // Action: Export PDF Mock
   const handleExportPDF = () => {
-    window.print();
+    if (pods.length === 0) {
+      triggerNotification('System Alert', 'No Data to Export', 'No POD logs available to export.', 'Warning');
+      return;
+    }
+    const headers = ['POD ID', 'Driver Name', 'Driver ID', 'Vehicle', 'Order ID', 'Customer', 'Address', 'Status', 'Remarks', 'Uploaded Date'];
+    const rows = pods.map(p => [
+      p.podId,
+      p.driverName,
+      p.driverId,
+      p.vehicleNumber,
+      p.orderNumber,
+      p.customerName,
+      p.customerAddress,
+      p.status,
+      p.remarks || '--',
+      new Date(p.createdAt).toLocaleDateString()
+    ]);
+
+    const totalCount = pods.length;
+    const approvedCount = pods.filter(p => p.status === 'Approved').length;
+    const pendingCount = pods.filter(p => p.status === 'Pending').length;
+
+    downloadReport({
+      fileName: 'smartops_pod_ledger',
+      title: 'Proof of Delivery (POD) Console Ledger',
+      format: 'Print', // Print format triggers PDF autoprint dialog
+      headers,
+      rows,
+      summary: 'Logs of verified digital signatures, delivery cargo photographs, and client dispatch handovers.',
+      filters: {
+        Search: searchTerm || 'All',
+        Status: filterStatus,
+        Driver: filterDriver || 'All',
+        Vehicle: filterVehicle || 'All',
+        Customer: filterCustomer || 'All',
+        Date: filterDate || 'All'
+      },
+      kpis: [
+        { label: 'Total Logs Audited', value: totalCount },
+        { label: 'Approved PODs', value: approvedCount },
+        { label: 'Pending Verification', value: pendingCount }
+      ]
+    });
   };
 
   // Sort logic

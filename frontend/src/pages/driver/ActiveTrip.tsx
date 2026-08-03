@@ -143,7 +143,7 @@ export const ActiveTrip: React.FC = () => {
                 networkType = navConn.effectiveType.toUpperCase();
               }
 
-              const res = await api.driver.recordLocation({
+              const res = await api.drivers.recordLocation({
                 driverId,
                 tripId: driverActiveTrip.id,
                 latitude,
@@ -270,8 +270,7 @@ export const ActiveTrip: React.FC = () => {
   };
 
   const handleMockPhotoCapture = () => {
-    setPhotoMockUrl('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=400&q=80');
-    triggerNotification('Trip Started', 'Cargo Photo Uploaded', 'Consignment inspection snapshot saved.', 'Info');
+    handleAddPhoto('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=400&q=80');
   };
 
   const handleStopLog = async () => {

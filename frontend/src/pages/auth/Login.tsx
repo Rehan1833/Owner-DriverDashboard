@@ -4,7 +4,6 @@ import { useOperations } from '../../store/OperationsContext';
 import { UserRole } from '../../types';
 import { motion } from 'framer-motion';
 import {
-  ShieldCheck,
   Eye,
   EyeOff,
   Truck,
@@ -16,6 +15,7 @@ import {
   Package,
 } from 'lucide-react';
 import { GoogleAuthButton } from '../../components/auth/GoogleAuthButton';
+import { LogoIcon } from '../../components/common/LogoIcon';
 
 // ── Design tokens — exact values from SmartOps dashboard design system ────────
 const DS = {
@@ -209,12 +209,10 @@ export const Login: React.FC = () => {
             {/* Logo — matches dashboard sidebar logo exactly */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 44 }}>
               <div style={{
-                width: 38, height: 38, borderRadius: 10,
-                background: DS.primaryGrad,
+                width: 42, height: 42,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: `0 2px 8px 0 ${DS.primaryShadow}`,
               }}>
-                <ShieldCheck size={18} color="#fff" strokeWidth={2.2} />
+                <LogoIcon size={42} />
               </div>
               <div>
                 <div style={{
@@ -313,11 +311,10 @@ export const Login: React.FC = () => {
             marginBottom: 24, justifyContent: 'center',
           }}>
             <div style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: DS.primaryGrad,
+              width: 36, height: 36,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <ShieldCheck size={15} color="#fff" strokeWidth={2.2} />
+              <LogoIcon size={36} />
             </div>
             <span style={{ fontSize: 17, fontWeight: 900, color: DS.textPrimary }}>
               Smart<span style={{ color: DS.primary }}>Ops</span>

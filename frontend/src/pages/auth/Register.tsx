@@ -5,7 +5,6 @@ import { UserRole } from '../../types';
 import { motion } from 'framer-motion';
 import { api } from '../../api/client';
 import {
-  ShieldCheck,
   Eye,
   EyeOff,
   Truck,
@@ -24,6 +23,7 @@ import {
   Building,
   FileText
 } from 'lucide-react';
+import { LogoIcon } from '../../components/common/LogoIcon';
 import { GoogleAuthButton } from '../../components/auth/GoogleAuthButton';
 
 // ── Design tokens — exact values from SmartOps dashboard & Login page ────────
@@ -598,13 +598,10 @@ export const Register: React.FC = () => {
           {/* Logo badge */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
-              width: 44, height: 44,
-              borderRadius: 14,
-              background: DS.primaryGrad,
+              width: 46, height: 46,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 4px 14px ${DS.primaryShadow}`,
             }}>
-              <ShieldCheck size={22} color="#FFFFFF" strokeWidth={2.2} />
+              <LogoIcon size={46} />
             </div>
             <div>
               <span style={{ fontSize: 22, fontWeight: 800, color: DS.textPrimary, letterSpacing: '-0.03em' }}>
