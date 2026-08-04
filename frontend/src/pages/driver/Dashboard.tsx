@@ -161,10 +161,10 @@ export const Home: React.FC = () => {
   };
 
   const driverVehicle = vehicles.find(v => 
-    (v.driver && user?.fullName && v.driver.toLowerCase().includes(user.fullName.toLowerCase())) ||
-    (v.driver && user?.driverId && v.driver.toLowerCase().includes(user.driverId.toLowerCase())) ||
-    v.driver?.toLowerCase().includes('rajesh') ||
-    v.driver?.toLowerCase().includes('d1')
+    (v?.driver && user?.fullName && v.driver.toLowerCase().includes(user.fullName.toLowerCase())) ||
+    (v?.driver && user?.driverId && v.driver.toLowerCase().includes(user.driverId.toLowerCase())) ||
+    v?.driver?.toLowerCase().includes('rajesh') ||
+    v?.driver?.toLowerCase().includes('d1')
   ) || vehicles[0] || fallbackVehicle;
 
   // Shift Duty States

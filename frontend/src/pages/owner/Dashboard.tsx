@@ -385,7 +385,7 @@ export const Dashboard: React.FC = () => {
       rows = inventory.map(i => [i.sku || i.id, i.itemName, i.category, i.quantity, i.minimumQuantity, i.sellingPrice]);
     } else if (activeTableTab === 'Attendance') {
       headers = ['Driver ID', 'Employee Name', 'Status', 'Check-In', 'Check-Out', 'Hours'];
-      rows = attendance.map(a => [a.driverId || 'DRV', a.driverName || a.employeeName, a.attendanceStatus || a.status, a.checkInTime || a.checkIn, a.checkOutTime || a.checkOut || '--', a.workingHours || 0]);
+      rows = attendance.map(a => [a?.driverId || 'DRV', a?.driverName || a?.employeeName || 'Staff', a?.attendanceStatus || a?.status || 'Present', a?.checkInTime || a?.checkIn || '--', a?.checkOutTime || a?.checkOut || '--', a?.workingHours || 0]);
     } else if (activeTableTab === 'Fleet') {
       headers = ['Vehicle Number', 'Type', 'Status', 'Driver', 'Fuel Level (%)', 'Odometer (km)'];
       rows = vehicles.map(v => [v.vehicleNumber, v.vehicleType || 'Truck', v.status, v.driver, v.fuelLevel ?? 100, v.odometer ?? 0]);

@@ -80,6 +80,7 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
 
       // 1. Attendance drivers
       attendance.forEach(a => {
+        if (!a) return;
         const id = a.driverId;
         const name = a.driverName || a.employeeName || '';
         if (id && name && !seen.has(id)) {

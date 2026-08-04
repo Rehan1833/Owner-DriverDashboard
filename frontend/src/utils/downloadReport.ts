@@ -86,24 +86,24 @@ export const downloadReport = async ({
       head: [headers],
       body: tableRows,
       startY: 75,
-      theme: 'striped',
+      theme: 'striped' as const,
       headStyles: {
-        fillColor: [0, 106, 106], // SmartOps Dark Teal (#006A6A)
-        textColor: [255, 255, 255],
-        fontStyle: 'bold',
+        fillColor: [0, 106, 106] as [number, number, number], // SmartOps Dark Teal (#006A6A)
+        textColor: [255, 255, 255] as [number, number, number],
+        fontStyle: 'bold' as const,
         fontSize: 9,
-        halign: 'left'
+        halign: 'left' as const
       },
       bodyStyles: {
         fontSize: 8,
-        textColor: [51, 65, 85]
+        textColor: [51, 65, 85] as [number, number, number]
       },
       alternateRowStyles: {
-        fillColor: [248, 250, 252]
+        fillColor: [248, 250, 252] as [number, number, number]
       },
       columnStyles: {
         // Force column wrap
-        0: { cellWidth: 'auto' }
+        0: { cellWidth: 'auto' as const }
       },
       didParseCell: (data: any) => {
         // Style Totals Row bold at the bottom

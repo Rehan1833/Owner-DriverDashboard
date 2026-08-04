@@ -5,7 +5,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Settings, UserCheck, Wrench, Shield } from 'lucide-react';
 
 export const Operations: React.FC = () => {
-  const { attendance, inventory } = useOperations();
+  const { inventory } = useOperations();
 
   const totalInventoryUnits = inventory.reduce((sum, i) => sum + i.quantity, 0);
 
@@ -75,33 +75,6 @@ export const Operations: React.FC = () => {
           ]}
           type="bar"
         />
-      </div>
-
-      {/* Workers Productivity Board */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm">
-        <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC] mb-5 uppercase tracking-wide">Floor Check-Ins (Shift A & B)</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {attendance.map(worker => (
-            <div key={worker.id} className="p-4 border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A]/40 rounded-xl flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-3">
-                <img
-                  src={worker.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${worker.employeeName}&backgroundColor=006A6A`}
-                  alt=""
-                  className="w-9 h-9 rounded-full bg-[#F8F9FF] dark:bg-slate-800 border border-[#E5EEFF] dark:border-[#334155] shadow-sm"
-                />
-                <div className="text-left">
-                  <h5 className="text-sm font-bold text-slate-800 dark:text-[#F8FAFC] leading-tight">{worker.employeeName}</h5>
-                  <p className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] font-semibold mt-0.5">{worker.role || 'Staff'}</p>
-                </div>
-              </div>
-              <div>
-                <Badge variant={worker.status === 'Present' ? 'success' : worker.status === 'Late' ? 'warning' : 'danger'}>
-                  {worker.status}
-                </Badge>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

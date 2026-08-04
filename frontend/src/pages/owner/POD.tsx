@@ -110,16 +110,16 @@ export const POD: React.FC = () => {
     }
     const headers = ['POD ID', 'Driver Name', 'Driver ID', 'Vehicle', 'Order ID', 'Customer', 'Address', 'Status', 'Remarks', 'Uploaded Date'];
     const rows = pods.map(p => [
-      p.podId,
-      p.driverName,
-      p.driverId,
-      p.vehicleNumber,
-      p.orderNumber,
-      p.customerName,
-      p.customerAddress,
-      p.status,
-      p.remarks || '--',
-      new Date(p.createdAt).toLocaleDateString()
+      p?.podId || '',
+      p?.driverName || '',
+      p?.driverId || '',
+      p?.vehicleNumber || '',
+      p?.orderNumber || '',
+      p?.customerName || '',
+      p?.customerAddress || '',
+      p?.status || '',
+      p?.remarks || '--',
+      p?.createdAt ? new Date(p.createdAt).toLocaleDateString() : '--'
     ]);
     downloadReport({
       fileName: 'smartops_pod_ledger',
@@ -147,21 +147,21 @@ export const POD: React.FC = () => {
     }
     const headers = ['POD ID', 'Driver Name', 'Driver ID', 'Vehicle', 'Order ID', 'Customer', 'Address', 'Status', 'Remarks', 'Uploaded Date'];
     const rows = pods.map(p => [
-      p.podId,
-      p.driverName,
-      p.driverId,
-      p.vehicleNumber,
-      p.orderNumber,
-      p.customerName,
-      p.customerAddress,
-      p.status,
-      p.remarks || '--',
-      new Date(p.createdAt).toLocaleDateString()
+      p?.podId || '',
+      p?.driverName || '',
+      p?.driverId || '',
+      p?.vehicleNumber || '',
+      p?.orderNumber || '',
+      p?.customerName || '',
+      p?.customerAddress || '',
+      p?.status || '',
+      p?.remarks || '--',
+      p?.createdAt ? new Date(p.createdAt).toLocaleDateString() : '--'
     ]);
 
     const totalCount = pods.length;
-    const approvedCount = pods.filter(p => p.status === 'Approved').length;
-    const pendingCount = pods.filter(p => p.status === 'Pending').length;
+    const approvedCount = pods.filter(p => p?.status === 'Approved').length;
+    const pendingCount = pods.filter(p => p?.status === 'Pending').length;
 
     downloadReport({
       fileName: 'smartops_pod_ledger',

@@ -193,8 +193,9 @@ export const Attendance: React.FC = () => {
   // 2. TABLE FILTERING LOGIC
   const filteredAttendance = useMemo(() => {
     return attendance.filter(row => {
+      if (!row) return false;
       // Search
-      const matchesSearch = row.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      const matchesSearch = (row.employeeName && row.employeeName.toLowerCase().includes(searchQuery.toLowerCase())) || 
         (row.driverId && row.driverId.toLowerCase().includes(searchQuery.toLowerCase()));
       
       // Status

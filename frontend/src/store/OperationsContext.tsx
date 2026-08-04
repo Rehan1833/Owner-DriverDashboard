@@ -493,7 +493,7 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       });
     }
 
-    addActivity('Duty Completed', `Driver ${user?.fullName || payload.driverId} checked out. Shift hours: ${record.workingHours} hrs.`, 'attendance');
+    addActivity('Duty Completed', `Driver ${user?.fullName || payload?.driverId} checked out. Shift hours: ${record.workingHours} hrs.`, 'attendance');
     triggerNotification('System Alert', 'Duty Terminated', `Driver ${user?.fullName || 'Rajesh'} shift closed. Total hours: ${record.workingHours} hrs.`, 'Info');
   };
 

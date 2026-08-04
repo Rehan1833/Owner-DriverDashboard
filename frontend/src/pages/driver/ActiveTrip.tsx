@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOperations } from '../../store/OperationsContext';
 import { Badge } from '../../components/ui/Badge';
@@ -30,6 +31,7 @@ import { GoogleDriverMap } from '../../components/common/GoogleDriverMap';
 import { api } from '../../api/client';
 
 export const ActiveTrip: React.FC = () => {
+  const navigate = useNavigate();
   const { trips, vehicles, user, updateTripStatus, triggerNotification } = useOperations();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -599,7 +601,12 @@ export const ActiveTrip: React.FC = () => {
               <Button
                 variant="danger"
                 size="sm"
-                onClick={handleStopTrip}
+                onClick={() => {
+                  if (driverActiveTrip) {
+                    updateTripStatus(driverActiveTrip.id, 'Delivered');
+                  }
+                  navigate('/driver/pod');
+                }}
                 className="text-xs py-2.5 px-4 rounded-xl font-extrabold bg-red-600 hover:bg-red-700 text-white shadow-md flex items-center gap-1.5"
               >
                 🛑 Reached Location / Stop Trip & Upload POD
@@ -652,8 +659,8 @@ export const ActiveTrip: React.FC = () => {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => setPodModalOpen(true)}
-              className="text-xs py-2.5 rounded-xl border border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100"
+              onClick={() => navigate('/driver/pod')}
+              className="text-xs py-2.5 rounded-xl border border-[#006A6A] bg-[#006A6A]/10 text-[#006A6A] dark:text-[#7DF5F5] hover:bg-[#006A6A]/20 font-bold"
             >
               <PenTool className="h-4 w-4 mr-1" /> Upload POD Signature
             </Button>

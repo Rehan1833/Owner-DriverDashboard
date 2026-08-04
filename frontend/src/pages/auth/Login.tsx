@@ -87,7 +87,13 @@ export const Login: React.FC = () => {
       navigate(selectedRole === 'Driver' ? '/driver' : '/owner');
     } catch (err: any) {
       setLoading(false);
-      setErrorMsg(err.response?.data?.message || 'Login failed. Verify your credentials.');
+      if (err.response?.data?.message) {
+        setErrorMsg(err.response.data.message);
+      } else if (!err.response) {
+        setErrorMsg('Unable to connect to server. Please ensure backend server is running.');
+      } else {
+        setErrorMsg('Login failed. Verify your credentials.');
+      }
     }
   };
 
