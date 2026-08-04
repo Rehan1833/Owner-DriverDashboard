@@ -155,6 +155,9 @@ export const api = {
     }): Promise<{ success: boolean; message: string; user: User }> => {
       try {
         const res = await axiosInstance.put('/users/profile', payload);
+        if (res.data.user) {
+          localStorage.setItem('smartops_user', JSON.stringify(res.data.user));
+        }
         return res.data;
       } catch (err: any) {
         if (err.response) {
@@ -169,8 +172,52 @@ export const api = {
         localStorage.setItem('smartops_user', JSON.stringify(updatedUser));
         return { success: true, message: 'Profile updated in offline mode.', user: updatedUser };
       }
+    },
+    getProfile: async (): Promise<{ success: boolean; user: User }> => {
+      try {
+        const res = await axiosInstance.get('/users/profile');
+        if (res.data.user) {
+          localStorage.setItem('smartops_user', JSON.stringify(res.data.user));
+        }
+        return res.data;
+      } catch (err: any) {
+        const saved = localStorage.getItem('smartops_user');
+        const currentUser = saved ? JSON.parse(saved) : null;
+        return { success: true, user: currentUser };
+      }
     }
   },
+
+  // USER API
+  user: {
+    getProfile: async (): Promise<{ success: boolean; user: User }> => {
+      try {
+        const res = await axiosInstance.get('/users/profile');
+        if (res.data.user) {
+          localStorage.setItem('smartops_user', JSON.stringify(res.data.user));
+        }
+        return res.data;
+      } catch (err: any) {
+        const saved = localStorage.getItem('smartops_user');
+        const currentUser = saved ? JSON.parse(saved) : null;
+        return { success: true, user: currentUser };
+      }
+    },
+    updateProfile: async (payload: {
+      fullName?: string;
+      email?: string;
+      mobileNumber?: string;
+      companyName?: string;
+      avatarUrl?: string;
+    }): Promise<{ success: boolean; message: string; user: User }> => {
+      const res = await axiosInstance.put('/users/profile', payload);
+      if (res.data.user) {
+        localStorage.setItem('smartops_user', JSON.stringify(res.data.user));
+      }
+      return res.data;
+    }
+  },
+
 
   // DRIVER LOCATION TELEMETRY API
   driver: {

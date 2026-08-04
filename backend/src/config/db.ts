@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import path from 'path';
+import fs from 'fs';
 import User from '../models/User';
 import Product from '../models/Product';
 import Inventory from '../models/Inventory';
@@ -426,22 +428,63 @@ export const connectDB = async () => {
     }
   } catch (err: any) {
     console.error(`MongoDB connection warning: ${err.message}`);
-    console.log('Backend will operate in simulated in-memory state fallback if connection fails.');
+    console.log('Backend will operate in persistent local database fallback if local daemon is unavailable.');
     
     try {
-      console.log('Starting MongoMemoryServer for simulated in-memory fallback...');
+      console.log('Starting MongoMemoryServer with local disk storage persistence...');
       // @ts-ignore
       const { MongoMemoryServer } = await import('mongodb-memory-server');
-      const mongoServer = await MongoMemoryServer.create();
+
+      const dataDir = path.join(process.cwd(), '.mongo_data');
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+
+      // Remove stale lock file if present from an unclean termination
+      const lockFile = path.join(dataDir, 'mongod.lock');
+      if (fs.existsSync(lockFile)) {
+        try {
+          fs.unlinkSync(lockFile);
+        } catch {
+          // ignore
+        }
+      }
+
+      let mongoServer: any;
+      try {
+        mongoServer = await MongoMemoryServer.create({
+          instance: {
+            dbPath: dataDir,
+            storageEngine: 'wiredTiger'
+          }
+        });
+      } catch (dbPathErr: any) {
+        console.warn(`Persistent dbPath creation warning: ${dbPathErr.message}. Falling back to standard MongoMemoryServer...`);
+        mongoServer = await MongoMemoryServer.create();
+      }
+
       const mongoUri = mongoServer.getUri();
-      console.log(`In-memory MongoDB instance started. Connecting Mongoose to: ${mongoUri}...`);
+      console.log(`MongoDB instance started at ${mongoUri}`);
       
       await mongoose.connect(mongoUri);
-      console.log('Connected successfully to in-memory MongoDB!');
+      console.log('Connected successfully to local MongoDB fallback!');
       await seedDefaultAccounts();
       await seedDefaultInventory();
+
+      const cleanup = async () => {
+        try {
+          await mongoose.disconnect();
+          await mongoServer.stop();
+        } catch {
+          // ignore
+        }
+      };
+      process.once('SIGINT', cleanup);
+      process.once('SIGTERM', cleanup);
     } catch (fallbackErr: any) {
-      console.error(`In-memory database startup failed: ${fallbackErr.message}`);
+      console.error(`Database startup failed: ${fallbackErr.message}`);
     }
   }
 };
+
+

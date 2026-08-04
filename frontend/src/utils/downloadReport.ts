@@ -82,7 +82,7 @@ export const downloadReport = async ({
       tableRows.push(totals);
     }
 
-    const autoTableOptions = {
+    const autoTableOptions: any = {
       head: [headers],
       body: tableRows,
       startY: 75,

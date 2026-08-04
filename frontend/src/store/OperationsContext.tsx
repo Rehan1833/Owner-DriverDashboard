@@ -125,6 +125,19 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setVehicles(fltData);
       setTrips(trpData);
 
+      // Fetch fresh user profile if logged in
+      const jwtToken = localStorage.getItem('smartops_jwt');
+      if (jwtToken) {
+        try {
+          const profileRes = await api.user.getProfile();
+          if (profileRes?.user) {
+            setUser(profileRes.user);
+          }
+        } catch (pErr) {
+          console.warn('Profile fetch warning:', pErr);
+        }
+      }
+
       // Fetch company for Owner users
       const savedUser = localStorage.getItem('smartops_user');
       const currentUser: User | null = savedUser ? JSON.parse(savedUser) : null;
@@ -136,6 +149,7 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       console.error('Data refreshing error:', err);
     }
   };
+
 
   useEffect(() => {
     refreshAllData();

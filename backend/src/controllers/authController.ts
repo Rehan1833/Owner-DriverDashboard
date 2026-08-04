@@ -197,7 +197,8 @@ export const verifyOTP = async (req: Request, res: Response) => {
         isPhoneVerified: user.isPhoneVerified,
         companyName: user.companyName,
         driverId: user.driverId,
-        vehicleNumber: user.vehicleNumber
+        vehicleNumber: user.vehicleNumber,
+        avatarUrl: user.avatarUrl || null
       }
     });
   } catch (err: any) {
@@ -422,7 +423,8 @@ export const register = async (req: Request, res: Response) => {
         isEmailVerified: newUser.isEmailVerified,
         companyName: newUser.companyName,
         driverId: newUser.driverId,
-        vehicleNumber: newUser.vehicleNumber
+        vehicleNumber: newUser.vehicleNumber,
+        avatarUrl: newUser.avatarUrl || null
       }
     });
   } catch (err: any) {
@@ -515,7 +517,8 @@ export const login = async (req: Request, res: Response) => {
         isPhoneVerified: user.isPhoneVerified,
         companyName: user.companyName || null,
         driverId: user.driverId || null,
-        vehicleNumber: user.vehicleNumber || null
+        vehicleNumber: user.vehicleNumber || null,
+        avatarUrl: user.avatarUrl || null
       }
     });
   } catch (err: any) {

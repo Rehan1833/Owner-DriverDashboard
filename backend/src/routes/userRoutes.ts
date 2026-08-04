@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getDrivers, updateDriverStatus } from '../controllers/driverController';
-import { updateProfile } from '../controllers/userController';
+import { updateProfile, getProfile } from '../controllers/userController';
 import { authenticateJWT, ownerOnly } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -9,7 +9,9 @@ const router = Router();
 router.use(authenticateJWT);
 
 // Authenticated user profile routes
+router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
+
 
 // Owner-only routes
 router.use(ownerOnly);
