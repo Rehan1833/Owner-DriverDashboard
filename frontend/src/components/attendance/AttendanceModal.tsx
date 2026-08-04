@@ -114,14 +114,14 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({ onSuccess }) =
 
       // Formulate attendance payload
       const payload = {
-        driverId: user?.driverId || 'DRV-9041',
-        driverName: user?.fullName || 'Rajesh Kumar',
-        employeeName: user?.fullName || 'Rajesh Kumar',
+        driverId: user?.driverId || '',
+        driverName: user?.fullName || 'Driver',
+        employeeName: user?.fullName || 'Driver',
         checkInGPS: `${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lng.toFixed(5)}`,
         checkInWarehouse: address.split(',')[0] || 'Pune Warehouse Yard A',
         checkInDeviceInfo: deviceType,
         checkInInternetStatus: `IP: ${ipAddress} (Online)`,
-        vehicleNumber: user?.vehicleNumber || 'MH-12-QW-9874',
+        vehicleNumber: user?.vehicleNumber || '',
         latitude: gpsCoords.lat,
         longitude: gpsCoords.lng,
         address: address,
@@ -255,14 +255,14 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({ onSuccess }) =
             {/* Profile Row */}
             <div className="flex items-center gap-4 bg-[#F8F9FF]/50 dark:bg-[#0F172A]/30 p-4 rounded-2xl border border-slate-105/50 dark:border-slate-800/40">
               <img
-                src={user?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.fullName || 'Rajesh')}`}
+                src={user?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.fullName || 'Driver')}`}
                 alt="Driver Avatar"
                 className="w-14 h-14 rounded-full border border-slate-200/50 bg-slate-205 dark:bg-slate-800 object-cover"
               />
               <div className="space-y-0.5 text-left">
-                <h3 className="text-sm font-extrabold text-slate-800 dark:text-[#F8FAFC] leading-tight">{user?.fullName || 'Rajesh Kumar'}</h3>
-                <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400">Driver ID: {user?.driverId || 'DRV-9041'}</p>
-                <p className="text-[10px] font-semibold text-slate-400">Vehicle: {user?.vehicleNumber || 'MH-12-QW-9874'}</p>
+                <h3 className="text-sm font-extrabold text-slate-800 dark:text-[#F8FAFC] leading-tight">{user?.fullName || 'Driver'}</h3>
+                <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400">Driver ID: {user?.driverId || 'N/A'}</p>
+                <p className="text-[10px] font-semibold text-slate-400">Vehicle: {user?.vehicleNumber || 'N/A'}</p>
               </div>
             </div>
 

@@ -477,14 +477,14 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const record = await api.attendance.startBreak(payload);
     setAttendance(prev => prev.map(a => (a && a.driverId === payload?.driverId && a.date === record.date) ? record : a));
     addActivity('Break Started', `Driver ${user?.fullName || payload?.driverId} started break: ${payload.type}`, 'attendance');
-    triggerNotification('System Alert', 'Driver Break Logs', `Driver ${user?.fullName || 'Rajesh'} started a ${payload.type} break`, 'Info');
+    triggerNotification('System Alert', 'Driver Break Logs', `Driver ${user?.fullName || 'Operator'} started a ${payload.type} break`, 'Info');
   };
 
   const driverEndBreak = async (payload: any) => {
     const record = await api.attendance.endBreak(payload);
     setAttendance(prev => prev.map(a => (a && a.driverId === payload?.driverId && a.date === record.date) ? record : a));
     addActivity('Break Ended', `Driver ${user?.fullName || payload?.driverId} resumed duty`, 'attendance');
-    triggerNotification('System Alert', 'Driver Break Logs', `Driver ${user?.fullName || 'Rajesh'} break completed, returned to active duty`, 'Info');
+    triggerNotification('System Alert', 'Driver Break Logs', `Driver ${user?.fullName || 'Operator'} break completed, returned to active duty`, 'Info');
   };
 
   const driverEndDuty = async (payload: any) => {
@@ -492,7 +492,8 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setAttendance(prev => prev.map(a => (a && a.driverId === payload?.driverId && a.date === record.date) ? record : a));
     
     // Sync with payroll automatically
-    const payrollRecord = payroll.find(p => p.employee.includes(record.employeeName || 'Rajesh Kumar') || p.employeeName?.includes(record.employeeName || 'Rajesh Kumar'));
+    const empName = record.employeeName || user?.fullName || '';
+    const payrollRecord = payroll.find(p => empName && (p.employee.toLowerCase().includes(empName.toLowerCase()) || p.employeeName?.toLowerCase().includes(empName.toLowerCase())));
     if (payrollRecord) {
       const overtimeBonus = Math.floor((record.overtime || 0) * 400);
       const performanceBonus = Math.floor((record.performanceScore || 100) * 10);
@@ -508,7 +509,7 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
 
     addActivity('Duty Completed', `Driver ${user?.fullName || payload?.driverId} checked out. Shift hours: ${record.workingHours} hrs.`, 'attendance');
-    triggerNotification('System Alert', 'Duty Terminated', `Driver ${user?.fullName || 'Rajesh'} shift closed. Total hours: ${record.workingHours} hrs.`, 'Info');
+    triggerNotification('System Alert', 'Duty Terminated', `Driver ${user?.fullName || 'Operator'} shift closed. Total hours: ${record.workingHours} hrs.`, 'Info');
   };
 
   // Salary CRUD triggers

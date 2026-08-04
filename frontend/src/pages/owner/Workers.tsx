@@ -444,34 +444,34 @@ export const Workers: React.FC = () => {
                 </div>
 
                 {/* Card Actions */}
-                <div className="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
+                <div className="grid grid-cols-4 gap-2 mt-5 pt-4 border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800">
                   <button
                     onClick={() => {
                       setSelectedDriver(driver);
                       setMessageModalOpen(true);
                     }}
-                    className="py-2 px-3 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] hover:bg-[#F8F9FF] dark:bg-[#0F172A] dark:hover:bg-slate-800 text-slate-700 dark:text-[#CBD5E1] font-semibold rounded-xl text-[11px] flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
+                    className="py-2 px-2 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] hover:bg-[#F8F9FF] dark:bg-[#0F172A] dark:hover:bg-slate-800 text-slate-700 dark:text-[#CBD5E1] font-semibold rounded-xl text-[10px] flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
                   >
-                    <Send className="h-3 w-3 text-[#006A6A]" /> Text Alert
+                    <Send className="h-3 w-3 text-[#006A6A]" /> SMS
                   </button>
                   <button
                     onClick={() => {
                       alert(`Details editor for ${driver.fullName} — coming soon.`);
                     }}
-                    className="py-2 px-3 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] hover:bg-[#F8F9FF] dark:bg-[#0F172A] dark:hover:bg-slate-800 text-slate-700 dark:text-[#CBD5E1] font-semibold rounded-xl text-[11px] flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
+                    className="py-2 px-2 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] hover:bg-[#F8F9FF] dark:bg-[#0F172A] dark:hover:bg-slate-800 text-slate-700 dark:text-[#CBD5E1] font-semibold rounded-xl text-[10px] flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
                   >
                     <Edit2 className="h-3 w-3 text-[#6D7A79]" /> Edit
                   </button>
                   <button
                     onClick={() => handleDeactivateDriver(driver)}
-                    className={`py-2 px-3 font-semibold rounded-xl text-[11px] flex items-center justify-center gap-1 cursor-pointer transition-all border shadow-sm ${
+                    className={`py-2 px-2 font-semibold rounded-xl text-[10px] flex items-center justify-center gap-1 cursor-pointer transition-all border shadow-sm ${
                       driver.status === 'Active'
                         ? 'bg-[#EF4444]/10 hover:bg-[#EF4444]/15 text-[#EF4444] border-[#EF4444]/20'
                         : 'bg-[#10B981]/10 hover:bg-[#10B981]/15 text-[#10B981] border-[#10B981]/20'
                     }`}
                   >
                     {driver.status === 'Active' ? (
-                      <><UserX className="h-3 w-3" /> Deactivate</>
+                      <><UserX className="h-3 w-3" /> Block</>
                     ) : (
                       <><UserCheck className="h-3 w-3" /> Activate</>
                     )}

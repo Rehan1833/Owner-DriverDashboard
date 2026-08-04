@@ -61,16 +61,25 @@ export const getDrivers = async (req: AuthRequest, res: Response) => {
       ownerCompanyId = (ownerUser as any)?.companyId || undefined;
     }
     if (ownerCompanyId) {
-      filter.companyId = ownerCompanyId;
+      filter.$or = [
+        { companyId: ownerCompanyId },
+        { companyId: { $exists: false } },
+        { companyId: null },
+        { companyId: '' }
+      ];
     }
 
     // Search across fullName, email, mobileNumber (case-insensitive)
     if (search && search.trim() !== '') {
       const rx = new RegExp(search.trim(), 'i');
-      filter.$or = [
-        { fullName: rx },
-        { email: rx },
-        { mobileNumber: rx },
+      filter.$and = [
+        {
+          $or: [
+            { fullName: rx },
+            { email: rx },
+            { mobileNumber: rx },
+          ]
+        }
       ];
     }
 
@@ -80,9 +89,7 @@ export const getDrivers = async (req: AuthRequest, res: Response) => {
     } else if (status === 'Inactive') {
       filter.isEmailVerified = false;
     }
-    // 'All' → no extra filter
 
-    // Exclude all sensitive fields from projection
     const projection = {
       passwordHash: 0,
       securityAnswerHash: 0,
@@ -107,7 +114,7 @@ export const getDrivers = async (req: AuthRequest, res: Response) => {
         page: pageNum,
         limit: limitNum,
         total,
-        pages: Math.ceil(total / limitNum),
+        pages: Math.ceil(total / limitNum) || 1,
       },
     });
   } catch (err: any) {
@@ -122,9 +129,6 @@ export const getDrivers = async (req: AuthRequest, res: Response) => {
 /**
  * PATCH /api/users/drivers/:id/status
  * Owner-only: soft deactivate or reactivate a driver by toggling isEmailVerified.
- * This avoids physical deletion which would break trips/attendance/payroll references.
- *
- * Body: { status: 'active' | 'inactive' }
  */
 export const updateDriverStatus = async (req: AuthRequest, res: Response) => {
   try {
@@ -146,7 +150,6 @@ export const updateDriverStatus = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Soft deactivate: set isEmailVerified = false (blocks login via auth middleware)
     driver.isEmailVerified = status === 'active';
     await driver.save();
 
@@ -160,6 +163,35 @@ export const updateDriverStatus = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to update driver status. Please try again.',
+    });
+  }
+};
+
+/**
+ * DELETE /api/users/drivers/:id
+ * Owner-only: permanently delete a driver record.
+ */
+export const deleteDriver = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const driver = await User.findOne({ _id: id, role: 'Driver' });
+    if (!driver) {
+      return res.status(404).json({
+        success: false,
+        message: 'Driver record not found.',
+      });
+    }
+
+    await User.deleteOne({ _id: id });
+    return res.status(200).json({
+      success: true,
+      message: `Driver ${driver.fullName} deleted permanently.`,
+    });
+  } catch (err: any) {
+    console.error('[deleteDriver] Error:', err.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to delete driver record. Please try again.',
     });
   }
 };

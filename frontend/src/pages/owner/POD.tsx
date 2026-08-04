@@ -686,7 +686,7 @@ export const POD: React.FC = () => {
                 <h3 className="text-xl font-bold text-[#0B1C30] dark:text-[#F8FAFC] modal-title">Specify Rejection Discrepancy</h3>
               </div>
               <p className="text-[15px] text-[#334155] dark:text-[#CBD5E1] leading-relaxed font-medium modal-description">
-                Please write a clear correction advice description. The driver Rajesh Kumar will review this advice inside their console and re-upload correct proofs.
+                Please write a clear correction advice description. The assigned driver will review this advice inside their console and re-upload correct proofs.
               </p>
               
               <textarea

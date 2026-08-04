@@ -1157,7 +1157,7 @@ export const api = {
         // Purge legacy seed mock drivers so only genuine drivers are shown
         let local = rawLocal.filter(d => 
           !['drv-1', 'drv-2', 'drv-3'].includes(d.id) && 
-          !['harpreet.singh@smartops.com', 'rajesh.kumar@smartops.com', 'vikram.sharma@smartops.com'].includes(d.email)
+          !['harpreet.singh@smartops.com', 'rajesh.kumar@smartops.com', 'vikram.sharma@smartops.com', 'rajesh@smartops.com', 'driver@smartops.com'].includes(d.email.toLowerCase())
         );
         if (local.length !== rawLocal.length) {
           LocalStorageFallback.set('smartops_drivers', local);
@@ -1210,8 +1210,22 @@ export const api = {
           status: status === 'active' ? ('Active' as const) : ('Inactive' as const),
           isEmailVerified: status === 'active'
         } : d);
-        LocalStorageFallback.set('smartops_drivers', updated);
         return updated.find(d => d.id === id) as DriverRecord;
+      }
+    },
+
+    /**
+     * Delete a driver permanently.
+     */
+    delete: async (id: string): Promise<void> => {
+      try {
+        await axiosInstance.delete(`/users/drivers/${id}`);
+        const local = LocalStorageFallback.get<DriverRecord>('smartops_drivers', []);
+        LocalStorageFallback.set('smartops_drivers', local.filter(d => d.id !== id));
+      } catch (err: any) {
+        if (err.response) throw err;
+        const local = LocalStorageFallback.get<DriverRecord>('smartops_drivers', []);
+        LocalStorageFallback.set('smartops_drivers', local.filter(d => d.id !== id));
       }
     },
 

@@ -15,7 +15,7 @@ const inspectUsers = async () => {
     const users = await User.find({});
     console.log(`Total users found: ${users.length}`);
     users.forEach(u => {
-      console.log(`- ID: ${u._id} | Name: ${u.fullName} | Email: ${u.email} | Mobile: "${u.mobileNumber || ''}" | Role: ${u.role} | Provider: ${u.provider}`);
+      console.log(`- ID: ${u._id} | Name: ${u.fullName} | Email: ${u.email} | Role: ${u.role} | CompanyId: "${u.companyId || ''}" | CompanyName: "${u.companyName || ''}"`);
     });
 
     await mongoose.disconnect();

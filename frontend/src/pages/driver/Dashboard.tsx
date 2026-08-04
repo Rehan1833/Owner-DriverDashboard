@@ -162,9 +162,7 @@ export const Home: React.FC = () => {
 
   const driverVehicle = vehicles.find(v => 
     (v?.driver && user?.fullName && v.driver.toLowerCase().includes(user.fullName.toLowerCase())) ||
-    (v?.driver && user?.driverId && v.driver.toLowerCase().includes(user.driverId.toLowerCase())) ||
-    v?.driver?.toLowerCase().includes('rajesh') ||
-    v?.driver?.toLowerCase().includes('d1')
+    (v?.driver && user?.driverId && v.driver.toLowerCase().includes(user.driverId.toLowerCase()))
   ) || vehicles[0] || fallbackVehicle;
 
   // Shift Duty States
@@ -376,8 +374,8 @@ export const Home: React.FC = () => {
       try {
         const payload = {
           driverId,
-          driverName: user?.fullName || 'Rajesh Kumar',
-          employeeName: user?.fullName || 'Rajesh Kumar',
+          driverName: user?.fullName || 'Driver',
+          employeeName: user?.fullName || 'Driver',
           checkInGPS: `${watchLat.toFixed(5)}, ${watchLng.toFixed(5)}`,
           checkInWarehouse: watchAddress,
           checkInDeviceInfo: deviceInfo,
@@ -536,7 +534,7 @@ export const Home: React.FC = () => {
             <Zap className="h-4 w-4 text-[#14B8A6]" /> DRIVER LOGISTICS CONSOLE
           </span>
           <h2 className="text-[36px] sm:text-[42px] font-extrabold tracking-tight leading-none text-[#FFFFFF]">
-            Welcome back, {user?.fullName || 'Rajesh Kumar'}
+            Welcome back, {user?.fullName || 'Driver'}
           </h2>
           <p className="text-[#FFFFFF] text-[14px] sm:text-[15px] leading-relaxed max-w-2xl font-medium pt-1">
             Role: <span className="text-[#14B8A6] font-bold">Driver</span> · ID: <span className="text-[#FFFFFF] font-semibold">{driverId}</span> · Vehicle: <span className="text-[#FFFFFF] font-semibold">{user?.vehicleNumber || driverVehicle?.vehicleNumber || 'MH-12-QW-9874'}</span> · Duty: <span className="text-[#14B8A6] font-bold">{currentDutyStatus}</span>

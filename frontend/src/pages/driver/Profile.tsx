@@ -62,13 +62,13 @@ export const Profile: React.FC = () => {
         {/* Profile Card Summary */}
         <div className="md:col-span-1 bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm flex flex-col items-center text-center space-y-4 hover:shadow-md transition-shadow">
           <img
-            src={user?.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=Rajesh'}
+            src={user?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.fullName || 'Driver')}`}
             alt="Driver Photo"
             className="w-24 h-24 rounded-2xl bg-[#006A6A]/10 border border-[#E5E7EB] dark:border-[#334155] object-cover"
           />
           <div className="space-y-1">
-            <h3 className="text-base font-bold text-[#111827] dark:text-[#F8FAFC]">{user?.fullName || 'Rajesh Kumar'}</h3>
-            <p className="text-xs text-[#4B5563] dark:text-[#94A3B8] font-bold uppercase tracking-wide">Driver ID: DRV-9041</p>
+            <h3 className="text-base font-bold text-[#111827] dark:text-[#F8FAFC]">{user?.fullName || 'Driver'}</h3>
+            <p className="text-xs text-[#4B5563] dark:text-[#94A3B8] font-bold uppercase tracking-wide">Driver ID: {user?.driverId || 'N/A'}</p>
             <div className="flex items-center justify-center gap-1.5 pt-2 text-[10px] text-[#006A6A] dark:text-[#7DF5F5] font-extrabold bg-[#006A6A]/10 px-3 py-1 rounded-full border border-[#006A6A]/15">
               <Award className="h-3.5 w-3.5" />
               <span>Safety Score: 100%</span>
@@ -85,11 +85,11 @@ export const Profile: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs font-bold">
               <div>
                 <span className="text-[#6B7280] dark:text-[#94A3B8] block font-extrabold text-[10px] uppercase">Registered Phone</span>
-                <span className="font-bold text-[#111827] dark:text-[#F8FAFC] block mt-1 font-mono">+91 98765 43210</span>
+                <span className="font-bold text-[#111827] dark:text-[#F8FAFC] block mt-1 font-mono">{user?.mobileNumber || 'N/A'}</span>
               </div>
               <div>
                 <span className="text-[#6B7280] dark:text-[#94A3B8] block font-extrabold text-[10px] uppercase">Workspace Email</span>
-                <span className="font-bold text-[#111827] dark:text-[#F8FAFC] block mt-1">{user?.email || 'rajesh@smartops.com'}</span>
+                <span className="font-bold text-[#111827] dark:text-[#F8FAFC] block mt-1">{user?.email || 'N/A'}</span>
               </div>
               <div>
                 <span className="text-[#6B7280] dark:text-[#94A3B8] block font-extrabold text-[10px] uppercase">Commercial License Number</span>

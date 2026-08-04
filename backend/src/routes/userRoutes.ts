@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDrivers, updateDriverStatus } from '../controllers/driverController';
+import { getDrivers, updateDriverStatus, deleteDriver } from '../controllers/driverController';
 import { updateProfile, getProfile } from '../controllers/userController';
 import { authenticateJWT, ownerOnly } from '../middleware/authMiddleware';
 
@@ -29,5 +29,11 @@ router.get('/drivers', getDrivers);
  * Body: { status: 'active' | 'inactive' }
  */
 router.patch('/drivers/:id/status', updateDriverStatus);
+
+/**
+ * DELETE /api/users/drivers/:id
+ * Permanently delete a driver account.
+ */
+router.delete('/drivers/:id', deleteDriver);
 
 export default router;

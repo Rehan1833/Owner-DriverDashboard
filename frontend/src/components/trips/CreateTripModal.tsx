@@ -105,15 +105,6 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
         console.warn('API driver fetch fallback:', err);
       }
 
-      // 3. Fallback defaults if list empty
-      if (list.length === 0) {
-        list.push(
-          { driverId: 'DRV-2026-000001', name: 'Rajesh Kumar', vehicleNumber: 'MH-12-TRK-9041' },
-          { driverId: 'DRV-2026-000002', name: 'Harpreet Singh', vehicleNumber: 'MH-12-TRK-8801' },
-          { driverId: 'DRV-2026-000003', name: 'Vikram Sharma', vehicleNumber: 'MH-14-TRK-4420' }
-        );
-      }
-
       if (isMounted) {
         setDriverOptions(list);
         if (list.length > 0 && !driverId) {
@@ -130,12 +121,8 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
 
   // Default vehicle fallback
   useEffect(() => {
-    if (!vehicleNumber) {
-      if (vehicles.length > 0) {
-        setVehicleNumber(vehicles[0].vehicleNumber);
-      } else {
-        setVehicleNumber('MH-12-TRK-9041');
-      }
+    if (!vehicleNumber && vehicles.length > 0) {
+      setVehicleNumber(vehicles[0].vehicleNumber);
     }
   }, [vehicles, vehicleNumber]);
 
@@ -170,9 +157,9 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
     e.preventDefault();
     setErrorMsg(null);
 
-    const effectiveDriverId = driverId || (driverOptions[0]?.driverId) || 'DRV-2026-000001';
-    const effectiveDriverName = driverName || (driverOptions[0]?.name) || 'Rajesh Kumar';
-    const effectiveVehicle = vehicleNumber || 'MH-12-TRK-9041';
+    const effectiveDriverId = driverId || (driverOptions[0]?.driverId) || '';
+    const effectiveDriverName = driverName || (driverOptions[0]?.name) || 'Unassigned Driver';
+    const effectiveVehicle = vehicleNumber || (vehicles[0]?.vehicleNumber) || 'Unassigned Vehicle';
 
     if (!pickupLocation) return setErrorMsg('Pickup location is required.');
     if (!dropLocation) return setErrorMsg('Destination location is required.');

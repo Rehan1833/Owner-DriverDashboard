@@ -463,7 +463,7 @@ export const Fleet: React.FC = () => {
                   type="text"
                   required
                   name="driver"
-                  placeholder="e.g. Rajesh Kumar"
+                  placeholder="e.g. Driver Name"
                   value={form.driver}
                   onChange={handleInputChange}
                   className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
