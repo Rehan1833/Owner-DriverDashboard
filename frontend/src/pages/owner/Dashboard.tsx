@@ -644,9 +644,9 @@ export const Dashboard: React.FC = () => {
                 data={revenueChartData}
                 xKey="name"
                 series={[
-                  { key: 'revenue', name: 'Total Revenue (â‚¹)', color: '#006A6A', type: 'area' },
-                  { key: 'cost', name: 'Operational Cost (â‚¹)', color: '#EF4444', type: 'line' },
-                  { key: 'target', name: 'Target Target (â‚¹)', color: '#10B981', type: 'line' }
+                  { key: 'revenue', name: 'Total Revenue (₹)', color: '#006A6A', type: 'area' },
+                  { key: 'cost', name: 'Operational Cost (₹)', color: '#EF4444', type: 'line' },
+                  { key: 'target', name: 'Target Target (₹)', color: '#10B981', type: 'line' }
                 ]}
               />
             )}
@@ -939,7 +939,7 @@ export const Dashboard: React.FC = () => {
                               ? 'bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/20'
                               : 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20'
                           }`}>
-                            {(row as InventoryItem).quantity <= (row as InventoryItem).minimumQuantity ? 'âš ï¸ Low Stock' : 'âœ… Healthy'}
+                            {(row as InventoryItem).quantity <= (row as InventoryItem).minimumQuantity ? '⚠️ Low Stock' : '✅ Healthy'}
                           </span>
                         </td>
                       </>

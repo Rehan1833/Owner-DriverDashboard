@@ -10,6 +10,7 @@ import podRoutes from './routes/podRoutes';
 import mapRoutes from './routes/mapRoutes';
 import userRoutes from './routes/userRoutes';
 import companyRoutes from './routes/companyRoutes';
+import driverRoutes from './routes/driverRoutes';
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.get('/health', (req: Request, res: Response) => {
 // Bind Enterprise Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/company', companyRoutes);
+app.use('/api/driver', driverRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/salary', salaryRoutes);

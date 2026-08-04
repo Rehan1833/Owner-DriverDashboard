@@ -47,7 +47,7 @@ export interface ITrip extends Document {
   scheduledStart?: Date;
   expectedEnd?: Date;
   notes?: string;
-  status: 'Draft' | 'Assigned' | 'Accepted' | 'Started' | 'Reached Pickup' | 'Loaded' | 'In Transit' | 'At Stop' | 'Reached Destination' | 'Delivered' | 'Completed' | 'Cancelled' | 'Delayed' | 'Incident Reported';
+  status: 'Draft' | 'Assigned' | 'Accepted' | 'Started' | 'On Route' | 'Reached Pickup' | 'Loaded' | 'In Transit' | 'At Stop' | 'Near Destination' | 'Reached Destination' | 'Delivered' | 'POD Uploaded' | 'Completed' | 'Cancelled' | 'Delayed' | 'Incident Reported';
   eta: string;
   distanceRemaining: number;
   stopReason?: string;
@@ -119,7 +119,7 @@ const TripSchema = new Schema<ITrip>({
   notes: { type: String },
   status: {
     type: String,
-    enum: ['Draft', 'Assigned', 'Accepted', 'Started', 'Reached Pickup', 'Loaded', 'In Transit', 'At Stop', 'Reached Destination', 'Delivered', 'Completed', 'Cancelled', 'Delayed', 'Incident Reported'],
+    enum: ['Draft', 'Assigned', 'Accepted', 'Started', 'On Route', 'Reached Pickup', 'Loaded', 'In Transit', 'At Stop', 'Near Destination', 'Reached Destination', 'Delivered', 'POD Uploaded', 'Completed', 'Cancelled', 'Delayed', 'Incident Reported'],
     default: 'Assigned'
   },
   eta: { type: String, default: '30 Mins' },

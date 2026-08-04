@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronDown, ChevronUp, Search, Download } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { downloadReport } from '../../utils/downloadReport';
 
 interface Column<T> {
   header: string;
@@ -100,28 +101,27 @@ export function Table<T extends { id: string | number }>({
   const handleExport = () => {
     if (sortedData.length === 0) return;
     
-    // Create CSV header
-    const headers = columns.map(c => c.header).join(',');
-    
-    // Create CSV lines
+    const headers = columns.map(c => c.header);
     const rows = sortedData.map(row => 
       columns.map(col => {
         if (typeof col.accessor === 'function') {
-          // Fallback if accessory is render function - try to get matching string or strip it
-          return `"${String(col.header)}"`;
+          // If accessor is a function, default to an empty string in raw CSV cells
+          return '';
         }
-        return `"${String(row[col.accessor] || '')}"`;
-      }).join(',')
+        return String(row[col.accessor] ?? '');
+      })
     );
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${exportFileName}-${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const name = exportFileName || 'smartops_ledger_export';
+
+    downloadReport({
+      fileName: name,
+      title: name.toUpperCase().replace(/_/g, ' '),
+      format: 'CSV',
+      headers,
+      rows,
+      summary: 'Data ledger export from the SmartOps operational management platform.'
+    });
   };
 
   return (

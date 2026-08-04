@@ -13,13 +13,16 @@ export const createPOD = async (req: AuthRequest, res: Response) => {
       customerName,
       customerAddress,
       imageUrl,
+      images,
       signatureUrl,
       remarks,
       latitude,
       longitude
     } = req.body;
 
-    if (!orderNumber || !vehicleNumber || !customerName || !customerAddress || !imageUrl) {
+    const primaryImage = imageUrl || (Array.isArray(images) && images.length > 0 ? images[0] : null);
+
+    if (!orderNumber || !vehicleNumber || !customerName || !customerAddress || !primaryImage) {
       return res.status(400).json({ message: 'Missing required delivery details.' });
     }
 
@@ -52,7 +55,8 @@ export const createPOD = async (req: AuthRequest, res: Response) => {
       orderNumber,
       customerName,
       customerAddress,
-      imageUrl,
+      imageUrl: primaryImage,
+      images: Array.isArray(images) && images.length > 0 ? images : [primaryImage],
       signatureUrl,
       remarks,
       latitude,
@@ -63,8 +67,47 @@ export const createPOD = async (req: AuthRequest, res: Response) => {
 
     await newPOD.save();
 
+    // Also find matching Trip by orderNumber or driver active trip and update status to 'POD Uploaded'
+    try {
+      const TripModel = (await import('../models/Trip')).default;
+      const TripEventModel = (await import('../models/TripEvent')).default;
+      
+      const matchingTrip = await TripModel.findOne({
+        $or: [
+          { invoiceNumber: orderNumber },
+          { tripNumber: orderNumber },
+          { driverId: req.userId, status: { $nin: ['Completed', 'Cancelled'] } }
+        ]
+      });
+
+      if (matchingTrip) {
+        matchingTrip.status = 'POD Uploaded';
+        if (matchingTrip.stops && matchingTrip.stops.length > 0) {
+          const lastStop = matchingTrip.stops[matchingTrip.stops.length - 1];
+          lastStop.status = 'Completed';
+          lastStop.podId = newPOD.podId;
+          lastStop.completedAt = new Date();
+        }
+        await matchingTrip.save();
+
+        await TripEventModel.create({
+          tripId: matchingTrip._id,
+          driverId: req.userId,
+          companyId: newPOD.companyId,
+          eventType: 'pod-uploaded',
+          title: 'POD Uploaded',
+          description: `POD ${newPOD.podId} uploaded for Order ${orderNumber}`,
+          latitude,
+          longitude,
+          timestamp: new Date()
+        });
+      }
+    } catch (tErr) {
+      console.warn('Failed to update trip on POD creation:', tErr);
+    }
+
     // Broadcast instant update
-    emitPodUpdate({ type: 'UPLOAD', pod: newPOD });
+    emitPodUpdate({ type: 'UPLOAD', pod: newPOD, companyId: newPOD.companyId });
 
     res.status(201).json(newPOD);
   } catch (err: any) {

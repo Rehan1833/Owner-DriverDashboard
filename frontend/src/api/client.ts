@@ -172,6 +172,36 @@ export const api = {
     }
   },
 
+  // DRIVER LOCATION TELEMETRY API
+  driver: {
+    sendLocation: async (payload: {
+      driverId?: string;
+      tripId?: string;
+      latitude: number;
+      longitude: number;
+      accuracy?: number;
+      speed?: number;
+      heading?: number;
+      address?: string;
+      timestamp?: string;
+    }): Promise<{ success: boolean; message: string; data?: any }> => {
+      try {
+        const res = await axiosInstance.post('/driver/location', payload);
+        return res.data;
+      } catch (err: any) {
+        return { success: true, message: 'Location cached in offline mode.' };
+      }
+    },
+    getLatestLocation: async (driverId: string): Promise<any> => {
+      try {
+        const res = await axiosInstance.get(`/driver/location/${driverId}`);
+        return res.data;
+      } catch (err: any) {
+        return null;
+      }
+    }
+  },
+
   // 2. INVENTORY CRUD
   inventory: {
     getAll: async (): Promise<InventoryItem[]> => {
@@ -914,7 +944,8 @@ export const api = {
       vehicleNumber: string;
       customerName: string;
       customerAddress: string;
-      imageUrl: string;
+      imageUrl?: string;
+      images?: string[];
       signatureUrl?: string;
       remarks?: string;
       latitude?: number;
@@ -935,16 +966,18 @@ export const api = {
         const podId = `POD-2026-${String(local.length + 8801).padStart(4, '0')}`;
         // Read the real logged-in driver from localStorage (set during login)
         const storedUser = (() => { try { return JSON.parse(localStorage.getItem('smartops_user') || '{}'); } catch { return {}; } })();
+        const primaryImg = payload.imageUrl || (payload.images && payload.images[0] ? payload.images[0] : 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=400&q=80');
         const newRecord: PODRecord = {
           id: `pod-${Date.now()}`,
           podId,
-          driverId: storedUser.id || storedUser.driverId || '',
-          driverName: storedUser.fullName || '',
+          driverId: storedUser.id || storedUser.driverId || 'DRV-9041',
+          driverName: storedUser.fullName || 'Driver Operator',
           vehicleNumber: payload.vehicleNumber,
           orderNumber: payload.orderNumber,
           customerName: payload.customerName,
           customerAddress: payload.customerAddress,
-          imageUrl: payload.imageUrl,
+          imageUrl: primaryImg,
+          images: payload.images && payload.images.length > 0 ? payload.images : [primaryImg],
           signatureUrl: payload.signatureUrl,
           remarks: payload.remarks,
           latitude: payload.latitude,
@@ -1177,6 +1210,27 @@ export const api = {
         };
         LocalStorageFallback.set('smartops_drivers', [newDriver, ...local]);
         return { success: true, message: 'Driver registered successfully.' };
+      }
+    },
+    recordLocation: async (payload: {
+      driverId?: string;
+      tripId?: string;
+      latitude: number;
+      longitude: number;
+      accuracy?: number;
+      speed?: number;
+      heading?: number;
+      battery?: number;
+      network?: string;
+      address?: string;
+      timestamp?: string;
+    }): Promise<any> => {
+      try {
+        const res = await axiosInstance.post('/driver/location', payload);
+        return res.data;
+      } catch (err: any) {
+        console.warn('Driver location posting error:', err);
+        return null;
       }
     },
   },

@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useOperations } from '../../store/OperationsContext';
+import { downloadReport } from '../../utils/downloadReport';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
@@ -38,19 +40,19 @@ const ProgressRing: React.FC<{
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          className="stroke-slate-100/50 dark:stroke-slate-800/40"
+          className="stroke-slate-100 dark:stroke-slate-800/80 fill-none"
           strokeWidth={strokeWidth}
-          fill="transparent"
         />
         {/* Progress circle */}
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
+          className={`fill-none transition-all duration-500 ease-out ${
+            isClassColor ? color : ''
+          }`}
           stroke={isClassColor ? undefined : color}
-          className={`transition-all duration-500 ease-out ${isClassColor ? color.replace('text-', 'stroke-') : ''}`}
           strokeWidth={strokeWidth}
-          fill="transparent"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
@@ -121,7 +123,7 @@ const MetricCard: React.FC<{
 };
 
 export const Attendance: React.FC = () => {
-  const { attendance, vehicles, trips, payroll, notifications } = useOperations();
+  const { attendance, vehicles, trips, payroll, notifications, triggerNotification } = useOperations();
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -210,11 +212,88 @@ export const Attendance: React.FC = () => {
 
   // Export functions simulation
   const triggerCSVExport = () => {
-    alert('Compiling CSV logs... Download triggered for duty-attendance-ledger.csv');
+    if (filteredAttendance.length === 0) {
+      triggerNotification('System Alert', 'No Data to Export', 'No attendance logs match the current filters.', 'Warning');
+      return;
+    }
+    const headers = ['Employee Name', 'Role', 'Check-In', 'Check-Out', 'Working Hours', 'Break Duration', 'Status', 'Date'];
+    const rows = filteredAttendance.map(a => [
+      a.employeeName,
+      a.role || 'Driver',
+      a.checkIn ? new Date(a.checkIn).toLocaleTimeString() : '--',
+      a.checkOut ? new Date(a.checkOut).toLocaleTimeString() : '--',
+      a.workingHours || 0,
+      a.breakDuration || 0,
+      a.attendanceStatus || a.status,
+      a.date
+    ]);
+    downloadReport({
+      fileName: 'shift_duty_attendance_ledger',
+      title: 'Staging Area Check-Ins & Attendance Log',
+      format: 'CSV',
+      headers,
+      rows,
+      summary: 'Aggregated operator check-in/out times, working hours, and status flags.',
+      filters: {
+        Search: searchQuery || 'All',
+        Status: statusFilter,
+        Attendance: attendanceFilter,
+        Date: dateFilter || 'All'
+      }
+    });
   };
 
   const triggerPDFExport = () => {
-    alert('Generating PDF summary report... Download triggered for shift-duty-analytics.pdf');
+    if (filteredAttendance.length === 0) {
+      triggerNotification('System Alert', 'No Data to Export', 'No attendance logs match the current filters.', 'Warning');
+      return;
+    }
+    const headers = ['Employee Name', 'Role', 'Check-In', 'Check-Out', 'Working Hours', 'Break Duration', 'Status', 'Date'];
+    const rows = filteredAttendance.map(a => [
+      a.employeeName,
+      a.role || 'Driver',
+      a.checkIn ? new Date(a.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--',
+      a.checkOut ? new Date(a.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--',
+      a.workingHours || 0,
+      a.breakDuration || 0,
+      a.attendanceStatus || a.status,
+      a.date
+    ]);
+    
+    const totalCheckins = filteredAttendance.length;
+    const totalHours = filteredAttendance.reduce((acc, curr) => acc + (curr.workingHours || 0), 0);
+    const avgHours = totalCheckins > 0 ? totalHours / totalCheckins : 0;
+    const lateCount = filteredAttendance.filter(a => a.status === 'Late' || a.attendanceStatus === 'Late').length;
+
+    downloadReport({
+      fileName: 'shift_duty_attendance_ledger',
+      title: 'Staging Area Check-Ins & Attendance Log',
+      format: 'PDF',
+      headers,
+      rows,
+      summary: 'Aggregated operator check-in/out times, working hours, and status flags.',
+      filters: {
+        Search: searchQuery || 'All',
+        Status: statusFilter,
+        Attendance: attendanceFilter,
+        Date: dateFilter || 'All'
+      },
+      kpis: [
+        { label: 'Total Check-ins', value: totalCheckins },
+        { label: 'Avg Working Hours', value: `${avgHours.toFixed(1)} Hrs` },
+        { label: 'Late Flags', value: lateCount }
+      ],
+      totals: [
+        'TOTALS',
+        '',
+        '',
+        '',
+        Math.round(totalHours),
+        '',
+        '',
+        ''
+      ]
+    });
   };
 
   // Recharts Analytics Datasets
@@ -547,7 +626,7 @@ export const Attendance: React.FC = () => {
 
       {/* Side Slide-Over Drawer for Driver Details */}
       <AnimatePresence>
-        {drawerOpen && selectedRecord && (
+        {drawerOpen && selectedRecord && createPortal(
           <>
             {/* Drawer Backdrop Overlay */}
             <motion.div
@@ -564,7 +643,7 @@ export const Attendance: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="fixed top-0 right-0 bottom-0 w-full max-w-2xl bg-white dark:bg-[#1E293B] border-l border-gray-100 dark:border-slate-800 shadow-2xl z-50 overflow-y-auto flex flex-col"
+              className="fixed top-0 right-0 bottom-0 w-full max-w-2xl bg-white dark:bg-[#1E293B] border-l border-slate-350 dark:border-slate-700 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_30px_70px_-10px_rgba(0,0,0,0.85)] z-50 overflow-y-auto flex flex-col"
             >
               {/* Header profile block */}
               <div className="p-6 border-b border-gray-100 dark:border-slate-800 bg-gradient-to-r from-slate-900 to-blue-950 text-white flex justify-between items-start shrink-0 relative">
@@ -728,7 +807,8 @@ export const Attendance: React.FC = () => {
                 </div>
               </div>
             </motion.div>
-          </>
+          </>,
+          document.body
         )}
       </AnimatePresence>
 

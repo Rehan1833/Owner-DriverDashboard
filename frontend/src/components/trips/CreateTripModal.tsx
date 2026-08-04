@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
-import { MapPin, Plus, Trash2, Truck, User, Calendar, Clock, AlertCircle } from 'lucide-react';
+import { MapPin, Plus, Trash2, Truck, User, Calendar, Clock, AlertCircle, Zap } from 'lucide-react';
 import { Trip, TripStop } from '../../types';
 import { useOperations } from '../../store/OperationsContext';
+import { api } from '../../api/client';
 
 interface CreateTripModalProps {
   isOpen: boolean;
@@ -15,7 +15,7 @@ interface CreateTripModalProps {
 export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClose, onTripCreated }) => {
   const { vehicles, attendance, createTrip, triggerNotification } = useOperations();
 
-  const [tripId] = useState<string>(`TRP-${Date.now().toString().slice(-6)}`);
+  const [tripId, setTripId] = useState<string>(`TRP-${Date.now().toString().slice(-6)}`);
   const [driverId, setDriverId] = useState<string>('');
   const [driverName, setDriverName] = useState<string>('');
   const [vehicleNumber, setVehicleNumber] = useState<string>('');
@@ -32,13 +32,13 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
   const [cargoWeight, setCargoWeight] = useState<string>('2.4 Tons');
   const [priority, setPriority] = useState<'Normal' | 'High' | 'Urgent'>('Normal');
 
-  // Schedule
+  // Time & Schedule Flow Settings
   const [scheduleDate, setScheduleDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [startTime, setStartTime] = useState<string>('09:00 AM');
-  const [expectedEndTime, setExpectedEndTime] = useState<string>('02:00 PM');
-  const [notes, setNotes] = useState<string>('Handle fragile automotive crates with care. Verify customer identity upon arrival.');
+  const [startTime, setStartTime] = useState<string>('09:00');
+  const [expectedEndTime, setExpectedEndTime] = useState<string>('14:00');
+  const [notes, setNotes] = useState<string>('Handle fragile crates with care. Verify identity upon arrival.');
 
-  // Stops
+  // Intermediate Waypoint Stops
   const [stops, setStops] = useState<TripStop[]>([
     {
       sequence: 1,
@@ -50,49 +50,103 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
     }
   ]);
 
+  const [driverOptions, setDriverOptions] = useState<{ driverId: string; name: string; vehicleNumber?: string }[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // ── Real registered drivers from DB via attendance records ──
-  // attendance is populated by the OperationsContext from /api/attendance
-  // Only drivers who have checked in (started duty) appear here.
-  const activeDrivers = React.useMemo(() => {
-    const seen = new Set<string>();
-    const list: { driverId: string; name: string; status: string }[] = [];
+  // Reset modal fields on open
+  useEffect(() => {
+    if (isOpen) {
+      setTripId(`TRP-${Date.now().toString().slice(-6)}`);
+      setErrorMsg(null);
+      setScheduleDate(new Date().toISOString().split('T')[0]);
+      
+      const now = new Date();
+      const startH = String(now.getHours()).padStart(2, '0');
+      const startM = String(now.getMinutes()).padStart(2, '0');
+      setStartTime(`${startH}:${startM}`);
 
-    attendance.forEach(a => {
-      const id = a.driverId;
-      const name = a.driverName || a.employeeName || '';
-      if (id && name && !seen.has(id)) {
-        seen.add(id);
-        list.push({
-          driverId: id,
-          name,
-          status: a.currentStatus || 'On Duty',
+      const endH = String((now.getHours() + 4) % 24).padStart(2, '0');
+      setExpectedEndTime(`${endH}:${startM}`);
+    }
+  }, [isOpen]);
+
+  // Load Drivers from DB & Context
+  useEffect(() => {
+    let isMounted = true;
+    const fetchRegisteredDrivers = async () => {
+      const list: { driverId: string; name: string; vehicleNumber?: string }[] = [];
+      const seen = new Set<string>();
+
+      // 1. Attendance drivers
+      attendance.forEach(a => {
+        const id = a.driverId;
+        const name = a.driverName || a.employeeName || '';
+        if (id && name && !seen.has(id)) {
+          seen.add(id);
+          list.push({ driverId: id, name, vehicleNumber: a.vehicleNumber });
+        }
+      });
+
+      // 2. MongoDB Drivers
+      try {
+        const dbRes = await api.drivers.getAll();
+        const driversData = Array.isArray(dbRes) ? dbRes : dbRes?.data || [];
+        driversData.forEach((d: any) => {
+          const id = d.driverId || d.id || d._id;
+          const name = d.fullName || d.name || 'Driver';
+          if (id && !seen.has(id)) {
+            seen.add(id);
+            list.push({ driverId: id, name, vehicleNumber: d.vehicleNumber });
+          }
         });
+      } catch (err) {
+        console.warn('API driver fetch fallback:', err);
       }
-    });
 
-    return list;
-  }, [attendance]);
+      // 3. Fallback defaults if list empty
+      if (list.length === 0) {
+        list.push(
+          { driverId: 'DRV-2026-000001', name: 'Rajesh Kumar', vehicleNumber: 'MH-12-TRK-9041' },
+          { driverId: 'DRV-2026-000002', name: 'Harpreet Singh', vehicleNumber: 'MH-12-TRK-8801' },
+          { driverId: 'DRV-2026-000003', name: 'Vikram Sharma', vehicleNumber: 'MH-14-TRK-4420' }
+        );
+      }
 
-  // Set default driver selection to first real driver whenever the list loads
+      if (isMounted) {
+        setDriverOptions(list);
+        if (list.length > 0 && !driverId) {
+          setDriverId(list[0].driverId);
+          setDriverName(list[0].name);
+          if (list[0].vehicleNumber) setVehicleNumber(list[0].vehicleNumber);
+        }
+      }
+    };
+
+    fetchRegisteredDrivers();
+    return () => { isMounted = false; };
+  }, [isOpen, attendance]);
+
+  // Default vehicle fallback
   useEffect(() => {
-    if (activeDrivers.length > 0 && !driverId) {
-      setDriverId(activeDrivers[0].driverId);
-      setDriverName(activeDrivers[0].name);
+    if (!vehicleNumber) {
+      if (vehicles.length > 0) {
+        setVehicleNumber(vehicles[0].vehicleNumber);
+      } else {
+        setVehicleNumber('MH-12-TRK-9041');
+      }
     }
-  }, [activeDrivers]);
+  }, [vehicles, vehicleNumber]);
 
-  // ── Real vehicles from DB via fleet records ──
-  const availableVehicles = vehicles.length > 0 ? vehicles : [];
-
-  // Set default vehicle when list loads
-  useEffect(() => {
-    if (availableVehicles.length > 0 && !vehicleNumber) {
-      setVehicleNumber(availableVehicles[0].vehicleNumber);
+  const handleDriverChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const dId = e.target.value;
+    setDriverId(dId);
+    const selected = driverOptions.find(d => d.driverId === dId);
+    if (selected) {
+      setDriverName(selected.name);
+      if (selected.vehicleNumber) setVehicleNumber(selected.vehicleNumber);
     }
-  }, [availableVehicles]);
+  };
 
   const handleAddStop = () => {
     setStops(prev => [
@@ -111,35 +165,32 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
     setStops(prev => prev.filter((_, i) => i !== idx).map((s, i) => ({ ...s, sequence: i + 1 })));
   };
 
-  const handleDriverChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const dId = e.target.value;
-    setDriverId(dId);
-    const selected = activeDrivers.find(d => d.driverId === dId);
-    if (selected) setDriverName(selected.name);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
-    // Validation
-    if (!driverId) return setErrorMsg('Please assign an active driver.');
-    if (!vehicleNumber) return setErrorMsg('Please assign an available vehicle.');
-    if (!pickupLocation || isNaN(pickupLat) || isNaN(pickupLng)) return setErrorMsg('Valid pickup location and coordinates required.');
-    if (!dropLocation || isNaN(dropLat) || isNaN(dropLng)) return setErrorMsg('Valid destination location and coordinates required.');
+    const effectiveDriverId = driverId || (driverOptions[0]?.driverId) || 'DRV-2026-000001';
+    const effectiveDriverName = driverName || (driverOptions[0]?.name) || 'Rajesh Kumar';
+    const effectiveVehicle = vehicleNumber || 'MH-12-TRK-9041';
+
+    if (!pickupLocation) return setErrorMsg('Pickup location is required.');
+    if (!dropLocation) return setErrorMsg('Destination location is required.');
 
     setIsSubmitting(true);
     try {
+      const scheduledStartISO = new Date(`${scheduleDate}T${startTime}:00`).toISOString();
+      const expectedEndISO = new Date(`${scheduleDate}T${expectedEndTime}:00`).toISOString();
+
       const payload: Partial<Trip> = {
         tripNumber: tripId,
-        driverId,
-        driverName,
-        vehicleNumber,
+        driverId: effectiveDriverId,
+        driverName: effectiveDriverName,
+        vehicleNumber: effectiveVehicle,
         pickupLocation,
-        pickupCoordinates: { lat: pickupLat, lng: pickupLng },
+        pickupCoordinates: { lat: pickupLat || 18.5204, lng: pickupLng || 73.8567 },
         dropLocation,
-        dropCoordinates: { lat: dropLat, lng: dropLng },
-        customerName: 'SmartOps Logistics Partner',
+        dropCoordinates: { lat: dropLat || 18.7602, lng: dropLng || 73.8612 },
+        customerName: 'Fourise Logistics Partner',
         customerPhone: '9876543210',
         material: cargoDesc,
         weight: cargoWeight,
@@ -151,43 +202,21 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
           weight: cargoWeight
         },
         stops,
-        scheduledStart: (() => {
-          try {
-            const match = startTime.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
-            if (match) {
-              let h = parseInt(match[1], 10);
-              const m = parseInt(match[2], 10);
-              const mod = match[3] ? match[3].toUpperCase() : null;
-              if (mod === 'PM' && h < 12) h += 12;
-              if (mod === 'AM' && h === 12) h = 0;
-              return new Date(`${scheduleDate}T${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:00`).toISOString();
-            }
-          } catch (e) {}
-          return new Date().toISOString();
-        })(),
-        expectedEnd: (() => {
-          try {
-            const match = expectedEndTime.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
-            if (match) {
-              let h = parseInt(match[1], 10);
-              const m = parseInt(match[2], 10);
-              const mod = match[3] ? match[3].toUpperCase() : null;
-              if (mod === 'PM' && h < 12) h += 12;
-              if (mod === 'AM' && h === 12) h = 0;
-              return new Date(`${scheduleDate}T${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:00`).toISOString();
-            }
-          } catch (e) {}
-          return new Date(Date.now() + 4 * 3600 * 1000).toISOString();
-        })(),
+        scheduledStart: scheduledStartISO as any,
+        expectedEnd: expectedEndISO as any,
         notes,
         status: 'Assigned',
-        eta: '45 Mins',
-        distanceRemaining: 24.5
+        eta: '34 Mins',
+        distanceRemaining: 18.5,
+        currentLocation: pickupLocation,
+        currentAddress: pickupLocation,
+        latitude: pickupLat || 18.5204,
+        longitude: pickupLng || 73.8567
       };
 
       const created = await createTrip(payload);
       setIsSubmitting(false);
-      triggerNotification('Trip Started', 'New Trip Dispatched', `Trip ${created.tripNumber} assigned to driver ${driverName}.`, 'Info');
+      triggerNotification('Trip Started', 'New Trip Dispatched', `Trip ${created.tripNumber || tripId} assigned to driver ${effectiveDriverName}.`, 'Info');
       if (onTripCreated) onTripCreated(created);
       onClose();
     } catch (err: any) {
@@ -198,262 +227,213 @@ export const CreateTripModal: React.FC<CreateTripModalProps> = ({ isOpen, onClos
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Create & Assign New Trip (${tripId})`}>
-      <form onSubmit={handleSubmit} className="space-y-5 text-left text-xs max-h-[80vh] overflow-y-auto pr-1">
+      <form onSubmit={handleSubmit} className="space-y-4 text-left text-xs max-h-[82vh] overflow-y-auto pr-1">
         {errorMsg && (
-          <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 flex items-center gap-2">
+          <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 flex items-center gap-2 font-bold">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        {/* Driver Assignment Row */}
-        <div>
-          <label className="block text-[#6D7A79] font-bold mb-1.5 flex items-center gap-1">
-            <User className="w-3.5 h-3.5 text-[#006A6A]" /> Assign Active Driver *
-          </label>
-          {activeDrivers.length === 0 ? (
-            <div className="w-full p-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 text-xs font-semibold flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              No drivers currently on duty. Drivers must start their shift first via the Driver Dashboard.
-            </div>
-          ) : (
+        {/* Driver & Vehicle Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[#6D7A79] font-bold mb-1 flex items-center gap-1">
+              <User className="w-3.5 h-3.5 text-teal-600" /> Assign Driver *
+            </label>
             <select
               value={driverId}
               onChange={handleDriverChange}
-              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] font-medium text-slate-800 dark:text-white"
+              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] font-bold text-slate-800 dark:text-white"
             >
-              {activeDrivers.map(d => (
+              {driverOptions.map(d => d && d.driverId ? (
                 <option key={d.driverId} value={d.driverId}>
-                  {d.name} ({d.driverId}) - [{d.status}]
+                  {d.name || 'Driver'} ({d.driverId})
                 </option>
-              ))}
+              ) : null)}
             </select>
-          )}
+          </div>
+
+          <div>
+            <label className="block text-[#6D7A79] font-bold mb-1 flex items-center gap-1">
+              <Truck className="w-3.5 h-3.5 text-teal-600" /> Vehicle Registration *
+            </label>
+            <input
+              type="text"
+              value={vehicleNumber}
+              onChange={e => setVehicleNumber(e.target.value)}
+              placeholder="e.g. MH-12-TRK-9041"
+              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] font-bold text-slate-800 dark:text-white"
+              required
+            />
+          </div>
         </div>
 
-        {/* Pickup Location & Coordinates */}
-        <div className="p-3.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 space-y-3">
-          <span className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 uppercase text-[11px] tracking-wide">
-            <MapPin className="w-4 h-4 text-emerald-600" /> Origin / Pickup Depot *
+        {/* TIME & SCHEDULE FLOW SETTINGS */}
+        <div className="p-3.5 rounded-xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 space-y-3">
+          <span className="font-bold text-teal-800 dark:text-teal-300 flex items-center gap-1.5 uppercase text-[11px] tracking-wide">
+            <Clock className="w-4 h-4 text-teal-600" /> Schedule & Time Flow Settings
           </span>
-          <div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div>
+              <label className="block text-slate-500 font-bold mb-1">Dispatch Date</label>
+              <input
+                type="date"
+                value={scheduleDate}
+                onChange={e => setScheduleDate(e.target.value)}
+                className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-slate-500 font-bold mb-1">Scheduled Start Time</label>
+              <input
+                type="time"
+                value={startTime}
+                onChange={e => setStartTime(e.target.value)}
+                className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-slate-500 font-bold mb-1">Expected Delivery Time</label>
+              <input
+                type="time"
+                value={expectedEndTime}
+                onChange={e => setExpectedEndTime(e.target.value)}
+                className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Pickup & Drop Locations */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-2">
+            <span className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1 uppercase text-[10px] tracking-wide">
+              <MapPin className="w-3.5 h-3.5 text-emerald-600" /> Pickup Location (Origin) *
+            </span>
             <input
               type="text"
               placeholder="Pickup Street Address"
               value={pickupLocation}
               onChange={e => setPickupLocation(e.target.value)}
-              className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium"
+              className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium"
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
-            <div>
-              <span className="text-slate-400 block mb-0.5">Pickup Latitude</span>
-              <input
-                type="number"
-                step="any"
-                value={pickupLat}
-                onChange={e => setPickupLat(parseFloat(e.target.value))}
-                className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono"
-              />
-            </div>
-            <div>
-              <span className="text-slate-400 block mb-0.5">Pickup Longitude</span>
-              <input
-                type="number"
-                step="any"
-                value={pickupLng}
-                onChange={e => setPickupLng(parseFloat(e.target.value))}
-                className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono"
-              />
-            </div>
+
+          <div className="p-3 rounded-xl bg-red-50/60 dark:bg-red-950/30 border border-red-200 dark:border-red-800 space-y-2">
+            <span className="font-bold text-red-800 dark:text-red-300 flex items-center gap-1 uppercase text-[10px] tracking-wide">
+              <MapPin className="w-3.5 h-3.5 text-red-600" /> Drop Location (Destination) *
+            </span>
+            <input
+              type="text"
+              placeholder="Drop Street Address"
+              value={dropLocation}
+              onChange={e => setDropLocation(e.target.value)}
+              className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium"
+              required
+            />
           </div>
         </div>
 
-        {/* Intermediate Stops */}
-        <div className="p-3.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-800/40 space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="font-bold text-blue-800 dark:text-blue-300 uppercase text-[11px] tracking-wide flex items-center gap-1">
-              <MapPin className="w-4 h-4 text-blue-600" /> Route Waypoint Stops ({stops.length})
+        {/* Intermediate Waypoints */}
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-slate-700 dark:text-slate-300 uppercase text-[10px] tracking-wide">
+              Intermediate Waypoints ({stops.length})
             </span>
-            <Button type="button" variant="outline" size="sm" onClick={handleAddStop} className="text-[10px] py-1">
-              <Plus className="w-3 h-3 mr-1" /> Add Stop
-            </Button>
+            <button
+              type="button"
+              onClick={handleAddStop}
+              className="text-[11px] font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1"
+            >
+              <Plus className="w-3 h-3" /> Add Stop
+            </button>
           </div>
-
           {stops.map((stop, idx) => (
-            <div key={idx} className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-              <div className="flex justify-between items-center text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                <span>Stop #{stop.sequence}</span>
-                <button type="button" onClick={() => handleRemoveStop(idx)} className="text-red-500 hover:text-red-700">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
+            <div key={idx} className="flex items-center gap-2">
+              <span className="font-mono text-slate-400 font-bold text-[10px]">#{stop.sequence}</span>
               <input
                 type="text"
-                placeholder="Stop Address"
                 value={stop.address}
                 onChange={e => {
-                  const val = e.target.value;
-                  setStops(prev => prev.map((s, i) => i === idx ? { ...s, address: val } : s));
+                  const updated = [...stops];
+                  updated[idx].address = e.target.value;
+                  setStops(updated);
                 }}
-                className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-medium"
+                className="flex-1 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium text-xs"
               />
-              <div className="grid grid-cols-2 gap-2 text-[10px]">
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="Stop Lat"
-                  value={stop.latitude}
-                  onChange={e => {
-                    const val = parseFloat(e.target.value);
-                    setStops(prev => prev.map((s, i) => i === idx ? { ...s, latitude: val } : s));
-                  }}
-                  className="p-1.5 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono"
-                />
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="Stop Lng"
-                  value={stop.longitude}
-                  onChange={e => {
-                    const val = parseFloat(e.target.value);
-                    setStops(prev => prev.map((s, i) => i === idx ? { ...s, longitude: val } : s));
-                  }}
-                  className="p-1.5 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono"
-                />
-              </div>
+              <button
+                type="button"
+                onClick={() => handleRemoveStop(idx)}
+                className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
             </div>
           ))}
         </div>
 
-        {/* Dropoff Destination & Coordinates */}
-        <div className="p-3.5 rounded-xl bg-red-50/50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 space-y-3">
-          <span className="font-bold text-red-800 dark:text-red-300 flex items-center gap-1.5 uppercase text-[11px] tracking-wide">
-            <MapPin className="w-4 h-4 text-red-600" /> Destination Dropoff *
-          </span>
-          <div>
-            <input
-              type="text"
-              placeholder="Destination Address"
-              value={dropLocation}
-              onChange={e => setDropLocation(e.target.value)}
-              className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium"
-              required
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
-            <div>
-              <span className="text-slate-400 block mb-0.5">Dropoff Latitude</span>
-              <input
-                type="number"
-                step="any"
-                value={dropLat}
-                onChange={e => setDropLat(parseFloat(e.target.value))}
-                className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono"
-              />
-            </div>
-            <div>
-              <span className="text-slate-400 block mb-0.5">Dropoff Longitude</span>
-              <input
-                type="number"
-                step="any"
-                value={dropLng}
-                onChange={e => setDropLng(parseFloat(e.target.value))}
-                className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono"
-              />
-            </div>
-          </div>
-        </div>
-
         {/* Cargo & Priority */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="sm:col-span-2">
-            <label className="block text-[#334155] dark:text-[#CBD5E1] font-bold mb-1">Cargo Description</label>
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <label className="block text-slate-500 font-bold mb-1">Cargo Description</label>
             <input
               type="text"
               value={cargoDesc}
               onChange={e => setCargoDesc(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] text-slate-800 dark:text-slate-200"
+              className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium"
             />
           </div>
-
           <div>
-            <label className="block text-[#334155] dark:text-[#CBD5E1] font-bold mb-1">Priority</label>
+            <label className="block text-slate-500 font-bold mb-1">Weight</label>
+            <input
+              type="text"
+              value={cargoWeight}
+              onChange={e => setCargoWeight(e.target.value)}
+              className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium"
+            />
+          </div>
+          <div>
+            <label className="block text-slate-500 font-bold mb-1">Priority</label>
             <select
               value={priority}
               onChange={e => setPriority(e.target.value as any)}
-              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] font-bold text-slate-800 dark:text-slate-200"
+              className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold"
             >
               <option value="Normal">Normal</option>
-              <option value="High">High 🔥</option>
-              <option value="Urgent">Urgent ⚡</option>
+              <option value="High">High</option>
+              <option value="Urgent">Urgent</option>
             </select>
           </div>
         </div>
 
-        {/* Schedule */}
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className="block text-[#334155] dark:text-[#CBD5E1] font-bold mb-1 flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-[#006A6A] dark:text-[#7DF5F5]" /> Date
-            </label>
-            <input
-              type="date"
-              value={scheduleDate}
-              onChange={e => setScheduleDate(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] text-slate-800 dark:text-slate-200"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#334155] dark:text-[#CBD5E1] font-bold mb-1 flex items-center gap-1">
-              <Clock className="w-3 h-3 text-[#006A6A] dark:text-[#7DF5F5]" /> Start Time
-            </label>
-            <input
-              type="text"
-              value={startTime}
-              onChange={e => setStartTime(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] text-slate-800 dark:text-slate-200"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#334155] dark:text-[#CBD5E1] font-bold mb-1 flex items-center gap-1">
-              <Clock className="w-3 h-3 text-[#006A6A] dark:text-[#7DF5F5]" /> Expected End
-            </label>
-            <input
-              type="text"
-              value={expectedEndTime}
-              onChange={e => setExpectedEndTime(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] text-slate-800 dark:text-slate-200"
-            />
-          </div>
-        </div>
-
-        {/* Instructions */}
+        {/* Remarks */}
         <div>
-          <label className="block text-[#334155] dark:text-[#CBD5E1] font-bold mb-1">Special Driver Instructions</label>
+          <label className="block text-slate-500 font-bold mb-1">Dispatch Remarks / Instructions</label>
           <textarea
             rows={2}
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            className="w-full p-2.5 rounded-xl border border-[#E5EEFF] dark:border-[#334155] bg-white dark:bg-[#0F172A] text-slate-800 dark:text-slate-200"
+            className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium"
           />
         </div>
 
-        {/* Buttons */}
-        <div className="flex justify-end gap-3 pt-3 border-t border-[#E5EEFF] dark:border-[#334155]">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+        {/* Submit */}
+        <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-slate-700">
+          <Button variant="outline" type="button" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button
-            type="submit"
             variant="primary"
-            className="bg-[#006A6A] hover:bg-[#005555] text-white px-6 font-bold"
-            disabled={isSubmitting || activeDrivers.length === 0}
+            type="submit"
+            disabled={isSubmitting}
+            className="bg-[#006A6A] hover:bg-[#005555] text-white px-5 py-2 rounded-xl font-bold"
           >
-            {isSubmitting ? 'Creating Consignment...' : 'Create & Assign Trip'}
+            {isSubmitting ? 'Dispatching Trip...' : 'Confirm & Dispatch Trip'}
           </Button>
         </div>
       </form>

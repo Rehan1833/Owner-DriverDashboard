@@ -160,12 +160,80 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  // Real-time Socket.io synchronizer
+  // Real-time Socket.io synchronizer with tenant isolation
   useEffect(() => {
     const socket = io('http://localhost:5000');
 
     socket.on('connect', () => {
       console.log('Operational telemetry link active.');
+      if (user?.companyId) {
+        socket.emit('join-company', user.companyId);
+      }
+    });
+
+    const handleLocationUpdate = (data: any) => {
+      console.log('Live location telemetry update:', data);
+      if (data && data.tripId) {
+        setTrips(prevTrips =>
+          prevTrips.map(t => {
+            if (t.id === data.tripId || (t as any)._id === data.tripId) {
+              return {
+                ...t,
+                latitude: data.latitude,
+                longitude: data.longitude,
+                currentLocation: data.address || t.currentLocation,
+                currentAddress: data.address || t.currentAddress,
+                speed: data.speed,
+                heading: data.heading,
+                accuracy: data.accuracy,
+                eta: data.eta || t.eta,
+                distanceRemaining: data.distanceRemaining !== undefined ? data.distanceRemaining : t.distanceRemaining,
+                lastGpsUpdate: new Date(data.timestamp || Date.now()).toISOString()
+              };
+            }
+            return t;
+          })
+        );
+      } else {
+        refreshAllData();
+      }
+    };
+
+    socket.on('location-update', handleLocationUpdate);
+    socket.on('telemetryUpdate', handleLocationUpdate);
+
+    socket.on('driver-online', (data: any) => {
+      console.log('Driver online:', data);
+      refreshAllData();
+    });
+
+    socket.on('driver-offline', (data: any) => {
+      console.log('Driver offline:', data);
+      refreshAllData();
+    });
+
+    socket.on('trip-started', (data: any) => {
+      console.log('Trip started event:', data);
+      triggerNotification('System Alert', 'Trip Started', `Driver started trip ${data.tripNumber || ''}.`, 'Info');
+      refreshAllData();
+    });
+
+    socket.on('trip-updated', (data: any) => {
+      console.log('Trip updated event:', data);
+      refreshAllData();
+    });
+
+    socket.on('trip-completed', (data: any) => {
+      console.log('Trip completed event:', data);
+      triggerNotification('System Alert', 'Trip Completed', `Trip ${data.tripNumber || ''} has been completed.`, 'Info');
+      refreshAllData();
+    });
+
+    socket.on('pod-uploaded', (data: any) => {
+      console.log('POD uploaded event:', data);
+      playAlertSound();
+      triggerNotification('System Alert', 'New POD Uploaded', `Driver uploaded POD verification record.`, 'Info');
+      refreshAllData();
     });
 
     socket.on('podUpdate', (data: any) => {
@@ -176,32 +244,28 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         triggerNotification(
           'System Alert',
           'New POD Uploaded',
-          `Driver ${data.pod.driverName} uploaded POD ${data.pod.podId} for Order ${data.pod.orderNumber}.`,
+          `Driver ${data.pod?.driverName || 'Driver'} uploaded POD ${data.pod?.podId || ''}.`,
           'Info'
         );
       } else if (data.type === 'APPROVE') {
         triggerNotification(
           'System Alert',
           'POD Approved',
-          `Order ${data.pod.orderNumber} POD has been Approved by ${data.pod.approvedBy || 'Owner'}.`,
+          `Order ${data.pod?.orderNumber || ''} POD Approved.`,
           'Info'
         );
       } else if (data.type === 'REJECT') {
         triggerNotification(
           'Critical',
           'POD Rejected',
-          `Order ${data.pod.orderNumber} POD has been Rejected. Reason: ${data.pod.rejectedReason || 'Discrepancy'}.`,
+          `Order ${data.pod?.orderNumber || ''} POD Rejected.`,
           'Error'
         );
       }
 
-      // Dispatch custom window event to force live tables re-fetch
+      // Dispatch custom window event for table re-fetch
       const syncEvent = new CustomEvent('pod-sync-event', { detail: data });
       window.dispatchEvent(syncEvent);
-    });
-
-    socket.on('telemetryUpdate', (data: any) => {
-      console.log('Telemetry path update received:', data);
       refreshAllData();
     });
 
@@ -388,7 +452,7 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const driverStartDuty = async (payload: any) => {
     const record = await api.attendance.startDuty(payload);
     setAttendance(prev => {
-      const filtered = prev.filter(a => !(a.driverId === payload.driverId && a.date === record.date));
+      const filtered = prev.filter(a => !(a && a.driverId === payload?.driverId && a.date === record.date));
       return [...filtered, record];
     });
     addActivity('Duty Started', `Driver ${payload.driverName} checked in at ${payload.checkInWarehouse}`, 'attendance');
@@ -397,21 +461,21 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const driverStartBreak = async (payload: any) => {
     const record = await api.attendance.startBreak(payload);
-    setAttendance(prev => prev.map(a => (a.driverId === payload.driverId && a.date === record.date) ? record : a));
-    addActivity('Break Started', `Driver ${user?.fullName || payload.driverId} started break: ${payload.type}`, 'attendance');
+    setAttendance(prev => prev.map(a => (a && a.driverId === payload?.driverId && a.date === record.date) ? record : a));
+    addActivity('Break Started', `Driver ${user?.fullName || payload?.driverId} started break: ${payload.type}`, 'attendance');
     triggerNotification('System Alert', 'Driver Break Logs', `Driver ${user?.fullName || 'Rajesh'} started a ${payload.type} break`, 'Info');
   };
 
   const driverEndBreak = async (payload: any) => {
     const record = await api.attendance.endBreak(payload);
-    setAttendance(prev => prev.map(a => (a.driverId === payload.driverId && a.date === record.date) ? record : a));
-    addActivity('Break Ended', `Driver ${user?.fullName || payload.driverId} resumed duty`, 'attendance');
+    setAttendance(prev => prev.map(a => (a && a.driverId === payload?.driverId && a.date === record.date) ? record : a));
+    addActivity('Break Ended', `Driver ${user?.fullName || payload?.driverId} resumed duty`, 'attendance');
     triggerNotification('System Alert', 'Driver Break Logs', `Driver ${user?.fullName || 'Rajesh'} break completed, returned to active duty`, 'Info');
   };
 
   const driverEndDuty = async (payload: any) => {
     const record = await api.attendance.endDuty(payload);
-    setAttendance(prev => prev.map(a => (a.driverId === payload.driverId && a.date === record.date) ? record : a));
+    setAttendance(prev => prev.map(a => (a && a.driverId === payload?.driverId && a.date === record.date) ? record : a));
     
     // Sync with payroll automatically
     const payrollRecord = payroll.find(p => p.employee.includes(record.employeeName || 'Rajesh Kumar') || p.employeeName?.includes(record.employeeName || 'Rajesh Kumar'));

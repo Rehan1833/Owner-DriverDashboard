@@ -113,7 +113,7 @@ export interface Trip {
   scheduledStart?: string;
   expectedEnd?: string;
   notes?: string;
-  status: 'Draft' | 'Assigned' | 'Accepted' | 'Started' | 'Reached Pickup' | 'Loaded' | 'In Transit' | 'At Stop' | 'Reached Destination' | 'Delivered' | 'Completed' | 'Cancelled' | 'Delayed' | 'Incident Reported';
+  status: 'Draft' | 'Assigned' | 'Accepted' | 'Started' | 'On Route' | 'Reached Pickup' | 'Loaded' | 'In Transit' | 'At Stop' | 'Near Destination' | 'Reached Destination' | 'Delivered' | 'POD Uploaded' | 'Completed' | 'Cancelled' | 'Delayed' | 'Incident Reported';
   eta: string;
   distanceRemaining: number;
   stopReason?: string;
@@ -164,9 +164,22 @@ export interface InventoryItem {
   batchNumber?: string;
   expiryDate?: string;
   description?: string;
+  // Extra enterprise fields
+  barcode?: string;
+  subCategory?: string;
+  brand?: string;
+  unit?: string;
+  storageLocation?: string;
+  reservedStock?: number;
+  availableStock?: number;
+  maximumStockLevel?: number;
+  reorderLevel?: number;
+  manufacturingDate?: string;
+  lastRestockedDate?: string;
+  remarks?: string;
+  status?: string;
   // UI Compatibility fields
   name?: string;
-  status?: 'In Stock' | 'Low Stock' | 'Out Of Stock';
   type?: 'Raw Material' | 'Finished Goods' | 'Packaging';
 }
 
@@ -274,6 +287,7 @@ export interface PODRecord {
   customerName: string;
   customerAddress: string;
   imageUrl: string;
+  images?: string[];
   signatureUrl?: string;
   remarks?: string;
   latitude?: number;

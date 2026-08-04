@@ -9,6 +9,7 @@ export interface IPOD extends Document {
   customerName: string;
   customerAddress: string;
   imageUrl: string;
+  images?: string[];
   signatureUrl?: string;
   remarks?: string;
   latitude?: number;
@@ -33,6 +34,7 @@ const PODSchema = new Schema<IPOD>({
   customerName: { type: String, required: true },
   customerAddress: { type: String, required: true },
   imageUrl: { type: String, required: true },
+  images: [{ type: String }],
   signatureUrl: { type: String },
   remarks: { type: String },
   latitude: { type: Number },

@@ -47,7 +47,7 @@ export const Navbar: React.FC = () => {
   // Check today's attendance record
   const todayStr = new Date().toISOString().split('T')[0];
   const todayRecord = user?.role === 'Driver'
-    ? attendance.find(a => a.driverId === user.driverId && a.date === todayStr)
+    ? attendance.find(a => a && a.driverId && (a.driverId === user.driverId || a.driverId === user.id) && a.date === todayStr)
     : null;
   const isPresent = todayRecord && (todayRecord.attendanceStatus === 'Present' || todayRecord.attendanceStatus === 'Late');
 

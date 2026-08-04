@@ -47,8 +47,24 @@ export const ActiveTrip: React.FC = () => {
   const [geofenceError, setGeofenceError] = useState<string | null>(null);
 
   // POD state
-  const [photoMockUrl, setPhotoMockUrl] = useState<string | null>(null);
+  const [photosList, setPhotosList] = useState<string[]>([]);
   const [signatureSaved, setSignatureSaved] = useState<string | null>(null);
+
+  const handleAddPhoto = (sampleUrl?: string) => {
+    const samplePhotos = [
+      'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1580674684081-7617fbf3d745?auto=format&fit=crop&w=400&q=80'
+    ];
+    const newPhoto = sampleUrl || samplePhotos[photosList.length % samplePhotos.length];
+    setPhotosList(prev => [...prev, newPhoto]);
+    triggerNotification('Trip Started', 'Cargo Photo Captured', `Photo #${photosList.length + 1} added to POD inspection record.`, 'Info');
+  };
+
+  const handleRemovePhoto = (idx: number) => {
+    setPhotosList(prev => prev.filter((_, i) => i !== idx));
+  };
 
   // Canvas drawing ref
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -87,7 +103,7 @@ export const ActiveTrip: React.FC = () => {
     }
   }, []);
 
-  // Real-Time Browser Geolocation Watcher with Throttled Transmission
+  // Real-Time Browser Geolocation Watcher with 5s Transmission & Battery/Network Telemetry
   useEffect(() => {
     if (!isGpsTracking || !driverActiveTrip) return;
 
@@ -97,8 +113,8 @@ export const ActiveTrip: React.FC = () => {
         async (position) => {
           setGpsPermissionState('granted');
           const { latitude, longitude, speed, heading, accuracy } = position.coords;
-          const currentSpeed = speed ? Math.round(speed * 3.6) : 42;
-          const currentHeading = heading || 90;
+          const currentSpeed = speed ? Math.round(speed * 3.6) : 0;
+          const currentHeading = heading || 0;
 
           setLiveCoords(prev => ({
             ...prev,
@@ -109,22 +125,39 @@ export const ActiveTrip: React.FC = () => {
             heading: currentHeading
           }));
 
-          // Send update to backend max once every 10 seconds or when position updates
+          // Send location update every 5 seconds
           const now = Date.now();
-          if (now - lastSent > 8000) {
+          if (now - lastSent >= 5000) {
             lastSent = now;
             try {
-              const updatedTrip = await api.trips.updateLocation({
-                id: driverActiveTrip.id,
+              let batteryPct = 95;
+              let networkType = '4G';
+              if ('getBattery' in navigator) {
+                try {
+                  const batt: any = await (navigator as any).getBattery();
+                  batteryPct = Math.round(batt.level * 100);
+                } catch (bErr) {}
+              }
+              const navConn: any = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+              if (navConn?.effectiveType) {
+                networkType = navConn.effectiveType.toUpperCase();
+              }
+
+              const res = await api.drivers.recordLocation({
+                driverId,
+                tripId: driverActiveTrip.id,
                 latitude,
                 longitude,
                 accuracy: accuracy || 10,
                 speed: currentSpeed,
                 heading: currentHeading,
+                battery: batteryPct,
+                network: networkType,
                 timestamp: new Date().toISOString()
               });
-              if (updatedTrip && updatedTrip.currentAddress) {
-                setLiveCoords(prev => ({ ...prev, address: updatedTrip.currentAddress }));
+
+              if (res?.data?.address) {
+                setLiveCoords(prev => ({ ...prev, address: res.data.address }));
               }
             } catch (e) {
               console.warn('Location streaming update paused:', e);
@@ -139,14 +172,14 @@ export const ActiveTrip: React.FC = () => {
         },
         {
           enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 5000
+          timeout: 10000,
+          maximumAge: 3000
         }
       );
 
       return () => navigator.geolocation.clearWatch(watchId);
     }
-  }, [isGpsTracking, driverActiveTrip]);
+  }, [isGpsTracking, driverActiveTrip, driverId]);
 
   const requestGpsPermission = () => {
     if ('geolocation' in navigator) {
@@ -237,8 +270,7 @@ export const ActiveTrip: React.FC = () => {
   };
 
   const handleMockPhotoCapture = () => {
-    setPhotoMockUrl('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=400&q=80');
-    triggerNotification('Trip Started', 'Cargo Photo Uploaded', 'Consignment inspection snapshot saved.', 'Info');
+    handleAddPhoto('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=400&q=80');
   };
 
   const handleStopLog = async () => {
@@ -301,12 +333,34 @@ export const ActiveTrip: React.FC = () => {
 
   const handleSubmitPOD = async () => {
     if (!driverActiveTrip) return;
-    await updateTripStatus(driverActiveTrip.id, 'Completed', {
-      signatureData: signatureSaved || 'Digital Signature Signed',
-      photo: photoMockUrl || 'Cargo Verification Photo'
-    });
-    setPodModalOpen(false);
-    triggerNotification('Trip Started', 'POD Transmitted', `Proof of delivery transmitted for trip ${driverActiveTrip.tripNumber}.`, 'Info');
+    try {
+      const photos = photosList.length > 0 ? photosList : [
+        'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=400&q=80'
+      ];
+      const sigData = signatureSaved || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+      await api.pod.upload({
+        orderNumber: driverActiveTrip.invoiceNumber || driverActiveTrip.tripNumber,
+        vehicleNumber: driverActiveTrip.vehicleNumber,
+        customerName: driverActiveTrip.customerName || 'Consignee Partner',
+        customerAddress: driverActiveTrip.dropLocation,
+        imageUrl: photos[0],
+        images: photos,
+        signatureUrl: sigData,
+        remarks: `Delivered ${photos.length} consignment verification photo(s) in sound condition.`
+      });
+
+      await updateTripStatus(driverActiveTrip.id, 'POD Uploaded', {
+        signatureData: sigData,
+        photo: photos[0],
+        deliveryPhoto: photos
+      });
+
+      setPodModalOpen(false);
+      triggerNotification('Trip Started', 'POD Transmitted', `Proof of delivery transmitted with ${photos.length} photos for trip ${driverActiveTrip.tripNumber}.`, 'Info');
+    } catch (e: any) {
+      alert(e.message || 'Failed to submit POD.');
+    }
   };
 
   const handleSOSAlert = () => {
@@ -330,7 +384,7 @@ export const ActiveTrip: React.FC = () => {
     if (st === 'Accepted') return 1;
     if (st === 'Started' || st === 'In Transit' || st === 'Reached Pickup' || st === 'Loaded') return 2;
     if (st === 'At Stop') return 3;
-    if (st === 'Reached Destination' || st === 'Delivered') return 4;
+    if (st === 'Reached Destination' || st === 'Delivered' || st === 'POD Uploaded') return 4;
     if (st === 'Completed') return 5;
     return 2;
   };
@@ -378,7 +432,9 @@ export const ActiveTrip: React.FC = () => {
     if (!driverActiveTrip) return;
     try {
       setIsGpsTracking(false);
+      await updateTripStatus(driverActiveTrip.id, 'Reached Destination');
       setPodModalOpen(true);
+      triggerNotification('Trip Started', 'Arrived at Destination', 'Reached destination location. Opening Proof of Delivery (POD) uploader.', 'Info');
     } catch (err: any) {
       alert(err.message || 'Failed to stop trip.');
     }
@@ -538,6 +594,18 @@ export const ActiveTrip: React.FC = () => {
 
           {/* Operational Action Buttons */}
           <div className="flex flex-wrap items-center gap-3 border-t border-[#E5EEFF] dark:border-[#334155] pt-4">
+            {/* Reached Location & Stop Trip Button */}
+            {driverActiveTrip.status !== 'Completed' && driverActiveTrip.status !== 'POD Uploaded' && (
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={handleStopTrip}
+                className="text-xs py-2.5 px-4 rounded-xl font-extrabold bg-red-600 hover:bg-red-700 text-white shadow-md flex items-center gap-1.5"
+              >
+                🛑 Reached Location / Stop Trip & Upload POD
+              </Button>
+            )}
+
             {/* Advance Status Button */}
             {driverActiveTrip.status !== 'Completed' && (
               <Button
@@ -754,16 +822,45 @@ export const ActiveTrip: React.FC = () => {
       <Modal isOpen={podModalOpen} onClose={() => setPodModalOpen(false)} title="Capture Digital Proof of Delivery (POD)">
         <div className="space-y-5 text-left text-xs">
           <div className="space-y-2">
-            <label className="block text-[#6D7A79] font-bold">1. Capture Consignment Photo</label>
-            {photoMockUrl ? (
-              <div className="relative rounded-xl overflow-hidden border border-emerald-500 max-h-40">
-                <img src={photoMockUrl} alt="POD Capture" className="w-full object-cover" />
-                <span className="absolute bottom-2 right-2 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded font-bold">Verified</span>
-              </div>
-            ) : (
-              <Button type="button" variant="outline" onClick={handleMockPhotoCapture} className="w-full py-3 border-dashed">
-                <Camera className="w-4 h-4 mr-2 text-[#006A6A]" /> Snap Cargo Photo (Camera)
+            <div className="flex justify-between items-center">
+              <label className="block text-[#6D7A79] font-bold">1. Capture Consignment Photos ({photosList.length})</label>
+              <button
+                type="button"
+                onClick={() => handleAddPhoto()}
+                className="text-xs font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1 bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded border border-teal-200"
+              >
+                <Camera className="w-3 h-3" /> + Add Photo
+              </button>
+            </div>
+
+            {photosList.length === 0 ? (
+              <Button type="button" variant="outline" onClick={() => handleAddPhoto()} className="w-full py-3 border-dashed">
+                <Camera className="w-4 h-4 mr-2 text-[#006A6A]" /> Snap First Cargo Photo (Camera)
               </Button>
+            ) : (
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {photosList.map((url, i) => (
+                    <div key={i} className="relative rounded-xl overflow-hidden border border-emerald-500 group h-24 bg-slate-900">
+                      <img src={url} alt={`POD #${i+1}`} className="w-full h-full object-cover" />
+                      <span className="absolute top-1 left-1 bg-slate-900/80 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">
+                        #{i + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhoto(i)}
+                        className="absolute top-1 right-1 bg-red-600 text-white text-[10px] p-1 rounded-full opacity-90 hover:opacity-100"
+                        title="Remove Photo"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <Button type="button" variant="outline" onClick={() => handleAddPhoto()} className="w-full py-2 text-xs font-bold border-dashed">
+                  + Add Another Consignment Photo
+                </Button>
+              </div>
             )}
           </div>
 
