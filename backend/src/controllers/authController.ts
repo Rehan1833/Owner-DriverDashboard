@@ -298,16 +298,8 @@ export const register = async (req: Request, res: Response) => {
         return res.status(400).json({ message: 'A valid company type is required.' });
       }
 
-      // Generate unique companyId — retry on collision (extremely unlikely)
-      let generatedId = generateCompanyId();
-      let idCollision = await Company.findOne({ companyId: generatedId });
-      let retries = 0;
-      while (idCollision && retries < 5) {
-        generatedId = generateCompanyId();
-        idCollision = await Company.findOne({ companyId: generatedId });
-        retries++;
-      }
-      newCompanyId = generatedId;
+      // Generate unique companyId
+      newCompanyId = await generateCompanyId();
     }
 
     // ── DRIVER: look up company by name and attach companyId ────────────────
@@ -333,7 +325,7 @@ export const register = async (req: Request, res: Response) => {
         });
         if (!linkedCompany) {
           return res.status(400).json({
-            message: 'Company not found. Please enter the correct company name or contact your company administrator.'
+            message: 'Company not found. Please contact your company owner.'
           });
         }
         driverLinkedCompanyId = linkedCompany.companyId;
@@ -348,16 +340,14 @@ export const register = async (req: Request, res: Response) => {
       securityAnswerHash = await bcrypt.hash(String(securityAnswer).toLowerCase().trim(), 10);
     }
 
-    // ── Generate Unique Driver ID for Drivers ──────────────────────────────────
+    // ── Generate Unique Driver ID for Drivers (DRV-000001, DRV-000002...) ─────
     let generatedDriverId: string | undefined = undefined;
     if (normalizedRole === 'Driver') {
       if (driverId && String(driverId).trim() !== '') {
         generatedDriverId = String(driverId).trim();
       } else {
-        const year = new Date().getFullYear();
-        const seq = await getNextSequenceValue(`driver_${year}`);
-        const seqPadded = String(seq).padStart(6, '0');
-        generatedDriverId = `DRV-${year}-${seqPadded}`;
+        const seq = await getNextSequenceValue('driver_unique_id');
+        generatedDriverId = `DRV-${String(seq).padStart(6, '0')}`;
       }
     }
 

@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import crypto from 'crypto';
+import { getNextSequenceValue } from './Counter';
 
 export interface ICompany extends Document {
   companyId: string;
@@ -15,13 +16,13 @@ export interface ICompany extends Document {
   updatedAt: Date;
 }
 
+}
 /**
- * Generates a unique company ID in the format CMP-XXXXXXXX
- * Uses 8 random hex characters for uniqueness.
+ * Generates a unique company ID in the format CMP-100001
  */
-export const generateCompanyId = (): string => {
-  const hex = crypto.randomBytes(4).toString('hex').toUpperCase();
-  return `CMP-${hex}`;
+export const generateCompanyId = async (): Promise<string> => {
+  const seq = await getNextSequenceValue('company_id_seq');
+  return `CMP-${100000 + seq}`;
 };
 
 const CompanySchema = new Schema<ICompany>(

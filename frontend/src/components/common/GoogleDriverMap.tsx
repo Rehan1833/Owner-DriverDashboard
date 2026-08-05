@@ -123,7 +123,7 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
   const [directionsRenderer, setDirectionsRenderer] = useState<any>(null);
   const [trafficLayer, setTrafficLayer] = useState<any>(null);
   const [isTrafficOn, setIsTrafficOn] = useState<boolean>(true);
-  const [mapType, setMapType] = useState<'dark' | 'roadmap' | 'satellite'>('dark');
+  const [mapType, setMapType] = useState<'dark' | 'roadmap' | 'satellite'>('roadmap');
   const [isGoogleLoaded, setIsGoogleLoaded] = useState<boolean>(false);
   const [loadError, setLoadError] = useState<boolean>(false);
 
@@ -392,21 +392,21 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
   const googleNavUrl = `https://www.google.com/maps/dir/?api=1&origin=${driverLocation.lat},${driverLocation.lng}&destination=${dropLocation.lat},${dropLocation.lng}&travelmode=driving`;
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl bg-slate-900 text-white">
+    <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/80 shadow-md bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
       {/* Top Overlay Bar */}
-      <div className="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-900/90 backdrop-blur-md border border-slate-700/60 shadow-lg">
+      <div className="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700/60 shadow-md">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
+          <div className="w-9 h-9 rounded-lg bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 flex items-center justify-center text-teal-600 dark:text-teal-400">
             <Truck className="w-5 h-5 animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm text-slate-100">{driverName}</span>
-              <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-300 rounded border border-blue-500/30">
+              <span className="font-extrabold text-sm text-slate-900 dark:text-slate-100">{driverName}</span>
+              <span className="px-2 py-0.5 text-xs font-mono font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 rounded border border-teal-200 dark:border-teal-800">
                 {vehicleNumber}
               </span>
             </div>
-            <p className="text-xs text-slate-400 truncate max-w-xs sm:max-w-md">
+            <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-xs sm:max-w-md font-medium mt-0.5">
               📍 {driverLocation.address || `${driverLocation.lat.toFixed(4)}, ${driverLocation.lng.toFixed(4)}`}
             </p>
           </div>
@@ -414,19 +414,19 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
 
         <div className="flex items-center gap-2">
           <div className="text-right hidden sm:block mr-1">
-            <p className="text-xs text-slate-400">ETA / Distance</p>
-            <p className="text-sm font-semibold text-emerald-400">{eta} ({distanceRemaining} km)</p>
+            <p className="text-xs text-slate-400 font-medium">ETA / Distance</p>
+            <p className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">{eta} ({distanceRemaining} km)</p>
           </div>
 
           <a
             href={googleNavUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#006A6A] hover:bg-[#005555] text-white text-xs font-bold shadow-md transition-all active:scale-95"
           >
             <Navigation className="w-3.5 h-3.5" />
             <span>Google Navigation</span>
-            <ExternalLink className="w-3 h-3 text-blue-200" />
+            <ExternalLink className="w-3 h-3 text-teal-100" />
           </a>
         </div>
       </div>
@@ -438,7 +438,7 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
         /* Fallback Modern Graphic Map when key loading or offline */
         <div
           style={{ height }}
-          className="relative w-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col items-center justify-center p-6 text-center overflow-hidden"
+          className="relative w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col items-center justify-center p-6 text-center overflow-hidden text-white"
         >
           {/* Radial Grid Pattern */}
           <div
@@ -454,14 +454,14 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
             <motion.div
               animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0.2, 0.6] }}
               transition={{ repeat: Infinity, duration: 2.5 }}
-              className="absolute w-28 h-28 rounded-full bg-blue-500/20 border border-blue-400/40"
+              className="absolute w-28 h-28 rounded-full bg-teal-500/20 border border-teal-400/40"
             />
             <motion.div
               animate={{ scale: [1, 1.2, 1], opacity: [0.8, 0.4, 0.8] }}
               transition={{ repeat: Infinity, duration: 1.8 }}
               className="absolute w-20 h-20 rounded-full bg-emerald-500/20 border border-emerald-400/40"
             />
-            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-emerald-500 flex items-center justify-center text-white shadow-xl border border-white/20">
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#006A6A] to-emerald-500 flex items-center justify-center text-white shadow-xl border border-white/20">
               <Truck className="w-7 h-7" />
             </div>
           </div>
@@ -490,7 +490,7 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
 
             <div className="flex items-center justify-between pt-1">
               <div className="flex items-center gap-1.5 text-xs text-slate-300">
-                <Compass className="w-4 h-4 text-blue-400" />
+                <Compass className="w-4 h-4 text-teal-400" />
                 <span>Heading: {driverLocation.heading || 90}° East</span>
               </div>
               <div className="flex items-center gap-1 text-xs font-semibold text-emerald-400">
@@ -503,12 +503,12 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
 
       {/* Bottom Controls Bar */}
       {showControls && (
-        <div className="absolute bottom-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 p-2 px-3 rounded-xl bg-slate-900/90 backdrop-blur-md border border-slate-700/60 text-xs">
-          <div className="flex items-center gap-2 text-slate-300">
+        <div className="absolute bottom-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 p-2 px-3 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700/60 text-xs shadow-md text-slate-800 dark:text-white">
+          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-medium">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span className="font-medium text-emerald-400">Status: {status}</span>
-            <span className="text-slate-500">|</span>
-            <span className="text-slate-400">Trip: {tripNumber}</span>
+            <span className="font-extrabold text-emerald-600 dark:text-emerald-400">Status: {status}</span>
+            <span className="text-slate-300 dark:text-slate-600">|</span>
+            <span className="text-slate-500 dark:text-slate-400">Trip: {tripNumber}</span>
           </div>
 
           {isKeyConfigured && isGoogleLoaded && (
@@ -516,10 +516,10 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
               {/* Traffic Toggle */}
               <button
                 onClick={handleToggleTraffic}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded transition-colors border ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors border font-semibold ${
                   isTrafficOn
-                    ? 'bg-emerald-600/30 text-emerald-300 border-emerald-500/50'
-                    : 'bg-slate-800 text-slate-400 border-slate-700'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                 }`}
                 title="Toggle Live Traffic"
               >
@@ -530,27 +530,27 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
               {/* Map Type Selector */}
               <button
                 onClick={() => setMapType(prev => prev === 'dark' ? 'roadmap' : prev === 'roadmap' ? 'satellite' : 'dark')}
-                className="flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors border border-slate-700 capitalize"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors border border-slate-200 dark:border-slate-700 capitalize font-semibold"
                 title="Change Map Style"
               >
-                <Layers className="w-3.5 h-3.5 text-blue-400" />
+                <Layers className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                 <span>{mapType}</span>
               </button>
 
               {/* Recenter Route */}
               <button
                 onClick={handleFitRouteBounds}
-                className="flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors border border-slate-700"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors border border-slate-200 dark:border-slate-700 font-semibold"
                 title="Fit Route to Screen"
               >
-                <Maximize2 className="w-3.5 h-3.5 text-blue-400" />
+                <Maximize2 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                 <span className="hidden sm:inline">Fit Route</span>
               </button>
 
               {/* Center Driver */}
               <button
                 onClick={handleCenterDriver}
-                className="flex items-center gap-1 px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors border border-blue-500"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#006A6A] hover:bg-[#005555] text-white font-bold transition-colors shadow-xs"
                 title="Center Driver Position"
               >
                 <LocateFixed className="w-3.5 h-3.5" />

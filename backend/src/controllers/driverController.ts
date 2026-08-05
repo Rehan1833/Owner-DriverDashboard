@@ -52,21 +52,19 @@ export const getDrivers = async (req: AuthRequest, res: Response) => {
     // Build MongoDB filter — always restrict to role = 'Driver'
     const filter: Record<string, any> = { role: 'Driver' };
 
-    // ── DATA ISOLATION: Only return drivers belonging to this Owner's company ──
-    // req.companyId is extracted from the JWT by authenticateJWT middleware.
-    // If the token is a legacy token (pre-companyId), fall back to a DB lookup.
     let ownerCompanyId = req.companyId;
     if (!ownerCompanyId && req.userId) {
       const ownerUser = await User.findById(req.userId).select('companyId').lean();
       ownerCompanyId = (ownerUser as any)?.companyId || undefined;
     }
+
     if (ownerCompanyId) {
-      filter.$or = [
-        { companyId: ownerCompanyId },
-        { companyId: { $exists: false } },
-        { companyId: null },
-        { companyId: '' }
-      ];
+      filter.companyId = ownerCompanyId;
+    } else if (req.userRole !== 'SUPER_ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: Company context required.'
+      });
     }
 
     // Search across fullName, email, mobileNumber (case-insensitive)
@@ -142,11 +140,16 @@ export const updateDriverStatus = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const driver = await User.findOne({ _id: id, role: 'Driver' });
+    const filter: Record<string, any> = { _id: id, role: 'Driver' };
+    if (req.userRole !== 'SUPER_ADMIN') {
+      filter.companyId = req.companyId;
+    }
+
+    const driver = await User.findOne(filter);
     if (!driver) {
       return res.status(404).json({
         success: false,
-        message: 'Driver not found.',
+        message: 'Driver not found or access denied.',
       });
     }
 
@@ -174,11 +177,16 @@ export const updateDriverStatus = async (req: AuthRequest, res: Response) => {
 export const deleteDriver = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const driver = await User.findOne({ _id: id, role: 'Driver' });
+    const filter: Record<string, any> = { _id: id, role: 'Driver' };
+    if (req.userRole !== 'SUPER_ADMIN') {
+      filter.companyId = req.companyId;
+    }
+
+    const driver = await User.findOne(filter);
     if (!driver) {
       return res.status(404).json({
         success: false,
-        message: 'Driver record not found.',
+        message: 'Driver record not found or access denied.',
       });
     }
 
