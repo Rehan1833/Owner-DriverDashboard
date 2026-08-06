@@ -15,7 +15,8 @@
     "install:all": "npm install"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "mongodb-memory-server": "^11.2.0"
   },
   "dependencies": {
     "zod": "^4.4.3"
