@@ -1,14 +1,15 @@
 import { Response } from 'express';
 import User from '../models/User';
+import Company from '../models/Company';
 import { AuthRequest } from '../middleware/authMiddleware';
 
 /**
  * PUT /api/users/profile
- * Updates the authenticated user's profile details (fullName, email, mobileNumber, companyName, avatarUrl).
+ * Updates the authenticated user's profile details (fullName, email, mobileNumber, companyName, licenseNumber, vehicleNumber, avatarUrl).
  */
 export const updateProfile = async (req: AuthRequest, res: Response) => {
   try {
-    const { fullName, email, mobileNumber, companyName, avatarUrl } = req.body;
+    const { fullName, email, mobileNumber, companyName, licenseNumber, vehicleNumber, avatarUrl } = req.body;
     const userId = req.userId;
 
     if (!userId) {
@@ -21,19 +22,45 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     }
 
     // Check email uniqueness if it is being changed
-    if (email && email !== user.email) {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
+    if (email && String(email).trim().toLowerCase() !== user.email.toLowerCase()) {
+      const cleanEmail = String(email).trim().toLowerCase();
+      const existingUser = await User.findOne({ email: cleanEmail });
+      if (existingUser && String(existingUser._id) !== String(user._id)) {
         return res.status(400).json({ success: false, message: 'Email address is already in use by another account.' });
       }
-      user.email = email;
+      user.email = cleanEmail;
     }
 
-    // Update other fields
-    if (fullName) user.fullName = fullName;
-    if (mobileNumber !== undefined) user.mobileNumber = mobileNumber;
-    if (companyName && user.role === 'Owner') user.companyName = companyName;
-    if (avatarUrl !== undefined) user.avatarUrl = avatarUrl;
+    // Update fields
+    if (fullName && String(fullName).trim() !== '') {
+      user.fullName = String(fullName).trim();
+    }
+    if (mobileNumber !== undefined) {
+      user.mobileNumber = String(mobileNumber).trim();
+    }
+    if (companyName && user.role === 'Owner') {
+      const cleanCompanyName = String(companyName).trim();
+      user.companyName = cleanCompanyName;
+      if (user.companyId) {
+        try {
+          await Company.findOneAndUpdate(
+            { companyId: user.companyId },
+            { companyName: cleanCompanyName }
+          );
+        } catch (cErr: any) {
+          console.warn('[User Profile] Company update sync warning:', cErr.message);
+        }
+      }
+    }
+    if (licenseNumber !== undefined) {
+      user.licenseNumber = String(licenseNumber).trim();
+    }
+    if (vehicleNumber !== undefined) {
+      user.vehicleNumber = String(vehicleNumber).trim();
+    }
+    if (avatarUrl !== undefined) {
+      user.avatarUrl = avatarUrl;
+    }
 
     await user.save();
 
@@ -56,7 +83,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
 
     res.json({
       success: true,
-      message: 'Profile updated successfully.',
+      message: 'Profile attributes saved successfully.',
       user: userDTO
     });
   } catch (error: any) {

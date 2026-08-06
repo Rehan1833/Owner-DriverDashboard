@@ -300,7 +300,7 @@ export const Register: React.FC = () => {
       }
     } catch (err: any) {
       setLoading(false);
-      setErrorMsg(err.response?.data?.message || 'Unable to send verification OTP code. Please verify your details.');
+      setErrorMsg(err.response?.data?.message || err.message || 'Unable to register account. Please check your details and try again.');
     }
   };
 

@@ -186,7 +186,7 @@ export const Dashboard: React.FC = () => {
         navigate('/owner/fleet');
         break;
       case 'alerts':
-        navigate('/owner/operations');
+        setActiveTableTab('Notifications');
         break;
       case 'salary':
         navigate('/owner/payroll');
@@ -576,13 +576,13 @@ export const Dashboard: React.FC = () => {
         <KPICard
           id="alerts"
           title="Critical Alerts"
-          value={notifications.filter(n => !n.read).length}
+          value={unreadNotificationsCount}
           description="Active unresolved warnings"
           change=""
-          isPositive={true}
+          isPositive={unreadNotificationsCount === 0}
           icon={Bell}
           progress={notificationsProgress}
-          color="#EF4444"
+          color={unreadNotificationsCount > 0 ? "#EF4444" : "#10B981"}
           onClick={() => handleCardClick('alerts')}
         />
         <KPICard

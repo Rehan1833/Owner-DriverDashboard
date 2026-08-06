@@ -86,8 +86,10 @@ interface OperationsContextType {
     email?: string;
     mobileNumber?: string;
     companyName?: string;
+    licenseNumber?: string;
+    vehicleNumber?: string;
     avatarUrl?: string;
-  }) => Promise<void>;
+  }) => Promise<any>;
 }
 
 const OperationsContext = createContext<OperationsContextType | undefined>(undefined);
@@ -403,13 +405,18 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     email?: string;
     mobileNumber?: string;
     companyName?: string;
+    licenseNumber?: string;
+    vehicleNumber?: string;
     avatarUrl?: string;
   }) => {
     const res = await api.auth.updateProfile(payload);
-    if (res.user) {
+    if (res?.user) {
       setUser(res.user);
       localStorage.setItem('smartops_user', JSON.stringify(res.user));
     }
+    // Refresh company and profile data across components
+    refreshAllData();
+    return res;
   };
 
   const addActivity = (action: string, details: string, category: ActivityItem['category']) => {

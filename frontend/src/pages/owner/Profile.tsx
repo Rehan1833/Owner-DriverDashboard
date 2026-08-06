@@ -23,17 +23,18 @@ export const Profile: React.FC = () => {
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
   
   const [isEditing, setIsEditing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Sync state if user changes (e.g. after refresh/load)
+  // Sync state if user changes (e.g. after refresh/load), but only when NOT actively editing
   React.useEffect(() => {
-    if (user) {
-      setFullName(user.fullName);
-      setEmail(user.email);
+    if (user && !isEditing) {
+      setFullName(user.fullName || '');
+      setEmail(user.email || '');
       setMobileNumber(user.mobileNumber || '');
       setCompanyName(user.companyName || '');
       setAvatarUrl(user.avatarUrl || '');
     }
-  }, [user]);
+  }, [user, isEditing]);
 
   // Sound play
   const playSound = (severity: 'Success' | 'Warning' | 'Error' | 'Info') => {
@@ -46,20 +47,34 @@ export const Profile: React.FC = () => {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    if (!fullName.trim()) {
+      alert('Owner Full Name is required.');
+      return;
+    }
+    if (!email.trim()) {
+      alert('Admin Email address is required.');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      await updateProfile({
-        fullName,
-        email,
-        mobileNumber,
-        companyName
+      const res = await updateProfile({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        mobileNumber: mobileNumber.trim(),
+        companyName: companyName.trim()
       });
       setIsEditing(false);
       playSound('Success');
-      triggerNotification('System Alert', 'Profile Synchronized', 'Admin profile attributes refreshed.', 'Info');
+      triggerNotification('System Alert', 'Profile Synchronized', 'Admin profile attributes refreshed successfully.', 'Info');
       addActivity('Profile Modified', 'Updated contact details and avatar settings', 'task');
-      alert('Profile updated successfully!');
+      alert(res?.message || 'Profile updated successfully!');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update profile settings.');
+      alert(err.response?.data?.message || err.message || 'Failed to update profile settings.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -215,7 +230,7 @@ export const Profile: React.FC = () => {
 
               {isEditing && (
                 <div className="flex justify-end gap-2.5 pt-2">
-                  <Button type="submit" variant="primary">
+                  <Button type="submit" variant="primary" isLoading={isSubmitting}>
                     Save Changes
                   </Button>
                 </div>

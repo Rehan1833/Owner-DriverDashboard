@@ -37,16 +37,16 @@ export const Profile: React.FC = () => {
     confirmNewPassword: ''
   });
 
-  // Sync state if user updates
+  // Sync state if user updates, only when not editing
   useEffect(() => {
-    if (user) {
+    if (user && !isEditing) {
       setFullName(user.fullName || '');
       setEmail(user.email || '');
       setMobileNumber(user.mobileNumber || '');
-      setLicenseNumber(user.companyName || 'DL-MH-12-2015-0098');
+      setLicenseNumber(user.licenseNumber || 'DL-MH-12-2015-0098');
       setAvatarUrl(user.avatarUrl || '');
     }
-  }, [user]);
+  }, [user, isEditing]);
 
   // Play audio sound feedback
   const playSound = (severity: 'Success' | 'Warning' | 'Error' | 'Info') => {
@@ -60,18 +60,19 @@ export const Profile: React.FC = () => {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await updateProfile({
-        fullName,
-        email,
-        mobileNumber,
-        companyName: licenseNumber
+      const res = await updateProfile({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        mobileNumber: mobileNumber.trim(),
+        licenseNumber: licenseNumber.trim()
       });
       setIsEditing(false);
       playSound('Success');
       triggerNotification('System Alert', 'Driver Profile Saved', 'Your operator credentials and license details have been updated.', 'Info');
       addActivity('Profile Modified', 'Updated driver personal contact and license details', 'task');
+      alert(res?.message || 'Driver profile updated successfully!');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update driver profile.');
+      alert(err.response?.data?.message || err.message || 'Failed to update driver profile.');
     }
   };
 

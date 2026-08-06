@@ -16,7 +16,6 @@ export interface ICompany extends Document {
   updatedAt: Date;
 }
 
-}
 /**
  * Generates a unique company ID in the format CMP-100001
  */
