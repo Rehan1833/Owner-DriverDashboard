@@ -36,17 +36,12 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
     status: 'Active',
 
     // Advanced Info (Step 2 - Optional)
-    subCategory: '',
-    brand: '',
-    barcode: '',
     reservedStock: 0,
     minimumQuantity: 0,
     maximumStockLevel: 1000,
-    reorderLevel: 10,
     storageLocation: 'Warehouse Floor',
     supplier: '',
     warehouse: 'Default Warehouse',
-    batchNumber: '',
     manufacturingDate: '',
     expiryDate: '',
     lastRestockedDate: '',
@@ -66,17 +61,12 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
         purchasePrice: 0,
         sellingPrice: 0,
         status: 'Active',
-        subCategory: '',
-        brand: '',
-        barcode: '',
         reservedStock: 0,
         minimumQuantity: 0,
         maximumStockLevel: 1000,
-        reorderLevel: 10,
         storageLocation: 'Warehouse Floor',
         supplier: '',
         warehouse: 'Default Warehouse',
-        batchNumber: '',
         manufacturingDate: '',
         expiryDate: '',
         lastRestockedDate: '',
@@ -103,7 +93,6 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
         'reservedStock',
         'minimumQuantity',
         'maximumStockLevel',
-        'reorderLevel',
       ].includes(name)
         ? Number(value)
         : value,
@@ -376,51 +365,6 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
         {/* STEP 2: ADVANCED DETAILS (OPTIONAL) */}
         {step === 2 && (
           <div className="space-y-5 animate-fade-in">
-            {/* Categorization & Branding */}
-            <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 space-y-3">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#006A6A] dark:text-teal-400 uppercase tracking-wider">
-                <Layers className="h-3.5 w-3.5" /> Categorization & Branding
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Sub Category</label>
-                  <input
-                    type="text"
-                    name="subCategory"
-                    placeholder="e.g. Cold Rolled Sheets"
-                    value={form.subCategory}
-                    onChange={handleChange}
-                    onKeyDown={handleKeyDown}
-                    className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Brand</label>
-                  <input
-                    type="text"
-                    name="brand"
-                    placeholder="e.g. Tata Steel"
-                    value={form.brand}
-                    onChange={handleChange}
-                    onKeyDown={handleKeyDown}
-                    className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Barcode</label>
-                  <input
-                    type="text"
-                    name="barcode"
-                    placeholder="e.g. 890123456789"
-                    value={form.barcode}
-                    onChange={handleChange}
-                    onKeyDown={handleKeyDown}
-                    className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none font-mono"
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Warehouse & Supplier */}
             <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 space-y-3">
               <div className="flex items-center gap-1.5 text-xs font-bold text-[#006A6A] dark:text-teal-400 uppercase tracking-wider">
@@ -471,7 +415,7 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
               <div className="flex items-center gap-1.5 text-xs font-bold text-[#006A6A] dark:text-teal-400 uppercase tracking-wider">
                 <ShieldAlert className="h-3.5 w-3.5" /> Stock Limits & Thresholds
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Reserved Stock</label>
                   <input
@@ -508,39 +452,15 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
                     className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Reorder Level</label>
-                  <input
-                    type="number"
-                    min="0"
-                    name="reorderLevel"
-                    value={form.reorderLevel}
-                    onChange={handleChange}
-                    onKeyDown={handleKeyDown}
-                    className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
-                  />
-                </div>
               </div>
             </div>
 
-            {/* Dates & Batches */}
+            {/* Dates */}
             <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 space-y-3">
               <div className="flex items-center gap-1.5 text-xs font-bold text-[#006A6A] dark:text-teal-400 uppercase tracking-wider">
-                <Calendar className="h-3.5 w-3.5" /> Batches & Dates
+                <Calendar className="h-3.5 w-3.5" /> Dates
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Batch Number</label>
-                  <input
-                    type="text"
-                    name="batchNumber"
-                    placeholder="e.g. BT-2026-01"
-                    value={form.batchNumber}
-                    onChange={handleChange}
-                    onKeyDown={handleKeyDown}
-                    className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
-                  />
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Mfg Date</label>
                   <input

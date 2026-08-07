@@ -187,11 +187,10 @@ export const Inventory: React.FC = () => {
               <button
                 key={type}
                 onClick={() => setFilterType(type)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  filterType === type
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${filterType === type
                     ? 'bg-[#006A6A] text-white shadow-sm'
                     : 'text-[#6D7A79] hover:text-[#545F73] dark:hover:text-slate-200'
-                }`}
+                  }`}
               >
                 {type}
               </button>
@@ -292,6 +291,6 @@ export const Inventory: React.FC = () => {
         item={selectedItem}
         onSubmit={handleEditSubmit}
       />
-    </div>
+    </div >
   );
 };

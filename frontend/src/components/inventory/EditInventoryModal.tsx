@@ -26,17 +26,12 @@ export const EditInventoryModal: React.FC<EditInventoryModalProps> = ({
     purchasePrice: 0,
     sellingPrice: 0,
     status: 'Active',
-    subCategory: '',
-    brand: '',
-    barcode: '',
     reservedStock: 0,
     minimumQuantity: 0,
     maximumStockLevel: 1000,
-    reorderLevel: 10,
     storageLocation: 'Warehouse Floor',
     supplier: '',
     warehouse: 'Default Warehouse',
-    batchNumber: '',
     manufacturingDate: '',
     expiryDate: '',
     lastRestockedDate: '',
@@ -54,17 +49,12 @@ export const EditInventoryModal: React.FC<EditInventoryModalProps> = ({
         purchasePrice: item.purchasePrice ?? 0,
         sellingPrice: item.sellingPrice ?? 0,
         status: item.status || 'Active',
-        subCategory: item.subCategory || '',
-        brand: item.brand || '',
-        barcode: item.barcode || '',
         reservedStock: item.reservedStock ?? 0,
         minimumQuantity: item.minimumQuantity ?? 0,
         maximumStockLevel: item.maximumStockLevel ?? 1000,
-        reorderLevel: item.reorderLevel ?? 10,
         storageLocation: item.storageLocation || 'Warehouse Floor',
         supplier: item.supplier || '',
         warehouse: item.warehouse || 'Default Warehouse',
-        batchNumber: item.batchNumber || '',
         manufacturingDate: item.manufacturingDate || '',
         expiryDate: item.expiryDate || '',
         lastRestockedDate: item.lastRestockedDate || '',
@@ -86,7 +76,6 @@ export const EditInventoryModal: React.FC<EditInventoryModalProps> = ({
         'reservedStock',
         'minimumQuantity',
         'maximumStockLevel',
-        'reorderLevel',
       ].includes(name)
         ? Number(value)
         : value,
@@ -262,36 +251,6 @@ export const EditInventoryModal: React.FC<EditInventoryModalProps> = ({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Sub Category</label>
-              <input
-                type="text"
-                name="subCategory"
-                value={form.subCategory}
-                onChange={handleChange}
-                className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Brand</label>
-              <input
-                type="text"
-                name="brand"
-                value={form.brand}
-                onChange={handleChange}
-                className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Barcode</label>
-              <input
-                type="text"
-                name="barcode"
-                value={form.barcode}
-                onChange={handleChange}
-                className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none font-mono"
-              />
-            </div>
-            <div className="space-y-1">
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Warehouse</label>
               <input
                 type="text"
@@ -329,7 +288,7 @@ export const EditInventoryModal: React.FC<EditInventoryModalProps> = ({
           <div className="flex items-center gap-1.5 text-xs font-bold text-[#006A6A] dark:text-teal-400 uppercase tracking-wider">
             <ShieldAlert className="h-3.5 w-3.5" /> Stock Limits & Thresholds
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1">
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Reserved Stock</label>
               <input
@@ -363,36 +322,15 @@ export const EditInventoryModal: React.FC<EditInventoryModalProps> = ({
                 className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Reorder Level</label>
-              <input
-                type="number"
-                min="0"
-                name="reorderLevel"
-                value={form.reorderLevel}
-                onChange={handleChange}
-                className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
-              />
-            </div>
           </div>
         </div>
 
         {/* Section 4: Batches & Dates */}
         <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 space-y-3">
           <div className="flex items-center gap-1.5 text-xs font-bold text-[#006A6A] dark:text-teal-400 uppercase tracking-wider">
-            <Calendar className="h-3.5 w-3.5" /> Batches & Dates
+            <Calendar className="h-3.5 w-3.5" /> Dates
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Batch Number</label>
-              <input
-                type="text"
-                name="batchNumber"
-                value={form.batchNumber}
-                onChange={handleChange}
-                className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
-              />
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1">
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">Mfg Date</label>
               <input
