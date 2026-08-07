@@ -6,9 +6,6 @@ export interface InventoryExportData {
   category: string;
   sku: string;
   productId?: string;
-  barcode?: string;
-  subCategory?: string;
-  brand?: string;
   unit?: string;
   warehouse: string;
   storageLocation?: string;
@@ -20,8 +17,6 @@ export interface InventoryExportData {
   reservedStock?: number;
   minimumQuantity: number;
   maximumStockLevel?: number;
-  reorderLevel?: number;
-  batchNumber?: string;
   expiryDate?: string;
   manufacturingDate?: string;
   lastRestockedDate?: string;
@@ -55,8 +50,6 @@ export const downloadInventoryExcel = (data: InventoryExportData[]) => {
   
   const lowStockCount = data.filter(d => (d.quantity || 0) <= (d.minimumQuantity || 0) && (d.quantity || 0) > 0).length;
   const outOfStockCount = data.filter(d => (d.quantity || 0) === 0).length;
-  const reorderLevelDefault = 10;
-  const reorderRequiredCount = data.filter(d => (d.quantity || 0) <= (d.reorderLevel || reorderLevelDefault)).length;
 
   // ----------------------------------------------------
   // SHEET 1: INVENTORY SUMMARY
@@ -78,7 +71,6 @@ export const downloadInventoryExcel = (data: InventoryExportData[]) => {
     ['Total Inventory Value (Cost)', totalInventoryValue, 'INR Value (Purchase Price Basis)'],
     ['Low Stock SKUs', lowStockCount, lowStockCount > 0 ? '⚠️ Action Required' : '✅ Optimal'],
     ['Out of Stock SKUs', outOfStockCount, outOfStockCount > 0 ? '🚨 Critical Replenishment' : '✅ Healthy'],
-    ['Reorder Needed Count', reorderRequiredCount, reorderRequiredCount > 0 ? 'Order Placements Due' : '✅ All Clear'],
   ];
 
   const wsSummary = XLSX.utils.aoa_to_sheet(summaryAOA);
@@ -109,33 +101,27 @@ export const downloadInventoryExcel = (data: InventoryExportData[]) => {
     'Product Name',           // A (col 0)
     'Product ID',             // B (col 1)
     'SKU',                    // C (col 2)
-    'Barcode',                // D (col 3)
-    'Category',               // E (col 4)
-    'Sub Category',           // F (col 5)
-    'Brand',                  // G (col 6)
-    'Unit',                   // H (col 7)
-    'Warehouse',              // I (col 8)
-    'Storage Location',       // J (col 9)
-    'Supplier Name',          // K (col 10)
-    'Purchase Price',         // L (col 11)
-    'Selling Price',          // M (col 12)
-    'Current Stock Quantity', // N (col 13)
-    'Reserved Stock',         // O (col 14)
-    'Available Stock',        // P (col 15) -> Formula
-    'Minimum Stock Level',    // Q (col 16)
-    'Maximum Stock Level',    // R (col 17)
-    'Reorder Level',          // S (col 18)
-    'Reorder Status',         // T (col 19) -> Formula
-    'Stock Status',           // U (col 20) -> Formula
-    'Last Restocked Date',    // V (col 21)
-    'Last Updated',           // W (col 22)
-    'Expiry Date',            // X (col 23)
-    'Batch Number',           // Y (col 24)
-    'Manufacturing Date',     // Z (col 25)
-    'Total Inventory Value',  // AA (col 26) -> Formula
-    'Created By',             // AB (col 27)
-    'Remarks',                // AC (col 28)
-    'Status'                  // AD (col 29)
+    'Category',               // D (col 3)
+    'Unit',                   // E (col 4)
+    'Warehouse',              // F (col 5)
+    'Storage Location',       // G (col 6)
+    'Supplier Name',          // H (col 7)
+    'Purchase Price',         // I (col 8)
+    'Selling Price',          // J (col 9)
+    'Current Stock Quantity', // K (col 10)
+    'Reserved Stock',         // L (col 11)
+    'Available Stock',        // M (col 12) -> Formula
+    'Minimum Stock Level',    // N (col 13)
+    'Maximum Stock Level',    // O (col 14)
+    'Stock Status',           // P (col 15) -> Formula
+    'Last Restocked Date',    // Q (col 16)
+    'Last Updated',           // R (col 17)
+    'Expiry Date',            // S (col 18)
+    'Manufacturing Date',     // T (col 19)
+    'Total Inventory Value',  // U (col 20) -> Formula
+    'Created By',             // V (col 21)
+    'Remarks',                // W (col 22)
+    'Status'                  // X (col 23)
   ];
 
   const inventoryRows: any[][] = [];
@@ -148,44 +134,36 @@ export const downloadInventoryExcel = (data: InventoryExportData[]) => {
       item.itemName || '', // A
       item.productId || item.id || '', // B
       item.sku || '', // C
-      item.barcode || item.sku || '', // D
-      item.category || '', // E
-      item.subCategory || 'General', // F
-      item.brand || 'SmartOps', // G
-      item.unit || 'Pieces', // H
-      item.warehouse || '', // I
-      item.storageLocation || 'Warehouse Floor', // J
-      item.supplier || '', // K
-      item.purchasePrice || 0, // L
-      item.sellingPrice || 0, // M
-      item.quantity || 0, // N
-      item.reservedStock || 0, // O
+      item.category || '', // D
+      item.unit || 'Pieces', // E
+      item.warehouse || '', // F
+      item.storageLocation || 'Warehouse Floor', // G
+      item.supplier || '', // H
+      item.purchasePrice || 0, // I
+      item.sellingPrice || 0, // J
+      item.quantity || 0, // K
+      item.reservedStock || 0, // L
       
-      // Available Stock (P): Formula = Current Stock - Reserved Stock
-      { t: 'n', f: `N${rowNum}-O${rowNum}` }, // P
+      // Available Stock (M): Formula = Current Stock - Reserved Stock
+      { t: 'n', f: `K${rowNum}-L${rowNum}` }, // M
       
-      item.minimumQuantity || 0, // Q
-      item.maximumStockLevel || 1000, // R
-      item.reorderLevel || 10, // S
+      item.minimumQuantity || 0, // N
+      item.maximumStockLevel || 1000, // O
       
-      // Reorder Status (T): Formula = IF(N <= S, "Yes", "No")
-      { t: 's', f: `IF(N${rowNum}<=S${rowNum},"Yes","No")` }, // T
+      // Stock Status (P): Formula = IF(K=0, "🔴 Out of Stock", IF(K<=N, "🟡 Low Stock", "🟢 In Stock"))
+      { t: 's', f: `IF(K${rowNum}=0,"🔴 Out of Stock",IF(K${rowNum}<=N${rowNum},"🟡 Low Stock","🟢 In Stock"))` }, // P
       
-      // Stock Status (U): Formula = IF(N=0, "🔴 Out of Stock", IF(N<=Q, "🟡 Low Stock", "🟢 In Stock"))
-      { t: 's', f: `IF(N${rowNum}=0,"🔴 Out of Stock",IF(N${rowNum}<=Q${rowNum},"🟡 Low Stock","🟢 In Stock"))` }, // U
+      item.lastRestockedDate || lastUpdatedDate, // Q
+      lastUpdatedDate, // R
+      item.expiryDate || 'N/A', // S
+      item.manufacturingDate || 'N/A', // T
       
-      item.lastRestockedDate || lastUpdatedDate, // V
-      lastUpdatedDate, // W
-      item.expiryDate || 'N/A', // X
-      item.batchNumber || 'N/A', // Y
-      item.manufacturingDate || 'N/A', // Z
+      // Total Inventory Value (U): Formula = Current Stock * Purchase Price
+      { t: 'n', f: `K${rowNum}*I${rowNum}` }, // U
       
-      // Total Inventory Value (AA): Formula = Current Stock * Purchase Price
-      { t: 'n', f: `N${rowNum}*L${rowNum}` }, // AA
-      
-      username, // AB
-      item.remarks || item.description || '', // AC
-      item.status || 'Active' // AD
+      username, // V
+      item.remarks || item.description || '', // W
+      item.status || 'Active' // X
     ];
     
     inventoryRows.push(row);
@@ -207,18 +185,18 @@ export const downloadInventoryExcel = (data: InventoryExportData[]) => {
         wsData[cellRef] = { t, v: cellVal };
       }
 
-      // Add format to price columns (L: 11, M: 12)
-      if (cIndex === 11 || cIndex === 12) {
+      // Add format to price columns (I: 8, J: 9)
+      if (cIndex === 8 || cIndex === 9) {
         wsData[cellRef].z = '₹#,##0.00';
       }
       
-      // Add format to quantity columns (N: 13, O: 14, P: 15, Q: 16, R: 17, S: 18)
-      if (cIndex >= 13 && cIndex <= 18) {
+      // Add format to quantity columns (K: 10, L: 11, M: 12, N: 13, O: 14)
+      if (cIndex >= 10 && cIndex <= 14) {
         wsData[cellRef].z = '#,##0';
       }
       
-      // Add format to Total Value column (AA: 26)
-      if (cIndex === 26) {
+      // Add format to Total Value column (U: 20)
+      if (cIndex === 20) {
         wsData[cellRef].z = '₹#,##0.00';
       }
     });
@@ -228,21 +206,21 @@ export const downloadInventoryExcel = (data: InventoryExportData[]) => {
   const lastRow = inventoryRows.length + 1;
   const totalsRowIndex = lastRow;
   
-  wsData['!ref'] = `A1:AD${totalsRowIndex + 1}`;
+  wsData['!ref'] = `A1:X${totalsRowIndex + 1}`;
 
   const totalsCells = [
     { c: 0, v: 'TOTAL ENTERPRISE STOCK' }, // A: Title
-    { c: 13, f: `SUM(N2:N${lastRow})` },   // N: Total Current Stock
-    { c: 14, f: `SUM(O2:O${lastRow})` },   // O: Total Reserved Stock
-    { c: 15, f: `SUM(P2:P${lastRow})` },   // P: Total Available Stock
-    { c: 26, f: `SUM(AA2:AA${lastRow})` }  // AA: Total Inventory Value
+    { c: 10, f: `SUM(K2:K${lastRow})` },   // K: Total Current Stock
+    { c: 11, f: `SUM(L2:L${lastRow})` },   // L: Total Reserved Stock
+    { c: 12, f: `SUM(M2:M${lastRow})` },   // M: Total Available Stock
+    { c: 20, f: `SUM(U2:U${lastRow})` }    // U: Total Inventory Value
   ];
 
   totalsCells.forEach(cellDef => {
     const cellRef = XLSX.utils.encode_cell({ r: totalsRowIndex, c: cellDef.c });
     if ('f' in cellDef) {
       wsData[cellRef] = { t: 'n', f: cellDef.f };
-      if (cellDef.c === 26) {
+      if (cellDef.c === 20) {
         wsData[cellRef].z = '₹#,##0.00';
       } else {
         wsData[cellRef].z = '#,##0';
@@ -257,7 +235,7 @@ export const downloadInventoryExcel = (data: InventoryExportData[]) => {
 
   // Enable Autofilters
   wsData['!autofilter'] = {
-    ref: `A1:AD${lastRow}`
+    ref: `A1:X${lastRow}`
   };
 
   // Auto column widths

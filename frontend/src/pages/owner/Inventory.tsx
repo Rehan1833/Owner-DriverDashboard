@@ -80,7 +80,6 @@ export const Inventory: React.FC = () => {
       });
     }
   };
-
   // Calculate stats
   const totalItemsVal = inventory.reduce((acc, curr) => acc + curr.quantity * curr.sellingPrice, 0);
   const lowStockCount = inventory.filter(i => i.quantity <= i.minimumQuantity && i.quantity > 0).length;

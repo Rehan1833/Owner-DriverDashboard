@@ -161,19 +161,14 @@ export interface InventoryItem {
   purchasePrice: number;
   sellingPrice: number;
   supplier: string;
-  batchNumber?: string;
   expiryDate?: string;
   description?: string;
   // Extra enterprise fields
-  barcode?: string;
-  subCategory?: string;
-  brand?: string;
   unit?: string;
   storageLocation?: string;
   reservedStock?: number;
   availableStock?: number;
   maximumStockLevel?: number;
-  reorderLevel?: number;
   manufacturingDate?: string;
   lastRestockedDate?: string;
   remarks?: string;

@@ -501,6 +501,26 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
+    if (user.role === 'Owner' && (!user.companyId || user.companyId.trim() === '')) {
+      const existingCompany = await Company.findOne({
+        $or: [{ createdBy: String(user._id) }, { companyName: user.companyName }]
+      });
+      if (existingCompany) {
+        user.companyId = existingCompany.companyId;
+      } else {
+        const cId = await generateCompanyId();
+        const newComp = await Company.create({
+          companyId: cId,
+          companyName: user.companyName || 'SmartOps Logistics',
+          companyType: 'Logistics',
+          createdBy: String(user._id)
+        });
+        user.companyId = newComp.companyId;
+      }
+      await user.save();
+    }
+    }
+
     const token = jwt.sign(
       {
         id: String(user._id),

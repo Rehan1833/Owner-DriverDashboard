@@ -64,14 +64,24 @@ export const getDrivers = async (req: AuthRequest, res: Response) => {
     const filter: Record<string, any> = { role: 'Driver' };
 
     let ownerCompanyId = req.companyId;
-    if (!ownerCompanyId && req.userId) {
-      const ownerUser = await User.findById(req.userId).select('companyId').lean();
-      ownerCompanyId = (ownerUser as any)?.companyId || undefined;
+    if ((!ownerCompanyId || ownerCompanyId.trim() === '') && req.userId) {
+      const ownerUser = await User.findById(req.userId);
+      if (ownerUser) {
+        if (ownerUser.companyId && ownerUser.companyId.trim() !== '') {
+          ownerCompanyId = ownerUser.companyId;
+        } else if (ownerUser.role === 'Owner') {
+          // Auto-heal companyId for Owner if missing
+          ownerCompanyId = 'CMP-SMARTOPS';
+          ownerUser.companyId = ownerCompanyId;
+          if (!ownerUser.companyName) ownerUser.companyName = 'SmartOps Logistics';
+          await ownerUser.save().catch(() => {});
+        }
+      }
     }
 
     if (ownerCompanyId) {
       filter.companyId = ownerCompanyId;
-    } else if (req.userRole !== 'SUPER_ADMIN') {
+    } else if (req.userRole !== 'SUPER_ADMIN' && req.userRole !== 'Owner') {
       return res.status(403).json({
         success: false,
         message: 'Access denied: Company context required.'

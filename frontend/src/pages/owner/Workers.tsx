@@ -115,7 +115,7 @@ export const Workers: React.FC = () => {
           if (isTokenError) {
             setError('Your session token is invalid or expired. Please log out and log in again.');
           } else {
-            setError('You do not have permission to view drivers. Owner access is required.');
+            setError(serverMsg || 'You do not have permission to view drivers. Owner access is required.');
           }
         } else if (!err?.response) {
           setError('Unable to load drivers. The server is unreachable. Please try again.');

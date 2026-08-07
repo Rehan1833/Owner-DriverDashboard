@@ -5,6 +5,7 @@ import fs from 'fs';
 import User from '../models/User';
 import Product from '../models/Product';
 import Inventory from '../models/Inventory';
+import Company, { generateCompanyId } from '../models/Company';
 
 const seedDefaultInventory = async () => {
   try {
@@ -315,13 +316,26 @@ const seedDefaultInventory = async () => {
 
 const seedDefaultAccounts = async () => {
   try {
+    // 1. Ensure default Company exists
+    let defaultCompany = await Company.findOne({ companyName: 'SmartOps Logistics' });
+    if (!defaultCompany) {
+      defaultCompany = await Company.create({
+        companyId: 'CMP-SMARTOPS',
+        companyName: 'SmartOps Logistics',
+        companyType: 'Logistics',
+        createdBy: '65f1a2b3c4d5e6f7a8b9c0d1'
+      });
+      console.log('Seeded default Company CMP-SMARTOPS.');
+    }
+
+    // 2. Seed default Owner if not present
     const ownerEmail = 'rehanchaudhari181133@gmail.com';
-    const existingOwner = await User.findOne({ email: ownerEmail });
+    let existingOwner = await User.findOne({ email: ownerEmail });
     if (!existingOwner) {
       console.log('Seeding default Owner account...');
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash('123456', salt);
-      const owner = new User({
+      existingOwner = new User({
         _id: new mongoose.Types.ObjectId('65f1a2b3c4d5e6f7a8b9c0d1'),
         fullName: 'Rehan Chaudhari',
         email: ownerEmail,
@@ -334,13 +348,40 @@ const seedDefaultAccounts = async () => {
         verifiedAt: new Date(),
         securityQuestion: "What is your best friend's name?",
         securityAnswerHash: await bcrypt.hash('friend', 10),
+        companyId: defaultCompany.companyId,
         companyName: 'SmartOps Logistics'
       });
-      await owner.save();
+      await existingOwner.save();
       console.log('Default Owner account seeded successfully!');
+    } else if (!existingOwner.companyId) {
+      existingOwner.companyId = defaultCompany.companyId;
+      if (!existingOwner.companyName) existingOwner.companyName = defaultCompany.companyName;
+      await existingOwner.save();
     }
 
-    // Note: Demo driver seeding (Rajesh Kumar & Vikram Singh) has been permanently removed.
+    // 3. Auto-heal any existing Owner accounts missing companyId
+    const ownersWithoutCompany = await User.find({
+      role: 'Owner',
+      $or: [{ companyId: { $exists: false } }, { companyId: null }, { companyId: '' }]
+    });
+    for (const owner of ownersWithoutCompany) {
+      let company = await Company.findOne({ createdBy: String(owner._id) });
+      if (!company && owner.companyName) {
+        company = await Company.findOne({ companyName: owner.companyName });
+      }
+      if (!company) {
+        const cId = await generateCompanyId();
+        company = await Company.create({
+          companyId: cId,
+          companyName: owner.companyName || 'SmartOps Logistics',
+          companyType: 'Logistics',
+          createdBy: String(owner._id)
+        });
+      }
+      owner.companyId = company.companyId;
+      if (!owner.companyName) owner.companyName = company.companyName;
+      await owner.save();
+    }
   } catch (err: any) {
     console.error('Error seeding default accounts:', err.message);
   }
