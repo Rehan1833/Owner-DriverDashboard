@@ -2,13 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { useOperations } from '../../store/OperationsContext';
 import { useTheme } from '../../store/ThemeContext';
-import { soundPlayer, SoundSeverity } from '../../utils/audio';
 import {
   Settings as SettingsIcon,
   Building2,
   Sliders,
   Bell,
-  Volume2,
   Shield,
   Eye,
   EyeOff,
@@ -16,9 +14,6 @@ import {
   Trash2,
   Save,
   RotateCcw,
-  CheckCircle,
-  HelpCircle,
-  Play
 } from 'lucide-react';
 
 interface OwnerSettingsState {
@@ -36,8 +31,6 @@ interface OwnerSettingsState {
   smsNotif: boolean;
   pushNotif: boolean;
   browserNotif: boolean;
-  soundEnabled: boolean;
-  soundVolume: number;
   alertAttendance: boolean;
   alertInventory: boolean;
   alertFleet: boolean;
@@ -61,8 +54,6 @@ const DEFAULT_SETTINGS: OwnerSettingsState = {
   smsNotif: false,
   pushNotif: true,
   browserNotif: true,
-  soundEnabled: true,
-  soundVolume: 0.5,
   alertAttendance: true,
   alertInventory: true,
   alertFleet: true,
@@ -109,25 +100,10 @@ export const Settings: React.FC = () => {
     }));
   };
 
-  // Sound play helper (safeguards check)
-  const playPreview = (severity: SoundSeverity) => {
-    if (settings.soundEnabled) {
-      soundPlayer.play(severity, settings.soundVolume);
-    } else {
-      // Temporarily play anyway if user is previewing, but at requested volume
-      soundPlayer.play(severity, settings.soundVolume);
-    }
-  };
-
   // Actions
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('smartops_owner_settings', JSON.stringify(settings));
-    
-    // Play Success sound
-    if (settings.soundEnabled) {
-      soundPlayer.play('Success', settings.soundVolume);
-    }
 
     triggerNotification(
       'System Alert',
@@ -135,16 +111,13 @@ export const Settings: React.FC = () => {
       'Corporate configuration and preference rules synchronized successfully.',
       'Info'
     );
-    addActivity('Settings Configuration', 'Updated global settings and sound preferences', 'task');
+    addActivity('Settings Configuration', 'Updated global settings preferences', 'task');
     alert('Settings saved successfully!');
   };
 
   const handleReset = () => {
     if (window.confirm('Are you sure you want to reset all configurations to default values?')) {
       setSettings(DEFAULT_SETTINGS);
-      if (settings.soundEnabled) {
-        soundPlayer.play('Info', 0.5);
-      }
       triggerNotification(
         'System Alert',
         'Settings Reset',
@@ -159,9 +132,6 @@ export const Settings: React.FC = () => {
     if (!currentPassword || !newPassword) {
       alert('Please fill out all password fields.');
       return;
-    }
-    if (settings.soundEnabled) {
-      soundPlayer.play('Success', settings.soundVolume);
     }
     triggerNotification(
       'System Alert',
@@ -184,9 +154,6 @@ export const Settings: React.FC = () => {
     downloadAnchor.click();
     downloadAnchor.remove();
 
-    if (settings.soundEnabled) {
-      soundPlayer.play('Success', settings.soundVolume);
-    }
     addActivity('Data Export', 'Downloaded settings backup JSON package', 'task');
   };
 
@@ -200,7 +167,7 @@ export const Settings: React.FC = () => {
             System Control Panel
           </h2>
           <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">
-            Configure system endpoints, telemetry thresholds, notification audio curves, and security session layers.
+            Configure system parameters, notification alerts, security settings, and data privacy.
           </p>
         </div>
         <div className="flex gap-2.5 self-stretch sm:self-auto">
@@ -235,7 +202,6 @@ export const Settings: React.FC = () => {
                 { label: 'Company Information', id: '#company', icon: Building2 },
                 { label: 'System Preferences', id: '#preferences', icon: Sliders },
                 { label: 'Notification Triggers', id: '#notifications', icon: Bell },
-                { label: 'Audio Synthesizer', id: '#audio', icon: Volume2 },
                 { label: 'Security & Access', id: '#security', icon: Shield },
                 { label: 'Privacy & Backup', id: '#privacy', icon: Database }
               ].map(tab => (
@@ -503,71 +469,7 @@ export const Settings: React.FC = () => {
             </div>
           </section>
 
-          {/* SECTION 4: AUDIO SYNTHESIZER CONTROL */}
-          <section id="audio" className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-6">
-            <div className="border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-3.5 flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-[#006A6A]/10 text-[#006A6A] dark:text-[#14B8A6]">
-                <Volume2 className="h-5 w-5" />
-              </div>
-              <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-white uppercase tracking-wide">Audio Synthesizer Preferences</h3>
-            </div>
-
-            <div className="space-y-5">
-              <div className="flex justify-between items-center text-xs">
-                <div className="text-left">
-                  <span className="font-bold block text-[#0B1C30] dark:text-[#F8FAFC] text-sm">Notification Beeps Sound</span>
-                  <span className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] block mt-0.5 font-medium">Trigger real-time synthesized chime tones on telemetry incidents.</span>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={settings.soundEnabled}
-                  onChange={e => handleChange('soundEnabled', e.target.checked)}
-                  className="h-4 w-4 text-[#006A6A] rounded border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:ring-[#006A6A]"
-                />
-              </div>
-
-              <div className="space-y-2.5">
-                <div className="flex justify-between text-xs font-semibold text-[#6D7A79] dark:text-[#94A3B8]">
-                  <span>Chime Amplitude (Volume)</span>
-                  <span className="text-[#0B1C30] dark:text-[#CBD5E1] font-bold">{Math.round(settings.soundVolume * 100)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={settings.soundVolume}
-                  onChange={e => handleChange('soundVolume', parseFloat(e.target.value))}
-                  disabled={!settings.soundEnabled}
-                  className="w-full accent-[#006A6A] bg-[#F8F9FF] dark:bg-slate-800 h-2 rounded-lg appearance-none cursor-pointer disabled:opacity-40"
-                />
-              </div>
-
-              <div className="border-t border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pt-4">
-                <h4 className="text-[13px] font-bold text-slate-700 dark:text-[#CBD5E1] mb-3 text-left">Synthesizer Profile Preview</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    { label: 'Success Ping', severity: 'Success', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20' },
-                    { label: 'Warning Tone', severity: 'Warning', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20' },
-                    { label: 'Error Buzz', severity: 'Error', color: 'bg-red-500/10 text-red-650 border-red-500/20 hover:bg-red-500/20' },
-                    { label: 'Info Ping', severity: 'Info', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20' }
-                  ].map(btn => (
-                    <button
-                      key={btn.severity}
-                      type="button"
-                      onClick={() => playPreview(btn.severity as SoundSeverity)}
-                      className={`py-2 px-3 border rounded-xl flex items-center justify-center gap-1.5 text-[11px] font-bold transition-all cursor-pointer hover:-translate-y-0.5 shadow-sm ${btn.color}`}
-                    >
-                      <Play className="h-3 w-3 fill-current" />
-                      {btn.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* SECTION 5: SECURITY & SESSIONS */}
+          {/* SECTION 4: SECURITY & ACCESS */}
           <section id="security" className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-6">
             <div className="border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-3.5 flex items-center gap-2">
               <div className="p-2 rounded-xl bg-[#006A6A]/10 text-[#006A6A] dark:text-[#14B8A6]">
@@ -628,26 +530,6 @@ export const Settings: React.FC = () => {
                   onChange={e => handleChange('twoFactorAuth', e.target.checked)}
                   className="h-4 w-4 text-[#006A6A] rounded border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:ring-[#006A6A]"
                 />
-              </div>
-
-              <div>
-                <h4 className="text-[13px] font-bold text-[#0B1C30] dark:text-[#CBD5E1] mb-3 text-left">Connected Devices & Active Sessions</h4>
-                <div className="space-y-2.5">
-                  {[
-                    { dev: 'Google Chrome (Vite Dev)', location: 'Pune, India (Current Session)', time: 'Active Now', status: 'Online' },
-                    { dev: 'Mozilla Firefox (Windows)', location: 'Mumbai, India', time: '2 hours ago', status: 'Inactive' }
-                  ].map((session, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-3.5 border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] dark:bg-slate-905 rounded-xl text-xs shadow-sm">
-                      <div className="text-left">
-                        <span className="font-bold text-slate-800 dark:text-[#F8FAFC] block">{session.dev}</span>
-                        <span className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] block mt-0.5 font-medium">{session.location} • {session.time}</span>
-                      </div>
-                      <span className={`px-2.5 py-0.5 text-[10px] font-bold border rounded-full tracking-wide uppercase ${session.status === 'Online' ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/15' : 'bg-slate-100 text-[#6D7A79] dark:bg-slate-800'}`}>
-                        {session.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           </section>
