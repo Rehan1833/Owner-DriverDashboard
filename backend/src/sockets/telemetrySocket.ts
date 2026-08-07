@@ -59,3 +59,12 @@ export const emitPodUpdate = (data: any) => {
   emitCompanyEvent('podUpdate', data?.companyId || data?.pod?.companyId, data);
   emitCompanyEvent('pod-uploaded', data?.companyId || data?.pod?.companyId, data);
 };
+
+export const emitDriverOnline = (data: any) => {
+  emitCompanyEvent('driver-online', data?.companyId, data);
+};
+
+export const emitDriverOffline = (data: any) => {
+  emitCompanyEvent('driver-offline', data?.companyId, data);
+};
+

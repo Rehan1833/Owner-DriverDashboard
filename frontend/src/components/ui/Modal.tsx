@@ -8,7 +8,8 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'inventory';
+  headerRight?: React.ReactNode;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -16,7 +17,8 @@ export const Modal: React.FC<ModalProps> = ({
   onClose,
   title,
   children,
-  size = 'md'
+  size = 'md',
+  headerRight
 }) => {
   // Prevent body scroll when open; restore on close
   useEffect(() => {
@@ -28,6 +30,8 @@ export const Modal: React.FC<ModalProps> = ({
     md: 'sm:max-w-md',
     lg: 'sm:max-w-lg',
     xl: 'sm:max-w-xl',
+    '2xl': 'sm:max-w-2xl',
+    inventory: 'sm:max-w-[730px]',
   };
 
   return createPortal(
@@ -71,15 +75,20 @@ export const Modal: React.FC<ModalProps> = ({
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827]">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#F8FAFC] tracking-tight modal-title">{title}</h2>
-              <button
-                onClick={onClose}
-                aria-label="Close dialog"
-                className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-400"
-              >
-                <X className="h-5 w-5" />
-              </button>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827]">
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-[#F8FAFC] tracking-tight modal-title">{title}</h2>
+              </div>
+              <div className="flex items-center gap-3">
+                {headerRight}
+                <button
+                  onClick={onClose}
+                  aria-label="Close dialog"
+                  className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-400"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
             {/* Body */}

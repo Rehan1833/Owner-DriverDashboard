@@ -177,17 +177,25 @@ export const recordLocation = async (req: Request, res: Response) => {
       });
     }
 
-    // 3. Update User document with latest GPS telemetry
+    // 3. Update User document with latest GPS telemetry & location tracking fields
     if (driverUser) {
       await User.updateOne(
         { _id: driverUser._id },
         {
           $set: {
+            isOnline: true,
+            latitude: latNum,
+            longitude: lngNum,
+            address: displayAddress,
             currentLocation: displayAddress,
+            speed: currentSpeed,
+            heading: currentHeading,
+            accuracy: currentAccuracy,
+            lastUpdated: recordTime,
             lastGpsUpdate: recordTime,
             battery: currentBattery,
             network: currentNetwork,
-            status: currentSpeed > 5 ? 'Online' : 'Idle'
+            status: 'Online'
           }
         }
       );
@@ -201,6 +209,7 @@ export const recordLocation = async (req: Request, res: Response) => {
       companyId,
       tripId: activeTrip?._id || tripId,
       tripNumber: activeTrip?.tripNumber || '',
+      isOnline: true,
       latitude: latNum,
       longitude: lngNum,
       speed: currentSpeed,
@@ -211,6 +220,7 @@ export const recordLocation = async (req: Request, res: Response) => {
       address: displayAddress,
       eta: calculatedETA,
       distanceRemaining: remainingDist,
+      lastUpdated: recordTime,
       timestamp: recordTime
     };
 

@@ -13,6 +13,7 @@ import {
 import { Trip, Vehicle } from '../../types';
 import { DriverLiveMap } from '../../components/maps/DriverLiveMap';
 import { api } from '../../api/client';
+import { useDriverLocationTracker } from '../../hooks/useDriverLocationTracker';
 
 // Circular Progress Ring Component (Identical to Owner Dashboard)
 const ProgressRing: React.FC<{
@@ -136,6 +137,7 @@ export const Home: React.FC = () => {
     driverEndDuty
   } = useOperations();
   const navigate = useNavigate();
+  const tracker = useDriverLocationTracker();
 
   // Active Trip for Driver
   const driverId = user?.driverId || 'DRV-9041';
@@ -539,6 +541,26 @@ export const Home: React.FC = () => {
           <p className="text-[#FFFFFF] text-[14px] sm:text-[15px] leading-relaxed max-w-2xl font-medium pt-1">
             Role: <span className="text-[#14B8A6] font-bold">Driver</span> · ID: <span className="text-[#FFFFFF] font-semibold">{driverId}</span> · Vehicle: <span className="text-[#FFFFFF] font-semibold">{user?.vehicleNumber || driverVehicle?.vehicleNumber || 'MH-12-QW-9874'}</span> · Duty: <span className="text-[#14B8A6] font-bold">{currentDutyStatus}</span>
           </p>
+          <div className="flex flex-wrap items-center gap-2 pt-2">
+            {tracker.isPermissionDenied ? (
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1.5 shadow-sm">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-400" /> GPS Permission Required
+              </span>
+            ) : tracker.isTrackingActive ? (
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5 shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" /> Live Tracking Active
+              </span>
+            ) : (
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-500/20 text-slate-300 border border-slate-500/40 flex items-center gap-1.5 shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-slate-400" /> Location Syncing
+              </span>
+            )}
+            {tracker.lastUpdated && (
+              <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                Last Updated: {tracker.lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 shrink-0 z-10">

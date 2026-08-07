@@ -63,6 +63,11 @@ export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunct
   req.userId = decoded.id;
   req.userRole = decoded.role;
   req.companyId = decoded.companyId || undefined;
+  (req as any).user = {
+    id: decoded.id,
+    role: decoded.role,
+    companyId: decoded.companyId || undefined
+  };
 
   // Attempt optional DB verification (email-verification enforcement)
   // Use a short timeout so a slow/disconnected DB does NOT block authenticated requests

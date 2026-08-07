@@ -1129,6 +1129,17 @@ export const api = {
       }
     }
   },
+  // AUTH API
+  auth: {
+    logout: async (userId?: string, driverId?: string): Promise<{ success: boolean; message: string }> => {
+      try {
+        const res = await axiosInstance.post('/auth/logout', { userId, driverId });
+        return res.data;
+      } catch (err: any) {
+        return { success: false, message: err.message || 'Logout request failed' };
+      }
+    }
+  },
 
   // 9. DRIVERS API — Database-first with Resilient LocalStorage Fallback
   drivers: {

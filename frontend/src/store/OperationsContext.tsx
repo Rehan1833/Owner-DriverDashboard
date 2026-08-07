@@ -346,6 +346,14 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const performLogout = async () => {
     setIsLoggingOut(true);
     try {
+      if (user?.role === 'Driver') {
+        try {
+          await api.auth.logout(user.id, user.driverId);
+        } catch (err) {
+          console.warn('Backend logout call warning:', err);
+        }
+      }
+
       // Clear React context states
       setUser(null);
       setCompany(null);

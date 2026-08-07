@@ -156,7 +156,7 @@ export function Table<T extends { id: string | number }>({
       {/* Main Table */}
       <div className="overflow-x-auto flex-1 min-h-[300px]">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-[#EFF4FF] dark:bg-[#111827] border-b border-[#E5EEFF] dark:border-[#334155] sticky top-0 backdrop-blur-md z-10">
+          <thead className="bg-[#EFF4FF] dark:bg-[#111827] border-b border-[#E5EEFF] dark:border-[#334155] sticky top-0 z-10">
             <tr>
               {columns.map((col, idx) => (
                 <th

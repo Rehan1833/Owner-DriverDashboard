@@ -188,12 +188,36 @@ export const OwnerTrips: React.FC = () => {
   };
 
   const calculateFreshness = (trip: Trip) => {
-    if (!trip.lastGpsUpdate && !trip.latitude) return { label: '⚫ GPS Disabled', status: 'OFFLINE', color: 'text-slate-500 bg-slate-100 dark:bg-slate-800 border-slate-300' };
-    const lastTime = trip.lastGpsUpdate ? new Date(trip.lastGpsUpdate).getTime() : new Date(trip.timestamp || Date.now()).getTime();
-    const diffMins = Math.floor((Date.now() - lastTime) / 60000);
-    if (diffMins < 2) return { label: '🟢 Driver Online', status: 'ONLINE', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300' };
-    if (diffMins < 5) return { label: `🟠 Driver Idle (${diffMins}m)`, status: 'IDLE', color: 'text-amber-700 bg-amber-50 dark:bg-amber-950/40 border-amber-300' };
-    return { label: '🔴 Offline', status: 'OFFLINE', color: 'text-red-700 bg-red-50 dark:bg-red-950/40 border-red-300' };
+    if (!trip.lastGpsUpdate && !(trip as any).lastUpdated && !trip.latitude) {
+      return { relativeTime: 'No updates', label: 'Offline', isOnline: false, color: 'text-slate-500 bg-slate-100 dark:bg-slate-800 border-slate-300' };
+    }
+    const lastTimeStr = trip.lastGpsUpdate || (trip as any).lastUpdated || trip.timestamp;
+    const lastTime = lastTimeStr ? new Date(lastTimeStr).getTime() : Date.now();
+    const diffSecs = Math.max(0, Math.floor((Date.now() - lastTime) / 1000));
+    
+    let relativeTime = 'Just now';
+    if (diffSecs >= 60) {
+      const diffMins = Math.floor(diffSecs / 60);
+      if (diffMins >= 60) {
+        const diffHours = Math.floor(diffMins / 60);
+        relativeTime = `${diffHours}h ago`;
+      } else {
+        relativeTime = `${diffMins}m ago`;
+      }
+    } else {
+      relativeTime = `${diffSecs}s ago`;
+    }
+
+    const isOnline = (trip as any).isOnline ?? (diffSecs < 120);
+
+    return {
+      relativeTime,
+      isOnline,
+      label: isOnline ? `Online (${relativeTime})` : `Offline (${relativeTime})`,
+      color: isOnline 
+        ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300' 
+        : 'text-slate-700 bg-slate-100 dark:bg-slate-800 border-slate-300'
+    };
   };
 
   const handleOpenHistory = async (trip: Trip) => {
@@ -542,7 +566,7 @@ export const OwnerTrips: React.FC = () => {
                         {activeDrawerTrip.driverId || 'DRV-8106'}
                       </span>
                       <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${fresh.color}`}>
-                        {fresh.status}
+                        {fresh.label}
                       </span>
                     </div>
                   </div>
@@ -556,7 +580,7 @@ export const OwnerTrips: React.FC = () => {
                 </button>
               </div>
 
-              {/* Drawer Body (8px spacing system, 24px section gaps, 16px card gaps) */}
+              {/* Drawer Body */}
               <div className="p-6 space-y-6 text-left flex-1 text-xs">
                 
                 {/* 1. Primary Information Cards Grid */}

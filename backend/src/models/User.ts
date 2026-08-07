@@ -32,6 +32,18 @@ export interface IUser extends Document {
   lastGpsUpdate?: Date;
   battery?: number;
   network?: string;
+  // Live & Persistent Location Tracking Fields
+  isOnline?: boolean;
+  latitude?: number;
+  longitude?: number;
+  address?: string;
+  speed?: number;
+  heading?: number;
+  accuracy?: number;
+  lastUpdated?: Date;
+  lastSeen?: Date;
+  loginTime?: Date;
+  logoutTime?: Date;
   comparePassword: (password: string) => Promise<boolean>;
   compareSecurityAnswer: (answer: string) => Promise<boolean>;
 }
@@ -63,7 +75,19 @@ const UserSchema = new Schema<IUser>({
   currentLocation: { type: String, default: '' },
   lastGpsUpdate: { type: Date },
   battery: { type: Number },
-  network: { type: String }
+  network: { type: String },
+  // Live & Persistent Location Tracking Fields
+  isOnline: { type: Boolean, default: false },
+  latitude: { type: Number, default: 0 },
+  longitude: { type: Number, default: 0 },
+  address: { type: String, default: '' },
+  speed: { type: Number, default: 0 },
+  heading: { type: Number, default: 0 },
+  accuracy: { type: Number, default: 0 },
+  lastUpdated: { type: Date },
+  lastSeen: { type: Date },
+  loginTime: { type: Date },
+  logoutTime: { type: Date }
 }, {
   timestamps: true
 });

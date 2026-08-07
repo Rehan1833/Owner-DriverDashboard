@@ -226,15 +226,18 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
         }
       });
 
-      // Driver Vehicle Marker (Blue Arrow)
+      const isDriverOffline = status === 'Offline';
+      const markerColor = isDriverOffline ? '#64748B' : '#10B981';
+
+      // Driver Vehicle Marker (Green for Online, Gray for Offline)
       const dMarker = new window.google.maps.Marker({
         position: { lat: driverLocation.lat, lng: driverLocation.lng },
         map,
-        title: `Driver: ${driverName} (${vehicleNumber})`,
+        title: `Driver: ${driverName} (${vehicleNumber}) - ${isDriverOffline ? 'Offline' : 'Online'}`,
         icon: {
           path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-          scale: 7,
-          fillColor: '#3B82F6',
+          scale: 8,
+          fillColor: markerColor,
           fillOpacity: 1,
           strokeColor: '#FFFFFF',
           strokeWeight: 2,
@@ -246,9 +249,9 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
         content: `
           <div style="color: #0f172a; padding: 6px; font-family: system-ui, -apple-system, sans-serif;">
             <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #1e293b;">🚚 ${driverName} (${vehicleNumber})</div>
-            <div style="font-size: 12px; color: #475569;">📍 ${driverLocation.address || 'Live Transit Location'}</div>
-            <div style="margin-top: 8px; font-size: 12px; background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-weight: 600; display: inline-block;">
-              ⚡ Speed: ${driverLocation.speed || 0} km/h | ETA: ${eta}
+            <div style="font-size: 12px; color: #475569;">📍 ${driverLocation.address || 'Location'}</div>
+            <div style="margin-top: 8px; font-size: 12px; background: ${isDriverOffline ? '#f1f5f9' : '#e0f2fe'}; color: ${isDriverOffline ? '#475569' : '#0369a1'}; padding: 4px 8px; border-radius: 6px; font-weight: 600; display: inline-block;">
+              ${isDriverOffline ? '⚪ Offline (Last Known Location)' : `🟢 Live Location | ⚡ Speed: ${driverLocation.speed || 0} km/h | ETA: ${eta}`}
             </div>
           </div>
         `
@@ -286,7 +289,7 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
           } else {
             console.warn('Google Directions API fallback to straight geodesic line:', status);
             // Fallback Polyline
-            const polyline = new window.google.maps.Polyline({
+            new window.google.maps.Polyline({
               path: [
                 { lat: pickupLocation.lat, lng: pickupLocation.lng },
                 { lat: driverLocation.lat, lng: driverLocation.lng },
@@ -469,18 +472,24 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
           {/* Location Status Telemetry */}
           <div className="relative z-10 max-w-lg w-full bg-slate-900/80 backdrop-blur-md p-4 rounded-xl border border-slate-700/60 shadow-xl space-y-3">
             <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-2">
-              <span className="flex items-center gap-1 text-emerald-400 font-medium">
-                <Zap className="w-3.5 h-3.5" /> Live Geolocation Active
-              </span>
+              {status === 'Offline' ? (
+                <span className="flex items-center gap-1 text-slate-400 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-slate-400" /> Offline — Last Known Location
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-emerald-400 font-medium">
+                  <Zap className="w-3.5 h-3.5" /> Live Geolocation Active
+                </span>
+              )}
               <span className="text-slate-400">
-                Speed: <strong className="text-white">{driverLocation.speed || 45} km/h</strong>
+                Speed: <strong className="text-white">{driverLocation.speed || 0} km/h</strong>
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-left text-xs">
               <div className="p-2 rounded-lg bg-slate-800/60 border border-slate-700/40">
-                <span className="text-slate-400 block mb-0.5">Pickup Location</span>
-                <span className="text-slate-200 font-medium truncate block">{pickupLocation.address}</span>
+                <span className="text-slate-400 block mb-0.5">{status === 'Offline' ? 'Last Known Address' : 'Pickup Location'}</span>
+                <span className="text-slate-200 font-medium truncate block">{driverLocation.address || pickupLocation.address}</span>
               </div>
               <div className="p-2 rounded-lg bg-slate-800/60 border border-slate-700/40">
                 <span className="text-slate-400 block mb-0.5">Destination</span>
@@ -491,7 +500,7 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
             <div className="flex items-center justify-between pt-1">
               <div className="flex items-center gap-1.5 text-xs text-slate-300">
                 <Compass className="w-4 h-4 text-teal-400" />
-                <span>Heading: {driverLocation.heading || 90}° East</span>
+                <span>Heading: {driverLocation.heading || 0}°</span>
               </div>
               <div className="flex items-center gap-1 text-xs font-semibold text-emerald-400">
                 <Clock className="w-3.5 h-3.5" /> ETA: {eta}
@@ -505,8 +514,10 @@ export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
       {showControls && (
         <div className="absolute bottom-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 p-2 px-3 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700/60 text-xs shadow-md text-slate-800 dark:text-white">
           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span className="font-extrabold text-emerald-600 dark:text-emerald-400">Status: {status}</span>
+            <span className={`w-2 h-2 rounded-full ${status === 'Offline' ? 'bg-slate-400' : 'bg-emerald-500 animate-ping'}`} />
+            <span className={`font-bold ${status === 'Offline' ? 'text-slate-500 dark:text-slate-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+              Status: {status === 'Offline' ? 'Offline' : status}
+            </span>
             <span className="text-slate-300 dark:text-slate-600">|</span>
             <span className="text-slate-500 dark:text-slate-400">Trip: {tripNumber}</span>
           </div>

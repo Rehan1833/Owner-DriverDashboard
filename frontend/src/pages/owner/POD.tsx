@@ -348,7 +348,7 @@ export const POD: React.FC = () => {
       <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-[20px] shadow-sm overflow-hidden text-left flex flex-col">
         <div className="overflow-x-auto flex-1 min-h-[300px]">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-[#F8F9FF] dark:bg-[#0F172A] border-b border-[#E5EEFF] dark:border-[#334155] sticky top-0 backdrop-blur-md z-10 font-bold text-xs">
+            <thead className="bg-[#F8F9FF] dark:bg-[#0F172A] border-b border-[#E5EEFF] dark:border-[#334155] sticky top-0 z-10 font-bold text-xs">
               <tr>
                 <th className="px-6 py-4 text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC]">Cargo Photo</th>
                 <th className="px-6 py-4 text-[15px] font-bold text-[#0B1C30] dark:text-[#F8FAFC] cursor-pointer" onClick={() => handleSort('driverName')}>

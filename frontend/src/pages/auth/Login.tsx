@@ -87,12 +87,19 @@ export const Login: React.FC = () => {
       navigate(selectedRole === 'Driver' ? '/driver' : '/owner');
     } catch (err: any) {
       setLoading(false);
-      if (err.response?.data?.message) {
+      console.error('[SmartOps Login Diagnostic Error]:', err);
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setErrorMsg('Network timeout: Backend server took too long to respond. Please try again.');
+      } else if (err.message === 'Network Error' || !err.response) {
+        setErrorMsg('Backend server is not running or unreachable at http://localhost:5000. Please ensure the Express server is running.');
+      } else if (err.response?.status === 404) {
+        setErrorMsg('API endpoint not found. Please check backend server routes.');
+      } else if (err.response?.status === 401 || err.response?.status === 403) {
+        setErrorMsg(err.response?.data?.message || 'Authentication failed. Please verify your email and password.');
+      } else if (err.response?.data?.message) {
         setErrorMsg(err.response.data.message);
-      } else if (!err.response) {
-        setErrorMsg('Unable to connect to server. Please ensure backend server is running.');
       } else {
-        setErrorMsg('Login failed. Verify your credentials.');
+        setErrorMsg('Login request failed. Please check server logs or network status.');
       }
     }
   };

@@ -7,6 +7,7 @@ import Company, { generateCompanyId } from '../models/Company';
 import VerificationCode from '../models/VerificationCode';
 import { getNextSequenceValue } from '../models/Counter';
 import { sendMobileOTP } from '../utils/otpService';
+import { emitDriverOnline, emitDriverOffline } from '../sockets/telemetrySocket';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'smartops_super_secret_key_123!';
 
@@ -481,6 +482,25 @@ export const login = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Account verification pending or account disabled.' });
     }
 
+    if (user.role === 'Driver') {
+      const loginNow = new Date();
+      user.isOnline = true;
+      user.loginTime = loginNow;
+      user.status = 'Online';
+      await user.save();
+
+      emitDriverOnline({
+        driverId: user.driverId || String(user._id),
+        driverName: user.fullName,
+        companyId: user.companyId,
+        isOnline: true,
+        loginTime: loginNow,
+        latitude: user.latitude || 0,
+        longitude: user.longitude || 0,
+        address: user.address || user.currentLocation || ''
+      });
+    }
+
     const token = jwt.sign(
       {
         id: String(user._id),
@@ -508,11 +528,69 @@ export const login = async (req: Request, res: Response) => {
         companyName: user.companyName || null,
         driverId: user.driverId || null,
         vehicleNumber: user.vehicleNumber || null,
-        avatarUrl: user.avatarUrl || null
+        avatarUrl: user.avatarUrl || null,
+        isOnline: user.isOnline || false,
+        latitude: user.latitude || 0,
+        longitude: user.longitude || 0,
+        address: user.address || user.currentLocation || '',
+        speed: user.speed || 0,
+        heading: user.heading || 0,
+        accuracy: user.accuracy || 0,
+        lastUpdated: user.lastUpdated || null,
+        lastSeen: user.lastSeen || null,
+        loginTime: user.loginTime || null,
+        logoutTime: user.logoutTime || null
       }
     });
   } catch (err: any) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+/**
+ * Controller for Driver / User Logout
+ * Sets isOnline = false, records logoutTime & lastSeen, preserves last known location
+ */
+export const logout = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id || (req as any).user?._id || req.body.userId;
+    const effectiveDriverId = req.body.driverId || (req as any).user?.driverId;
+
+    let user = null;
+    if (userId) {
+      user = await User.findById(userId);
+    } else if (effectiveDriverId) {
+      user = await User.findOne({ driverId: effectiveDriverId });
+    }
+
+    if (user && user.role === 'Driver') {
+      const now = new Date();
+      user.isOnline = false;
+      user.logoutTime = now;
+      user.lastSeen = now;
+      user.status = 'Offline';
+      user.speed = 0;
+      await user.save();
+
+      emitDriverOffline({
+        driverId: user.driverId || String(user._id),
+        driverName: user.fullName,
+        companyId: user.companyId,
+        isOnline: false,
+        logoutTime: now,
+        lastSeen: now,
+        latitude: user.latitude || 0,
+        longitude: user.longitude || 0,
+        address: user.address || user.currentLocation || ''
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Logout recorded successfully.'
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
