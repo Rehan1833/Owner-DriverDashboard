@@ -519,7 +519,6 @@ export const login = async (req: Request, res: Response) => {
       }
       await user.save();
     }
-    }
 
     const token = jwt.sign(
       {

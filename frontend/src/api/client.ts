@@ -185,6 +185,14 @@ export const api = {
         const currentUser = saved ? JSON.parse(saved) : null;
         return { success: true, user: currentUser };
       }
+    },
+    logout: async (userId?: string, driverId?: string): Promise<{ success: boolean; message: string }> => {
+      try {
+        const res = await axiosInstance.post('/auth/logout', { userId, driverId });
+        return res.data;
+      } catch (err: any) {
+        return { success: false, message: err.message || 'Logout request failed' };
+      }
     }
   },
 
@@ -1126,17 +1134,6 @@ export const api = {
         return res.data;
       } catch (err) {
         return { status: 'ZERO_RESULTS', routes: [] };
-      }
-    }
-  },
-  // AUTH API
-  auth: {
-    logout: async (userId?: string, driverId?: string): Promise<{ success: boolean; message: string }> => {
-      try {
-        const res = await axiosInstance.post('/auth/logout', { userId, driverId });
-        return res.data;
-      } catch (err: any) {
-        return { success: false, message: err.message || 'Logout request failed' };
       }
     }
   },
