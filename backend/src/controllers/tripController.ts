@@ -28,8 +28,12 @@ export const getTrips = async (req: any, res: any): Promise<any> => {
           { driverId: userId }
         ]
       };
-    } else if (req.companyId) {
-      filter.companyId = req.companyId;
+    } else {
+      const companyId = req.companyId;
+      if (!companyId) {
+        return res.status(403).json({ message: 'Access denied: Company context required.' });
+      }
+      filter.companyId = companyId;
     }
 
     const trips = await Trip.find(filter).sort({ createdAt: -1 });

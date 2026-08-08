@@ -517,7 +517,9 @@ export const login = async (req: Request, res: Response) => {
         });
         user.companyId = newComp.companyId;
       }
-      await user.save();
+      if (typeof user.save === 'function') {
+        await user.save();
+      }
     }
 
     const token = jwt.sign(

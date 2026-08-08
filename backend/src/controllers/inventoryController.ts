@@ -6,10 +6,11 @@ import mongoose from 'mongoose';
 
 export const getInventory = async (req: AuthRequest, res: Response) => {
   try {
-    const filter: any = {};
-    if (req.companyId) {
-      filter.companyId = req.companyId;
+    const companyId = req.companyId;
+    if (!companyId) {
+      return res.status(403).json({ message: 'Access denied: Company context required.' });
     }
+    const filter: any = { companyId };
     const items = await Inventory.find(filter).populate('productId').sort({ createdAt: -1 });
 
     const flatItems = items.map((inv: any) => {

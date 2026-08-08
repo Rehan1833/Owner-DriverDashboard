@@ -8,9 +8,15 @@ import Salary from '../models/Salary';
 
 export const getDashboardSummary = async (req: Request, res: Response) => {
   try {
-    const userCompanyId = (req as any).user?.companyId;
+    const userCompanyId = (req as any).user?.companyId || (req as any).companyId;
+    if (!userCompanyId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: Company context required for dashboard summary.'
+      });
+    }
 
-    const query = userCompanyId ? { companyId: userCompanyId } : {};
+    const query = { companyId: userCompanyId };
 
     const [
       inventoryItems,

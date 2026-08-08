@@ -69,12 +69,11 @@ export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunct
     companyId: decoded.companyId || undefined
   };
 
-  // Attempt optional DB verification (email-verification enforcement)
-  // Use a short timeout so a slow/disconnected DB does NOT block authenticated requests
+  // Attempt DB verification & companyId resolution
   const DB_CHECK_TIMEOUT_MS = 3000;
 
   const dbCheckPromise = User.findById(decoded.id)
-    .select('isEmailVerified provider role')
+    .select('isEmailVerified provider role companyId companyName')
     .lean()
     .exec();
 
@@ -84,35 +83,26 @@ export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunct
 
   Promise.race([dbCheckPromise, timeoutPromise])
     .then((user) => {
-      if (user === null) {
-        // DB timed out or returned null — trust the cryptographic JWT and continue
-        // Log in development only
-        if (process.env.NODE_ENV === 'development') {
-          console.warn(
-            `[Auth] DB check timed out or user not found for id=${decoded.id}. ` +
-            `Proceeding with JWT-verified role=${decoded.role}.`
-          );
+      if (user) {
+        // Enforce email verification for local accounts
+        if ((user as any).provider === 'local' && !(user as any).isEmailVerified) {
+          return res.status(403).json({
+            success: false,
+            message: 'Email verification pending. Please verify your account.',
+          });
         }
-        return next();
+        // Populate companyId from DB if missing in token
+        if (!req.companyId && (user as any).companyId) {
+          req.companyId = (user as any).companyId;
+          (req as any).user.companyId = (user as any).companyId;
+        }
       }
-
-      // DB responded — enforce email verification for local-provider accounts
-      if ((user as any).provider === 'local' && !(user as any).isEmailVerified) {
-        return res.status(403).json({
-          success: false,
-          message: 'Email verification pending. Please verify your account.',
-        });
-      }
-
       next();
     })
     .catch((dbErr: any) => {
-      // DB error (e.g., Mongoose buffer timeout when Atlas is unreachable)
-      // Trust the cryptographic JWT rather than blocking the authenticated user
       if (process.env.NODE_ENV === 'development') {
         console.warn(
-          `[Auth] DB lookup failed for id=${decoded.id}: ${dbErr.message}. ` +
-          `Proceeding with JWT-verified role=${decoded.role}.`
+          `[Auth] DB lookup failed for id=${decoded.id}: ${dbErr.message}. Proceeding with JWT-verified context.`
         );
       }
       next();

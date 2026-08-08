@@ -10,36 +10,74 @@ const axiosInstance = axios.create({
   timeout: 15000  // 15 seconds: accommodates MongoDB Atlas cold starts and slow connections
 });
 
-// ── REQUEST INTERCEPTOR: attach Bearer token ──────────────────────────────────
+// ── REQUEST INTERCEPTOR: attach Bearer token & Dev Logging ─────────────────────
 axiosInstance.interceptors.request.use((config: any) => {
   const token = localStorage.getItem('smartops_jwt');
-  // Only attach token if it is a real JWT (not empty, not the legacy mock string)
   if (token && token !== 'mock_jwt_token_payload' && token.trim() !== '') {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  if (import.meta.env.DEV) {
+    const rawUser = localStorage.getItem('smartops_user');
+    const u = rawUser ? JSON.parse(rawUser) : null;
+    console.log(`[API REQUEST] ${config.method?.toUpperCase()} ${config.url}`);
+    if (u) {
+      console.log(`[AUTH] userId: ${u.id || u._id} | role: ${u.role} | companyId: ${u.companyId || 'N/A'}`);
+    }
+  }
+
   return config;
 }, (error: any) => Promise.reject(error));
 
-// ── RESPONSE INTERCEPTOR: global 401 / session-expired handler ───────────────
+// ── RESPONSE INTERCEPTOR: Dev Logging, Retries, & 401 Session Handling ─────────
 axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401 || (error.response?.status === 404 && error.response?.data?.message === 'User not found.')) {
-      // Token is invalid or expired — clear session and redirect to login
+  (response) => {
+    if (import.meta.env.DEV) {
+      const recordsCount = Array.isArray(response.data)
+        ? response.data.length
+        : (Array.isArray(response.data?.data) ? response.data.data.length : undefined);
+      console.log(
+        `[API RESPONSE] ${response.config.method?.toUpperCase()} ${response.config.url} | status: ${response.status}${recordsCount !== undefined ? ` | records: ${recordsCount}` : ''}`
+      );
+    }
+    return response;
+  },
+  async (error) => {
+    const config = error.config;
+    const status = error.response?.status;
+
+    if (import.meta.env.DEV) {
+      console.error(
+        `[API ERROR] ${config?.method?.toUpperCase()} ${config?.url} | status: ${status || 'NETWORK_ERR'} | message: ${error.response?.data?.message || error.message}`
+      );
+    }
+
+    if (status === 401 || (status === 404 && error.response?.data?.message === 'User not found.')) {
       const currentToken = localStorage.getItem('smartops_jwt');
-      // Only auto-redirect if there was actually a token (avoid redirect loops on login page)
       if (currentToken) {
-        console.warn('[SmartOps Auth] Session expired (401). Clearing token and redirecting to login.');
+        console.warn('[SmartOps Auth] Session expired (401). Clearing token and notifying application.');
         localStorage.removeItem('smartops_jwt');
         localStorage.removeItem('smartops_user');
-        // Dispatch a custom event so React components can react (e.g., reset user state)
         window.dispatchEvent(new CustomEvent('smartops:session-expired'));
-        // Redirect to login if not already there
-        if (!window.location.pathname.startsWith('/login') && window.location.pathname !== '/') {
-          window.location.href = '/';
-        }
       }
+      return Promise.reject(error);
     }
+
+    // Exponential Backoff Retry logic for transient errors (502, 503, 504, Network Error)
+    // DO NOT retry 400, 401, 403, 404
+    const isTransient = !status || [502, 503, 504].includes(status);
+    if (isTransient && config && !config._retryCount) {
+      config._retryCount = 0;
+    }
+
+    if (isTransient && config && config._retryCount < 3) {
+      config._retryCount += 1;
+      const backoffDelay = Math.pow(2, config._retryCount) * 500; // 1s, 2s, 4s
+      console.warn(`[API RETRY] Retrying ${config.method?.toUpperCase()} ${config.url} (Attempt ${config._retryCount}/3) in ${backoffDelay}ms...`);
+      await new Promise(res => setTimeout(res, backoffDelay));
+      return axiosInstance(config);
+    }
+
     return Promise.reject(error);
   }
 );
@@ -247,6 +285,24 @@ export const api = {
         return { success: true, message: 'Location cached in offline mode.' };
       }
     },
+    recordLocation: async (payload: {
+      driverId?: string;
+      tripId?: string;
+      latitude: number;
+      longitude: number;
+      accuracy?: number;
+      speed?: number;
+      heading?: number;
+      address?: string;
+      timestamp?: string;
+    }): Promise<{ success: boolean; message: string; data?: any }> => {
+      try {
+        const res = await axiosInstance.post('/driver/location', payload);
+        return res.data;
+      } catch (err: any) {
+        return { success: true, message: 'Location cached in offline mode.' };
+      }
+    },
     getLatestLocation: async (driverId: string): Promise<any> => {
       try {
         const res = await axiosInstance.get(`/driver/location/${driverId}`);
@@ -260,698 +316,186 @@ export const api = {
   // 2. INVENTORY CRUD
   inventory: {
     getAll: async (): Promise<InventoryItem[]> => {
-      try {
-        const res = await axiosInstance.get('/inventory');
-        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
-        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
-      } catch (err) {
-        return LocalStorageFallback.get<InventoryItem>('smartops_inventory', mockInventory);
-      }
+      const res = await axiosInstance.get('/inventory');
+      const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+      return list.map((item: any) => ({ ...item, id: item._id || item.id }));
     },
     create: async (item: Omit<InventoryItem, 'id'>): Promise<InventoryItem> => {
-      try {
-        const res = await axiosInstance.post('/inventory', item);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<InventoryItem>('smartops_inventory', mockInventory);
-        const newItem = { ...item, id: `i-${Date.now()}` };
-        local.push(newItem);
-        LocalStorageFallback.set('smartops_inventory', local);
-        return newItem;
-      }
+      const res = await axiosInstance.post('/inventory', item);
+      return res.data;
     },
     update: async (id: string, item: Partial<InventoryItem>): Promise<InventoryItem> => {
-      try {
-        const res = await axiosInstance.put(`/inventory/${id}`, item);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<InventoryItem>('smartops_inventory', mockInventory);
-        const updated = local.map(i => i.id === id ? { ...i, ...item } : i);
-        LocalStorageFallback.set('smartops_inventory', updated);
-        return updated.find(i => i.id === id) as InventoryItem;
-      }
+      const res = await axiosInstance.put(`/inventory/${id}`, item);
+      return res.data;
     },
     delete: async (id: string): Promise<void> => {
-      try {
-        await axiosInstance.delete(`/inventory/${id}`);
-      } catch (err) {
-        const local = LocalStorageFallback.get<InventoryItem>('smartops_inventory', mockInventory);
-        const filtered = local.filter(i => i.id !== id);
-        LocalStorageFallback.set('smartops_inventory', filtered);
-      }
+      await axiosInstance.delete(`/inventory/${id}`);
     }
   },
 
   // 3. DRIVER DUTY & ATTENDANCE SYSTEM API
   attendance: {
     getAll: async (): Promise<AttendanceRecord[]> => {
-      try {
-        const res = await axiosInstance.get('/attendance');
-        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
-        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
-      } catch (err) {
-        return LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
-      }
+      const res = await axiosInstance.get('/attendance');
+      const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+      return list.map((item: any) => ({ ...item, id: item._id || item.id }));
     },
     getHistory: async (): Promise<AttendanceRecord[]> => {
-      try {
-        const res = await axiosInstance.get('/attendance/history');
-        return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
-      } catch (err) {
-        return LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance).sort((a, b) => b.date.localeCompare(a.date));
-      }
+      const res = await axiosInstance.get('/attendance/history');
+      return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
     },
     getLive: async (): Promise<AttendanceRecord[]> => {
-      try {
-        const res = await axiosInstance.get('/attendance/live');
-        return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
-      } catch (err) {
-        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
-        return local.filter(a => a.currentStatus && a.currentStatus !== 'Off Duty');
-      }
+      const res = await axiosInstance.get('/attendance/live');
+      return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
     },
     getAnalytics: async (): Promise<AttendanceRecord[]> => {
-      try {
-        const res = await axiosInstance.get('/attendance/analytics');
-        return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
-      } catch (err) {
-        return LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
-      }
+      const res = await axiosInstance.get('/attendance/analytics');
+      return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
     },
     getByDriverId: async (driverId: string): Promise<AttendanceRecord[]> => {
-      try {
-        const res = await axiosInstance.get(`/attendance/${driverId}`);
-        return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
-      } catch (err) {
-        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
-        return local.filter(a => a.driverId === driverId);
-      }
+      const res = await axiosInstance.get(`/attendance/${driverId}`);
+      return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
     },
-    startDuty: async (payload: { 
-      driverId: string; 
-      driverName: string; 
-      employeeName: string; 
-      checkInGPS?: string; 
-      checkInWarehouse?: string; 
-      checkInDeviceInfo?: string; 
-      checkInInternetStatus?: string;
-      vehicleNumber?: string;
-      latitude?: number;
-      longitude?: number;
-      address?: string;
-      checkInTime?: string;
-      browserInfo?: string;
-      deviceType?: string;
-    }): Promise<AttendanceRecord> => {
-      try {
-        const res = await axiosInstance.post('/attendance/start-duty', payload);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
-        const todayStr = new Date().toISOString().split('T')[0];
-        
-        // Remove existing record for today if present (force overwrite for testing simplicity)
-        const filtered = local.filter(a => !(a.driverId === payload.driverId && a.date === todayStr));
-        
-        const finalTime = payload.checkInTime || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-        let attendanceStatus: 'Present' | 'Late' | 'Absent' = 'Present';
-        const [timeVal, modifier] = finalTime.split(' ');
-        const [hours, minutes] = timeVal.split(':').map(Number);
-        let checkInHour = hours;
-        if (modifier === 'PM' && hours !== 12) checkInHour += 12;
-        if (modifier === 'AM' && hours === 12) checkInHour = 0;
-        if (checkInHour > 8 || (checkInHour === 8 && minutes > 30)) {
-          attendanceStatus = 'Late';
-        }
-
-        const newRecord: AttendanceRecord = {
-          id: `a-${Date.now()}`,
-          attendanceId: `a-${Date.now()}`,
-          employeeName: payload.employeeName,
-          driverName: payload.driverName,
-          driverId: payload.driverId,
-          vehicleNumber: payload.vehicleNumber || 'MH-12-QW-9874',
-          checkIn: finalTime,
-          checkInTime: finalTime,
-          checkInGPS: payload.checkInGPS || (payload.latitude && payload.longitude ? `${payload.latitude}, ${payload.longitude}` : ''),
-          latitude: payload.latitude,
-          longitude: payload.longitude,
-          address: payload.address || payload.checkInWarehouse || 'Primary Warehouse Yard',
-          checkInWarehouse: payload.address || payload.checkInWarehouse || 'Primary Warehouse Yard',
-          checkInDeviceInfo: payload.deviceType || payload.checkInDeviceInfo || 'Android Device',
-          checkInInternetStatus: payload.checkInInternetStatus || 'Connected',
-          workingHours: 0,
-          breakDuration: 0,
-          tripsCompleted: 0,
-          distanceCovered: 0,
-          fuelUsed: 0,
-          overtime: 0,
-          attendanceStatus,
-          currentStatus: 'On Duty',
-          performanceScore: 100,
-          status: attendanceStatus,
-          date: todayStr,
-          breaks: [],
-          timeline: [
-            { time: finalTime, event: 'Driver Logged In', description: `Device: ${payload.deviceType || payload.checkInDeviceInfo || 'Unknown'}. Browser: ${payload.browserInfo || 'Unknown'}. Internet: ${payload.checkInInternetStatus || 'Active'}.` },
-            { time: finalTime, event: 'Start Duty', description: `Duty started at ${payload.address || payload.checkInWarehouse || 'Warehouse Point'}.`, gps: payload.checkInGPS || (payload.latitude && payload.longitude ? `${payload.latitude}, ${payload.longitude}` : '') }
-          ]
-        };
-
-        filtered.push(newRecord);
-        LocalStorageFallback.set('smartops_attendance', filtered);
-        return newRecord;
-      }
+    startDuty: async (payload: any): Promise<AttendanceRecord> => {
+      const res = await axiosInstance.post('/attendance/start-duty', payload);
+      return res.data;
     },
     startBreak: async (payload: { driverId: string; type: string; remarks: string; gps: string }): Promise<AttendanceRecord> => {
-      try {
-        const res = await axiosInstance.post('/attendance/start-break', payload);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
-        const todayStr = new Date().toISOString().split('T')[0];
-        const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-        const updated = local.map(a => {
-          if (a.driverId === payload.driverId && a.date === todayStr) {
-            const breaks = a.breaks || [];
-            breaks.push({
-              type: payload.type,
-              breakStart: timeStr,
-              gps: payload.gps,
-              remarks: payload.remarks,
-              duration: 0
-            });
-            const timeline = a.timeline || [];
-            timeline.push({
-              time: timeStr,
-              event: 'Lunch Break',
-              description: `Halted for ${payload.type}. Remarks: ${payload.remarks || 'None'}`,
-              gps: payload.gps
-            });
-            return {
-              ...a,
-              currentStatus: 'On Break' as any,
-              breaks,
-              timeline
-            };
-          }
-          return a;
-        });
-
-        LocalStorageFallback.set('smartops_attendance', updated);
-        return updated.find(a => a.driverId === payload.driverId && a.date === todayStr) as AttendanceRecord;
-      }
+      const res = await axiosInstance.post('/attendance/start-break', payload);
+      return res.data;
     },
     endBreak: async (payload: { driverId: string; gps: string }): Promise<AttendanceRecord> => {
-      try {
-        const res = await axiosInstance.post('/attendance/end-break', payload);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
-        const todayStr = new Date().toISOString().split('T')[0];
-        const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-        const updated = local.map(a => {
-          if (a.driverId === payload.driverId && a.date === todayStr) {
-            const breaks = a.breaks || [];
-            const activeBreak = breaks.find(b => !b.breakEnd);
-            let diff = 0;
-            if (activeBreak) {
-              activeBreak.breakEnd = timeStr;
-              
-              const [sTime, sMod] = activeBreak.breakStart.split(' ');
-              const [sH, sM] = sTime.split(':').map(Number);
-              let startMin = sH * 60 + sM;
-              if (sMod === 'PM' && sH !== 12) startMin += 720;
-              if (sMod === 'AM' && sH === 12) startMin -= 720;
-
-              const [eTime, eMod] = timeStr.split(' ');
-              const [eH, eM] = eTime.split(':').map(Number);
-              let endMin = eH * 60 + eM;
-              if (eMod === 'PM' && eH !== 12) endMin += 720;
-              if (eMod === 'AM' && eH === 12) endMin -= 720;
-
-              diff = Math.max(0, endMin - startMin);
-              activeBreak.duration = diff;
-            }
-
-            const timeline = a.timeline || [];
-            timeline.push({
-              time: timeStr,
-              event: 'Resume Duty',
-              description: `Break ended. Duty resumed. Duration: ${diff} mins.`,
-              gps: payload.gps
-            });
-
-            return {
-              ...a,
-              currentStatus: 'On Duty' as any,
-              breakDuration: (a.breakDuration || 0) + diff,
-              breaks,
-              timeline
-            };
-          }
-          return a;
-        });
-
-        LocalStorageFallback.set('smartops_attendance', updated);
-        return updated.find(a => a.driverId === payload.driverId && a.date === todayStr) as AttendanceRecord;
-      }
+      const res = await axiosInstance.post('/attendance/end-break', payload);
+      return res.data;
     },
-    endDuty: async (payload: { 
-      driverId: string; 
-      checkOutGPS?: string; 
-      tripsCompleted: number; 
-      distanceCovered: number; 
-      fuelUsed: number;
-      checkOutTime?: string;
-      latitude?: number;
-      longitude?: number;
-      address?: string;
-    }): Promise<AttendanceRecord> => {
-      try {
-        const res = await axiosInstance.post('/attendance/end-duty', payload);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
-        const todayStr = new Date().toISOString().split('T')[0];
-        const finalCheckOutTime = payload.checkOutTime || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-        const updated = local.map(a => {
-          if (a.driverId === payload.driverId && a.date === todayStr) {
-            const [sTime, sMod] = a.checkIn.split(' ');
-            const [sH, sM] = sTime.split(':').map(Number);
-            let startMin = sH * 60 + sM;
-            if (sMod === 'PM' && sH !== 12) startMin += 720;
-            if (sMod === 'AM' && sH === 12) startMin -= 720;
-
-            const [eTime, eMod] = finalCheckOutTime.split(' ');
-            const [eH, eM] = eTime.split(':').map(Number);
-            let endMin = eH * 60 + eM;
-            if (eMod === 'PM' && eH !== 12) endMin += 720;
-            if (eMod === 'AM' && eH === 12) endMin -= 720;
-
-            const totalMin = Math.max(0, endMin - startMin);
-            const workingHours = Number((totalMin / 60).toFixed(2));
-            const overtime = Math.max(0, workingHours - 8);
-
-            const timeline = a.timeline || [];
-            timeline.push({
-              time: finalCheckOutTime,
-              event: 'End Duty',
-              description: `Shift completed. Distance covered: ${payload.distanceCovered}km. Total hours: ${workingHours}.`,
-              gps: payload.checkOutGPS || (payload.latitude && payload.longitude ? `${payload.latitude}, ${payload.longitude}` : '')
-            });
-
-            let score = 100;
-            if (a.attendanceStatus === 'Late') score -= 10;
-            if (a.breakDuration && a.breakDuration > 60) score -= 5;
-
-            return {
-              ...a,
-              checkOut: finalCheckOutTime,
-              checkOutTime: finalCheckOutTime,
-              checkOutGPS: payload.checkOutGPS || (payload.latitude && payload.longitude ? `${payload.latitude}, ${payload.longitude}` : ''),
-              latitude: payload.latitude !== undefined ? payload.latitude : a.latitude,
-              longitude: payload.longitude !== undefined ? payload.longitude : a.longitude,
-              address: payload.address || a.address,
-              workingHours,
-              overtime,
-              tripsCompleted: payload.tripsCompleted,
-              distanceCovered: payload.distanceCovered,
-              fuelUsed: payload.fuelUsed,
-              performanceScore: score,
-              currentStatus: 'Off Duty' as any,
-              timeline
-            };
-          }
-          return a;
-        });
-
-        LocalStorageFallback.set('smartops_attendance', updated);
-        return updated.find(a => a.driverId === payload.driverId && a.date === todayStr) as AttendanceRecord;
-      }
+    endDuty: async (payload: any): Promise<AttendanceRecord> => {
+      const res = await axiosInstance.post('/attendance/end-duty', payload);
+      return res.data;
     },
     create: async (record: Omit<AttendanceRecord, 'id'>): Promise<AttendanceRecord> => {
-      try {
-        const res = await axiosInstance.post('/attendance', record);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
-        const newRecord = { ...record, id: `a-${Date.now()}` };
-        local.push(newRecord);
-        LocalStorageFallback.set('smartops_attendance', local);
-        return newRecord;
-      }
+      const res = await axiosInstance.post('/attendance', record);
+      return res.data;
     },
     update: async (id: string, record: Partial<AttendanceRecord>): Promise<AttendanceRecord> => {
-      try {
-        const res = await axiosInstance.put(`/attendance/${id}`, record);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
-        const updated = local.map(a => a.id === id ? { ...a, ...record } : a);
-        LocalStorageFallback.set('smartops_attendance', updated);
-        return updated.find(a => a.id === id) as AttendanceRecord;
-      }
+      const res = await axiosInstance.put(`/attendance/${id}`, record);
+      return res.data;
     },
     delete: async (id: string): Promise<void> => {
-      try {
-        await axiosInstance.delete(`/attendance/${id}`);
-      } catch (err) {
-        const local = LocalStorageFallback.get<AttendanceRecord>('smartops_attendance', mockAttendance);
-        const filtered = local.filter(a => a.id !== id);
-        LocalStorageFallback.set('smartops_attendance', filtered);
-      }
+      await axiosInstance.delete(`/attendance/${id}`);
     }
   },
 
   // 4. SALARY CRUD
   salary: {
     getAll: async (): Promise<PayrollRecord[]> => {
-      try {
-        const res = await axiosInstance.get('/salary');
-        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
-        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
-      } catch (err) {
-        return LocalStorageFallback.get<PayrollRecord>('smartops_salary', mockPayroll);
-      }
+      const res = await axiosInstance.get('/salary');
+      const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+      return list.map((item: any) => ({ ...item, id: item._id || item.id }));
     },
     create: async (pay: Omit<PayrollRecord, 'id'>): Promise<PayrollRecord> => {
-      try {
-        const res = await axiosInstance.post('/salary', pay);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<PayrollRecord>('smartops_salary', mockPayroll);
-        const newPay = { ...pay, id: `p-${Date.now()}` };
-        local.push(newPay);
-        LocalStorageFallback.set('smartops_salary', local);
-        return newPay;
-      }
+      const res = await axiosInstance.post('/salary', pay);
+      return res.data;
     },
     update: async (id: string, pay: Partial<PayrollRecord>): Promise<PayrollRecord> => {
-      try {
-        const res = await axiosInstance.put(`/salary/${id}`, pay);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<PayrollRecord>('smartops_salary', mockPayroll);
-        const updated = local.map(p => p.id === id ? { ...p, ...pay } : p);
-        LocalStorageFallback.set('smartops_salary', updated);
-        return updated.find(p => p.id === id) as PayrollRecord;
-      }
+      const res = await axiosInstance.put(`/salary/${id}`, pay);
+      return res.data;
     },
     delete: async (id: string): Promise<void> => {
-      try {
-        await axiosInstance.delete(`/salary/${id}`);
-      } catch (err) {
-        const local = LocalStorageFallback.get<PayrollRecord>('smartops_salary', mockPayroll);
-        const filtered = local.filter(p => p.id !== id);
-        LocalStorageFallback.set('smartops_salary', filtered);
-      }
+      await axiosInstance.delete(`/salary/${id}`);
     }
   },
 
   // 5. FLEET VEHICLES CRUD
   fleet: {
     getAll: async (): Promise<Vehicle[]> => {
-      try {
-        const res = await axiosInstance.get('/fleet');
-        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
-        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
-      } catch (err) {
-        return LocalStorageFallback.get<Vehicle>('smartops_fleet', mockVehicles);
-      }
+      const res = await axiosInstance.get('/fleet');
+      const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+      return list.map((item: any) => ({ ...item, id: item._id || item.id }));
     },
     create: async (vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle> => {
-      try {
-        const res = await axiosInstance.post('/fleet', vehicle);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<Vehicle>('smartops_fleet', mockVehicles);
-        const newVehicle = { ...vehicle, id: `v-${Date.now()}` };
-        local.push(newVehicle);
-        LocalStorageFallback.set('smartops_fleet', local);
-        return newVehicle;
-      }
+      const res = await axiosInstance.post('/fleet', vehicle);
+      return res.data;
     },
     update: async (id: string, vehicle: Partial<Vehicle>): Promise<Vehicle> => {
-      try {
-        const res = await axiosInstance.put(`/fleet/${id}`, vehicle);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<Vehicle>('smartops_fleet', mockVehicles);
-        const updated = local.map(v => v.id === id ? { ...v, ...vehicle } : v);
-        LocalStorageFallback.set('smartops_fleet', updated);
-        return updated.find(v => v.id === id) as Vehicle;
-      }
+      const res = await axiosInstance.put(`/fleet/${id}`, vehicle);
+      return res.data;
     },
     delete: async (id: string): Promise<void> => {
-      try {
-        await axiosInstance.delete(`/fleet/${id}`);
-      } catch (err) {
-        const local = LocalStorageFallback.get<Vehicle>('smartops_fleet', mockVehicles);
-        const filtered = local.filter(v => v.id !== id);
-        LocalStorageFallback.set('smartops_fleet', filtered);
-      }
+      await axiosInstance.delete(`/fleet/${id}`);
     }
   },
 
   // 6. TRIP MANAGEMENT
   trips: {
     getAll: async (): Promise<Trip[]> => {
-      try {
-        const res = await axiosInstance.get('/trips');
-        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
-        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
-      } catch (err) {
-        return LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
-      }
+      const res = await axiosInstance.get('/trips');
+      const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+      return list.map((item: any) => ({ ...item, id: item._id || item.id }));
     },
     getActive: async (): Promise<Trip | null> => {
-      try {
-        const res = await axiosInstance.get('/trips/active');
-        return res.data ? { ...res.data, id: res.data._id || res.data.id } : null;
-      } catch (err) {
-        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
-        const active = local.find(t => t.status !== 'Completed' && (t as any).status !== 'Cancelled');
-        return active || local[0] || null;
-      }
+      const res = await axiosInstance.get('/trips/active');
+      return res.data ? { ...res.data, id: res.data._id || res.data.id } : null;
     },
     getById: async (id: string): Promise<Trip> => {
-      try {
-        const res = await axiosInstance.get(`/trips/${id}`);
-        return { ...res.data, id: res.data._id || res.data.id };
-      } catch (err) {
-        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
-        const trip = local.find(t => t.id === id);
-        if (!trip) throw new Error('Trip not found');
-        return trip;
-      }
+      const res = await axiosInstance.get(`/trips/${id}`);
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     start: async (id: string): Promise<Trip> => {
-      try {
-        const res = await axiosInstance.put('/trips/start', { id });
-        return { ...res.data, id: res.data._id || res.data.id };
-      } catch (err) {
-        return api.trips.updateStatus(id, 'In Transit');
-      }
+      const res = await axiosInstance.put('/trips/start', { id });
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     updateLocation: async (payload: { id: string; latitude?: number; longitude?: number; accuracy?: number; speed?: number; heading?: number; distanceRemaining?: number; eta?: string; timestamp?: string }): Promise<Trip> => {
-      try {
-        const res = await axiosInstance.post(`/trips/${payload.id}/location`, payload);
-        const data = res.data?.data?.trip || res.data;
-        return { ...data, id: data._id || data.id };
-      } catch (err) {
-        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
-        const updated = local.map(t => {
-          if (t.id === payload.id) {
-            return {
-              ...t,
-              ...(payload.latitude && payload.longitude ? { currentLocation: `${payload.latitude}, ${payload.longitude}`, latitude: payload.latitude, longitude: payload.longitude } : {}),
-              ...(payload.accuracy !== undefined ? { accuracy: payload.accuracy } : {}),
-              ...(payload.speed !== undefined ? { speed: payload.speed } : {}),
-              ...(payload.heading !== undefined ? { heading: payload.heading } : {}),
-              ...(payload.distanceRemaining !== undefined ? { distanceRemaining: payload.distanceRemaining } : {}),
-              ...(payload.eta ? { eta: payload.eta } : {}),
-              lastGpsUpdate: new Date()
-            };
-          }
-          return t;
-        });
-        LocalStorageFallback.set('smartops_trips', updated);
-        return updated.find(t => t.id === payload.id) as Trip;
-      }
+      const res = await axiosInstance.post(`/trips/${payload.id}/location`, payload);
+      const data = res.data?.data?.trip || res.data;
+      return { ...data, id: data._id || data.id };
     },
     getLocationHistory: async (tripId: string, filters?: { driverId?: string; startDate?: string; endDate?: string }): Promise<any[]> => {
-      try {
-        const res = await axiosInstance.get(`/trips/${tripId}/location-history`, { params: filters });
-        return Array.isArray(res.data) ? res.data : [];
-      } catch (err) {
-        return [];
-      }
+      const res = await axiosInstance.get(`/trips/${tripId}/location-history`, { params: filters });
+      return Array.isArray(res.data) ? res.data : [];
     },
     getLiveTracking: async (tripId: string): Promise<any> => {
-      try {
-        const res = await axiosInstance.get(`/trips/${tripId}/live-tracking`);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
-        const trip = local.find(t => t.id === tripId) || local[0];
-        return {
-          tripId: trip?.id || tripId,
-          tripNumber: trip?.tripNumber || '',
-          driverName: trip?.driverName || '',
-          driverId: trip?.driverId || '',
-          vehicleNumber: trip?.vehicleNumber || '',
-          status: trip?.status || 'In Transit',
-          currentLocation: trip?.currentLocation || '',
-          currentAddress: trip?.currentAddress || '',
-          latitude: trip?.latitude || 0,
-          longitude: trip?.longitude || 0,
-          speed: 0,
-          heading: 0,
-          distanceRemaining: trip?.distanceRemaining || 0,
-          eta: trip?.eta || 'N/A',
-          pickupLocation: trip?.pickupLocation || '',
-          pickupCoordinates: trip?.pickupCoordinates || { lat: 0, lng: 0 },
-          dropLocation: trip?.dropLocation || '',
-          dropCoordinates: trip?.dropCoordinates || { lat: 0, lng: 0 },
-          locationHistory: [],
-          googleNavUrl: ''
-        };
-      }
+      const res = await axiosInstance.get(`/trips/${tripId}/live-tracking`);
+      return res.data;
     },
-
     create: async (tripData: Partial<Trip>): Promise<Trip> => {
-      try {
-        const res = await axiosInstance.post('/trips', tripData);
-        return { ...res.data, id: res.data._id || res.data.id };
-      } catch (err: any) {
-        if (err.response?.data?.message) {
-          throw new Error(err.response.data.message);
-        }
-        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
-        const newTrip: Trip = {
-          id: `trp-${Date.now()}`,
-          tripNumber: tripData.tripNumber || `TRP-${Date.now().toString().slice(-6)}`,
-          vehicleNumber: tripData.vehicleNumber || '',
-          driverId: tripData.driverId || '',
-          driverName: tripData.driverName || '',
-          pickupLocation: tripData.pickupLocation || '',
-          dropLocation: tripData.dropLocation || '',
-          customerName: tripData.customerName || '',
-          customerPhone: tripData.customerPhone || '',
-          material: tripData.material || '',
-          weight: tripData.weight || '',
-          invoiceNumber: tripData.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
-          priority: tripData.priority || 'Normal',
-          cargo: tripData.cargo,
-          stops: tripData.stops || [],
-          scheduledStart: tripData.scheduledStart,
-          expectedEnd: tripData.expectedEnd,
-          notes: tripData.notes,
-          status: 'Assigned',
-          eta: '30 Mins',
-          distanceRemaining: 15.0,
-          timestamp: new Date().toISOString()
-        };
-        local.unshift(newTrip);
-        LocalStorageFallback.set('smartops_trips', local);
-        return newTrip;
-      }
+      const res = await axiosInstance.post('/trips', tripData);
+      return { ...res.data, id: res.data._id || res.data.id };
     },
-
     assign: async (id: string, payload: { driverId: string; driverName: string; vehicleNumber?: string }): Promise<Trip> => {
-      try {
-        const res = await axiosInstance.post(`/trips/${id}/assign`, payload);
-        return { ...res.data, id: res.data._id || res.data.id };
-      } catch (err) {
-        return api.trips.updateStatus(id, 'Assigned', payload);
-      }
+      const res = await axiosInstance.post(`/trips/${id}/assign`, payload);
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     accept: async (id: string): Promise<Trip> => {
-      try {
-        const res = await axiosInstance.post(`/trips/${id}/accept`);
-        return { ...res.data, id: res.data._id || res.data.id };
-      } catch (err) {
-        return api.trips.updateStatus(id, 'Accepted');
-      }
+      const res = await axiosInstance.post(`/trips/${id}/accept`);
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     arriveStop: async (id: string, stopId: string, coords?: { latitude?: number; longitude?: number }): Promise<Trip> => {
-      try {
-        const res = await axiosInstance.post(`/trips/${id}/stops/${stopId}/arrive`, coords);
-        return { ...res.data, id: res.data._id || res.data.id };
-      } catch (err: any) {
-        if (err.response?.data?.message) {
-          throw new Error(err.response.data.message);
-        }
-        return api.trips.updateStatus(id, 'At Stop');
-      }
+      const res = await axiosInstance.post(`/trips/${id}/stops/${stopId}/arrive`, coords);
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     completeStop: async (id: string, stopId: string, details?: { podId?: string; stopReason?: string; notes?: string }): Promise<Trip> => {
-      try {
-        const res = await axiosInstance.post(`/trips/${id}/stops/${stopId}/complete`, details);
-        return { ...res.data, id: res.data._id || res.data.id };
-      } catch (err) {
-        return api.trips.updateStatus(id, 'In Transit');
-      }
+      const res = await axiosInstance.post(`/trips/${id}/stops/${stopId}/complete`, details);
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     reportDelay: async (id: string, reason: string, note?: string): Promise<Trip> => {
-      try {
-        const res = await axiosInstance.post(`/trips/${id}/delay`, { reason, note });
-        return { ...res.data, id: res.data._id || res.data.id };
-      } catch (err) {
-        return api.trips.updateStatus(id, 'Delayed', { stopReason: reason });
-      }
+      const res = await axiosInstance.post(`/trips/${id}/delay`, { reason, note });
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     reportIncident: async (id: string, incidentType: string, description: string): Promise<Trip> => {
-      try {
-        const res = await axiosInstance.post(`/trips/${id}/incident`, { incidentType, description });
-        return { ...res.data, id: res.data._id || res.data.id };
-      } catch (err) {
-        return api.trips.updateStatus(id, 'Incident Reported', { stopReason: `${incidentType}: ${description}` });
-      }
+      const res = await axiosInstance.post(`/trips/${id}/incident`, { incidentType, description });
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     cancel: async (id: string): Promise<Trip> => {
-      try {
-        const res = await axiosInstance.put(`/trips/${id}/cancel`);
-        return { ...res.data, id: res.data._id || res.data.id };
-      } catch (err) {
-        return api.trips.updateStatus(id, 'Cancelled');
-      }
+      const res = await axiosInstance.put(`/trips/${id}/cancel`);
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     complete: async (id: string, details?: { signatureData?: string; photo?: string }): Promise<Trip> => {
-      try {
-        const res = await axiosInstance.post(`/trips/${id}/end`, details);
-        return { ...res.data, id: res.data._id || res.data.id };
-      } catch (err) {
-        return api.trips.updateStatus(id, 'Completed', details);
-      }
+      const res = await axiosInstance.post(`/trips/${id}/end`, details);
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     updateStatus: async (id: string, status: Trip['status'], details?: any): Promise<Trip> => {
-      try {
-        const res = await axiosInstance.put(`/trips/${id}`, { status, ...details });
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<Trip>('smartops_trips', mockTrips);
-        const updated = local.map(t => {
-          if (t.id === id) {
-            const up: any = { ...t, status };
-            if (details?.stopReason) up.stopReason = details.stopReason;
-            if (details?.signatureData) up.signatureData = details.signatureData;
-            if (details?.deliveryPhoto) {
-              up.deliveryPhoto = details.deliveryPhoto;
-            } else if (details?.photo) {
-              up.deliveryPhoto = up.deliveryPhoto ? [...up.deliveryPhoto, details.photo] : [details.photo];
-            }
-            return up;
-          }
-          return t;
-        });
-        LocalStorageFallback.set('smartops_trips', updated);
-        return updated.find(t => t.id === id) as Trip;
-      }
+      const res = await axiosInstance.put(`/trips/${id}`, { status, ...details });
+      return res.data;
     }
   },
 
@@ -959,40 +503,16 @@ export const api = {
   // 7. PROOF OF DELIVERY (POD) API
   pod: {
     getAll: async (params?: { status?: string; driver?: string; vehicle?: string; customer?: string; orderNumber?: string; date?: string }): Promise<PODRecord[]> => {
-      try {
-        const res = await axiosInstance.get('/pod', { params });
-        return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
-      } catch (err) {
-        let local = LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
-        if (params) {
-          if (params.status) local = local.filter(p => p.status === params.status);
-          if (params.driver) local = local.filter(p => p.driverName.toLowerCase().includes(params.driver!.toLowerCase()));
-          if (params.vehicle) local = local.filter(p => p.vehicleNumber.toLowerCase().includes(params.vehicle!.toLowerCase()));
-          if (params.customer) local = local.filter(p => p.customerName.toLowerCase().includes(params.customer!.toLowerCase()));
-          if (params.orderNumber) local = local.filter(p => p.orderNumber.toLowerCase().includes(params.orderNumber!.toLowerCase()));
-          if (params.date) local = local.filter(p => p.createdAt.startsWith(params.date!));
-        }
-        return local;
-      }
+      const res = await axiosInstance.get('/pod', { params });
+      return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
     },
     getDriverPODs: async (): Promise<PODRecord[]> => {
-      try {
-        const res = await axiosInstance.get('/pod/driver');
-        return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
-      } catch (err) {
-        return LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
-      }
+      const res = await axiosInstance.get('/pod/driver');
+      return res.data.map((item: any) => ({ ...item, id: item._id || item.id }));
     },
     getById: async (id: string): Promise<PODRecord> => {
-      try {
-        const res = await axiosInstance.get(`/pod/${id}`);
-        return { ...res.data, id: res.data._id || res.data.id };
-      } catch (err) {
-        const local = LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
-        const item = local.find(p => p.id === id || p.podId === id);
-        if (!item) throw new Error('POD record not found');
-        return item;
-      }
+      const res = await axiosInstance.get(`/pod/${id}`);
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     upload: async (payload: {
       orderNumber: string;
@@ -1006,91 +526,19 @@ export const api = {
       latitude?: number;
       longitude?: number;
     }): Promise<PODRecord> => {
-      try {
-        const res = await axiosInstance.post('/pod/upload', payload);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
-        
-        // Prevent duplicate
-        const duplicate = local.find(p => p.orderNumber === payload.orderNumber);
-        if (duplicate) {
-          throw new Error(`POD for Order ${payload.orderNumber} has already been uploaded.`);
-        }
-
-        const podId = `POD-2026-${String(local.length + 8801).padStart(4, '0')}`;
-        // Read the real logged-in driver from localStorage (set during login)
-        const storedUser = (() => { try { return JSON.parse(localStorage.getItem('smartops_user') || '{}'); } catch { return {}; } })();
-        const primaryImg = payload.imageUrl || (payload.images && payload.images[0] ? payload.images[0] : 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=400&q=80');
-        const newRecord: PODRecord = {
-          id: `pod-${Date.now()}`,
-          podId,
-          driverId: storedUser.id || storedUser.driverId || 'DRV-9041',
-          driverName: storedUser.fullName || 'Driver Operator',
-          vehicleNumber: payload.vehicleNumber,
-          orderNumber: payload.orderNumber,
-          customerName: payload.customerName,
-          customerAddress: payload.customerAddress,
-          imageUrl: primaryImg,
-          images: payload.images && payload.images.length > 0 ? payload.images : [primaryImg],
-          signatureUrl: payload.signatureUrl,
-          remarks: payload.remarks,
-          latitude: payload.latitude,
-          longitude: payload.longitude,
-          status: 'Pending',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        
-        local.unshift(newRecord);
-        LocalStorageFallback.set('smartops_pods', local);
-        return newRecord;
-      }
+      const res = await axiosInstance.post('/pod/upload', payload);
+      return res.data;
     },
     approve: async (id: string): Promise<PODRecord> => {
-      try {
-        const res = await axiosInstance.put(`/pod/approve/${id}`);
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
-        const approver = (() => { try { return JSON.parse(localStorage.getItem('smartops_user') || '{}'); } catch { return {}; } })();
-        const updated = local.map(p => p.id === id || p.podId === id ? { 
-          ...p, 
-          status: 'Approved' as const, 
-          approvedBy: approver.fullName || 'Owner',
-          approvedAt: new Date().toISOString(),
-          rejectedReason: undefined
-        } : p);
-        LocalStorageFallback.set('smartops_pods', updated);
-        return updated.find(p => p.id === id || p.podId === id) as PODRecord;
-      }
+      const res = await axiosInstance.put(`/pod/approve/${id}`);
+      return res.data;
     },
-
     reject: async (id: string, rejectedReason: string): Promise<PODRecord> => {
-      try {
-        const res = await axiosInstance.put(`/pod/reject/${id}`, { rejectedReason });
-        return res.data;
-      } catch (err) {
-        const local = LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
-        const updated = local.map(p => p.id === id || p.podId === id ? { 
-          ...p, 
-          status: 'Rejected' as const, 
-          rejectedReason,
-          approvedBy: undefined,
-          approvedAt: undefined
-        } : p);
-        LocalStorageFallback.set('smartops_pods', updated);
-        return updated.find(p => p.id === id || p.podId === id) as PODRecord;
-      }
+      const res = await axiosInstance.put(`/pod/reject/${id}`, { rejectedReason });
+      return res.data;
     },
     delete: async (id: string): Promise<void> => {
-      try {
-        await axiosInstance.delete(`/pod/${id}`);
-      } catch (err) {
-        const local = LocalStorageFallback.get<PODRecord>('smartops_pods', mockPODs);
-        const filtered = local.filter(p => p.id !== id && p.podId !== id);
-        LocalStorageFallback.set('smartops_pods', filtered);
-      }
+      await axiosInstance.delete(`/pod/${id}`);
     }
   },
 

@@ -70,11 +70,18 @@ export const getDrivers = async (req: AuthRequest, res: Response) => {
         if (ownerUser.companyId && ownerUser.companyId.trim() !== '') {
           ownerCompanyId = ownerUser.companyId;
         } else if (ownerUser.role === 'Owner') {
-          // Auto-heal companyId for Owner if missing
-          ownerCompanyId = 'CMP-SMARTOPS';
-          ownerUser.companyId = ownerCompanyId;
-          if (!ownerUser.companyName) ownerUser.companyName = 'SmartOps Logistics';
-          await ownerUser.save().catch(() => {});
+          const CompanyModel = (await import('../models/Company')).default;
+          let company = await CompanyModel.findOne({ createdBy: String(ownerUser._id) });
+          if (!company && ownerUser.companyName) {
+            company = await CompanyModel.findOne({ companyName: ownerUser.companyName });
+          }
+          if (company) {
+            ownerCompanyId = company.companyId;
+            ownerUser.companyId = company.companyId;
+            if (typeof ownerUser.save === 'function') {
+              await ownerUser.save().catch(() => {});
+            }
+          }
         }
       }
     }

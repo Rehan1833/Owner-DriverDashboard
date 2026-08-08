@@ -174,6 +174,7 @@ export interface InventoryItem {
   remarks?: string;
   status?: string;
   // UI Compatibility fields
+  batchNumber?: string;
   name?: string;
   type?: 'Raw Material' | 'Finished Goods' | 'Packaging';
 }

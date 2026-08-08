@@ -123,9 +123,12 @@ export const getPODs = async (req: AuthRequest, res: Response) => {
     // Drivers can only see their own uploads
     if (req.userRole === 'Driver') {
       filter.driverId = req.userId;
-    } else if (req.companyId) {
-      // Owners can only see PODs from their company
-      filter.companyId = req.companyId;
+    } else {
+      const companyId = req.companyId;
+      if (!companyId) {
+        return res.status(403).json({ message: 'Access denied: Company context required.' });
+      }
+      filter.companyId = companyId;
     }
 
     // Query filters
@@ -186,6 +189,9 @@ export const getPODById = async (req: AuthRequest, res: Response) => {
     // Validate access boundaries
     if (req.userRole === 'Driver' && pod.driverId !== req.userId) {
       return res.status(403).json({ message: 'Access denied to other drivers\' POD logs.' });
+    }
+    if (req.userRole === 'Owner' && req.companyId && pod.companyId && pod.companyId !== req.companyId) {
+      return res.status(403).json({ message: 'Access denied: POD belongs to another company.' });
     }
 
     res.json(pod);

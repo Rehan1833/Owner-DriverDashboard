@@ -146,7 +146,9 @@ describe('Secure Driver & Owner Authentication & OTP Verification API', () => {
         fullName: 'Verified Owner',
         email: 'owner@smartops.com',
         role: 'Owner',
+        companyId: 'CMP-20202',
         isEmailVerified: true,
+        save: jest.fn().mockResolvedValue(true),
         comparePassword: jest.fn().mockResolvedValue(true)
       };
 

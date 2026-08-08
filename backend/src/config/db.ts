@@ -471,7 +471,12 @@ export const connectDB = async () => {
       process.once('SIGTERM', cleanup);
     } catch (fallbackErr: any) {
       console.error(`Database startup failed: ${fallbackErr.message}`);
+      throw new Error(`MongoDB connection failed: ${fallbackErr.message}`);
     }
+  }
+
+  if (mongoose.connection.readyState !== 1) {
+    throw new Error(`MongoDB connection readyState is not connected (state: ${mongoose.connection.readyState})`);
   }
 };
 

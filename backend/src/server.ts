@@ -43,13 +43,14 @@ const startServer = async () => {
   try {
     await connectDB();
     validateEmailEnvironment();
-  } catch (err: any) {
-    console.warn(`[SERVER STARTUP] Database initialization warning: ${err?.message || err}. Starting Express server...`);
-  }
 
-  server.listen(PORT, () => {
-    console.log(`SmartOps Express Server listening on port ${PORT}`);
-  });
+    server.listen(PORT, () => {
+      console.log(`SmartOps Express Server listening on port ${PORT}`);
+    });
+  } catch (err: any) {
+    console.error(`[SERVER STARTUP FATAL ERROR] Database initialization failed: ${err?.message || err}. Terminating server process.`);
+    process.exit(1);
+  }
 };
 
 startServer();

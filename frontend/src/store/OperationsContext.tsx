@@ -113,49 +113,43 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Load Data on Mount & Auth State changes
   const refreshAllData = async () => {
+    const jwtToken = localStorage.getItem('smartops_jwt');
+    if (!jwtToken || !user) {
+      return;
+    }
     try {
-      const [invData, attData, salData, fltData, trpData] = await Promise.all([
+      const [invData, attData, salData, fltData, trpData] = await Promise.allSettled([
         api.inventory.getAll(),
         api.attendance.getAll(),
         api.salary.getAll(),
         api.fleet.getAll(),
         api.trips.getAll()
       ]);
-      setInventory(invData);
-      setAttendance(attData);
-      setPayroll(salData);
-      setVehicles(fltData);
-      setTrips(trpData);
 
-      // Fetch fresh user profile if logged in
-      const jwtToken = localStorage.getItem('smartops_jwt');
-      if (jwtToken) {
+      if (invData.status === 'fulfilled') setInventory(invData.value);
+      if (attData.status === 'fulfilled') setAttendance(attData.value);
+      if (salData.status === 'fulfilled') setPayroll(salData.value);
+      if (fltData.status === 'fulfilled') setVehicles(fltData.value);
+      if (trpData.status === 'fulfilled') setTrips(trpData.value);
+
+      if (user.role === 'Owner') {
         try {
-          const profileRes = await api.user.getProfile();
-          if (profileRes?.user) {
-            setUser(profileRes.user);
-          }
-        } catch (pErr) {
-          console.warn('Profile fetch warning:', pErr);
+          const companyData = await api.company.getMyCompany();
+          if (companyData) setCompany(companyData);
+        } catch {
+          // ignore
         }
-      }
-
-      // Fetch company for Owner users
-      const savedUser = localStorage.getItem('smartops_user');
-      const currentUser: User | null = savedUser ? JSON.parse(savedUser) : null;
-      if (currentUser?.role === 'Owner') {
-        const companyData = await api.company.getMyCompany();
-        if (companyData) setCompany(companyData);
       }
     } catch (err) {
       console.error('Data refreshing error:', err);
     }
   };
 
-
   useEffect(() => {
-    refreshAllData();
-  }, [user]);
+    if (user && localStorage.getItem('smartops_jwt')) {
+      refreshAllData();
+    }
+  }, [user?.id, user?.companyId]);
 
   // Synthetic sound play helper
   const playAlertSound = () => {
