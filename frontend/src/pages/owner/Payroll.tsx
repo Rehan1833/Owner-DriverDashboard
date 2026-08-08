@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOperations } from '../../store/OperationsContext';
 import { Table } from '../../components/tables/Table';
 import { Badge } from '../../components/ui/Badge';
@@ -7,12 +7,48 @@ import { Modal } from '../../components/ui/Modal';
 import { OperationsChart } from '../../components/charts/Charts';
 import { CreditCard, Landmark, Clock, Plus, Edit2, Trash2, CheckCircle } from 'lucide-react';
 import { PayrollRecord } from '../../types';
+import { api } from '../../api/client';
 
 export const Payroll: React.FC = () => {
   const { payroll, createSalary, updateSalary, deleteSalary } = useOperations();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<PayrollRecord | null>(null);
+  const [employeeList, setEmployeeList] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await api.drivers.getAll();
+        const driversData = Array.isArray(res) ? res : res?.data || [];
+        const driverNames = driversData
+          .map((d: any) => d.fullName || d.name)
+          .filter(Boolean);
+
+        const namesSet = new Set<string>(driverNames);
+        payroll.forEach(p => {
+          if (p.employee) namesSet.add(p.employee);
+        });
+
+        if (namesSet.size === 0) {
+          ['Harpreet Singh', 'Rajesh Kumar', 'Vikram Sharma', 'Amit Patel', 'Suresh Verma'].forEach(n => namesSet.add(n));
+        }
+
+        setEmployeeList(Array.from(namesSet));
+      } catch (err) {
+        console.warn('Could not fetch drivers list:', err);
+        const namesSet = new Set<string>();
+        payroll.forEach(p => {
+          if (p.employee) namesSet.add(p.employee);
+        });
+        if (namesSet.size === 0) {
+          ['Harpreet Singh', 'Rajesh Kumar', 'Vikram Sharma', 'Amit Patel', 'Suresh Verma'].forEach(n => namesSet.add(n));
+        }
+        setEmployeeList(Array.from(namesSet));
+      }
+    };
+    fetchEmployees();
+  }, [payroll]);
 
   // Form state
   const [form, setForm] = useState({
@@ -35,8 +71,8 @@ export const Payroll: React.FC = () => {
   };
 
   // Calculate Net payout value helper
-  const calculateFinalSalary = (basic: number, ot: number, bon: number, allow: number, ded: number, tx: number) => {
-    return basic + ot + bon + allow - ded - tx;
+  const calculateFinalSalary = (basic: number, ot: number, bon: number) => {
+    return Number(basic || 0) + Number(ot || 0) + Number(bon || 0);
   };
 
   const handleCreateSubmit = (e: React.FormEvent) => {
@@ -44,13 +80,13 @@ export const Payroll: React.FC = () => {
     const finalVal = calculateFinalSalary(
       form.basicSalary,
       form.overtime,
-      form.bonus,
-      form.allowance,
-      form.deduction,
-      form.tax
+      form.bonus
     );
     createSalary({
       ...form,
+      allowance: 0,
+      deduction: 0,
+      tax: 0,
       finalSalary: finalVal,
       paymentDate: form.paymentStatus === 'Paid' ? new Date().toISOString().split('T')[0] : undefined
     });
@@ -65,9 +101,9 @@ export const Payroll: React.FC = () => {
       basicSalary: record.basicSalary,
       overtime: record.overtime,
       bonus: record.bonus,
-      allowance: record.allowance,
-      deduction: record.deduction,
-      tax: record.tax,
+      allowance: record.allowance || 0,
+      deduction: record.deduction || 0,
+      tax: record.tax || 0,
       paymentStatus: record.paymentStatus
     });
     setEditModalOpen(true);
@@ -75,17 +111,18 @@ export const Payroll: React.FC = () => {
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedRecord) {
+    const targetId = selectedRecord?.id || (selectedRecord as any)?._id;
+    if (targetId) {
       const finalVal = calculateFinalSalary(
         form.basicSalary,
         form.overtime,
-        form.bonus,
-        form.allowance,
-        form.deduction,
-        form.tax
+        form.bonus
       );
-      updateSalary(selectedRecord.id, {
+      updateSalary(targetId, {
         ...form,
+        allowance: 0,
+        deduction: 0,
+        tax: 0,
         finalSalary: finalVal,
         paymentDate: form.paymentStatus === 'Paid' ? new Date().toISOString().split('T')[0] : undefined
       });
@@ -95,13 +132,16 @@ export const Payroll: React.FC = () => {
   };
 
   const handleDeleteClick = (id: string) => {
-    if (confirm('Are you sure you want to remove this payroll record?')) {
+    if (id && confirm('Are you sure you want to remove this payroll record?')) {
       deleteSalary(id);
     }
   };
 
   const handleQuickRelease = (record: PayrollRecord) => {
-    updateSalary(record.id, { paymentStatus: 'Paid' });
+    const targetId = record.id || (record as any)._id;
+    if (targetId) {
+      updateSalary(targetId, { paymentStatus: 'Paid' });
+    }
   };
 
   const resetForm = () => {
@@ -160,12 +200,8 @@ export const Payroll: React.FC = () => {
       sortKey: 'basicSalary' as keyof PayrollRecord,
     },
     {
-      header: 'OT + Allowance',
-      accessor: (row: PayrollRecord) => `+INR ${(row.overtime + row.allowance).toLocaleString()}`,
-    },
-    {
-      header: 'Tax + Deductions',
-      accessor: (row: PayrollRecord) => `-INR ${(row.tax + row.deduction).toLocaleString()}`,
+      header: 'OT + Bonus',
+      accessor: (row: PayrollRecord) => `+INR ${((row.overtime || 0) + (row.bonus || 0) + (row.allowance || 0)).toLocaleString()}`,
     },
     {
       header: 'Net Pay',
@@ -176,20 +212,23 @@ export const Payroll: React.FC = () => {
     },
     {
       header: 'Payment Status',
-      accessor: (row: PayrollRecord) => (
-        <Badge variant={row.paymentStatus === 'Paid' ? 'success' : 'warning'}>
-          {row.paymentStatus}
-        </Badge>
-      ),
+      accessor: (row: PayrollRecord) => {
+        const isApproved = row.paymentStatus === 'Paid' || row.paymentStatus === 'Approved';
+        return (
+          <Badge variant={isApproved ? 'success' : 'warning'}>
+            {isApproved ? 'Approved' : 'Pending'}
+          </Badge>
+        );
+      },
       sortKey: 'paymentStatus' as keyof PayrollRecord,
     },
     {
       header: 'Actions',
       accessor: (row: PayrollRecord) => {
-        const isPending = row.paymentStatus === 'Pending';
+        const isApproved = row.paymentStatus === 'Paid' || row.paymentStatus === 'Approved';
         return (
           <div className="flex items-center gap-2">
-            {isPending ? (
+            {!isApproved ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -200,7 +239,7 @@ export const Payroll: React.FC = () => {
               </Button>
             ) : (
               <span className="text-[#10B981] text-xs font-bold flex items-center gap-0.5 px-2">
-                <CheckCircle className="h-4 w-4" /> Paid
+                <CheckCircle className="h-4 w-4" /> Approved
               </span>
             )}
             <button
@@ -210,7 +249,7 @@ export const Payroll: React.FC = () => {
               <Edit2 className="h-4 w-4" />
             </button>
             <button
-              onClick={() => handleDeleteClick(row.id)}
+              onClick={() => handleDeleteClick(row.id || (row as any)._id)}
               className="p-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-slate-400 hover:text-[#EF4444] transition-colors cursor-pointer"
             >
               <Trash2 className="h-4 w-4" />
@@ -302,16 +341,24 @@ export const Payroll: React.FC = () => {
         <Modal key={idx} isOpen={modal.isOpen} onClose={() => modal.setOpen(false)} title={modal.title} size="md">
           <form onSubmit={modal.submit} className="space-y-4 text-left">
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Employee Name</label>
-              <input
-                type="text"
+              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Emp Name</label>
+              <select
                 required
                 name="employee"
-                placeholder="e.g. Driver Name"
                 value={form.employee}
                 onChange={handleInputChange}
-                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
-              />
+                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
+              >
+                <option value="">Select Emp Name</option>
+                {employeeList.map((emp) => (
+                  <option key={emp} value={emp}>
+                    {emp}
+                  </option>
+                ))}
+                {form.employee && !employeeList.includes(form.employee) && (
+                  <option value={form.employee}>{form.employee}</option>
+                )}
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -339,52 +386,15 @@ export const Payroll: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Bonuses (INR)</label>
-                <input
-                  type="number"
-                  name="bonus"
-                  value={form.bonus}
-                  onChange={handleInputChange}
-                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Other Allowances (INR)</label>
-                <input
-                  type="number"
-                  name="allowance"
-                  value={form.allowance}
-                  onChange={handleInputChange}
-                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Deductions (INR)</label>
-                <input
-                  type="number"
-                  name="deduction"
-                  value={form.deduction}
-                  onChange={handleInputChange}
-                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Tax Withholdings (INR)</label>
-                <input
-                  type="number"
-                  name="tax"
-                  value={form.tax}
-                  onChange={handleInputChange}
-                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
-                />
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Bonuses (INR)</label>
+              <input
+                type="number"
+                name="bonus"
+                value={form.bonus}
+                onChange={handleInputChange}
+                className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+              />
             </div>
 
             <div className="space-y-1.5 text-left">
@@ -396,14 +406,14 @@ export const Payroll: React.FC = () => {
                 className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
               >
                 <option value="Pending">Pending Approval</option>
-                <option value="Paid">Disbursed (Paid)</option>
+                <option value="Paid">Approved</option>
               </select>
             </div>
 
             <div className="bg-[#F8F9FF] dark:bg-[#0F172A]/60 rounded-xl p-4.5 border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800/80 flex justify-between items-center text-sm font-bold text-slate-700 dark:text-[#CBD5E1]">
               <span>Auto-Calculated Net Pay:</span>
               <span className="text-[#006A6A] dark:text-[#14B8A6]">
-                INR {calculateFinalSalary(form.basicSalary, form.overtime, form.bonus, form.allowance, form.deduction, form.tax).toLocaleString()}
+                INR {calculateFinalSalary(form.basicSalary, form.overtime, form.bonus).toLocaleString()}
               </span>
             </div>
 
@@ -421,5 +431,6 @@ export const Payroll: React.FC = () => {
     </div>
   );
 };
+
 
 

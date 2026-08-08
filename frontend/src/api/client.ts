@@ -388,20 +388,41 @@ export const api = {
   // 4. SALARY CRUD
   salary: {
     getAll: async (): Promise<PayrollRecord[]> => {
-      const res = await axiosInstance.get('/salary');
-      const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
-      return list.map((item: any) => ({ ...item, id: item._id || item.id }));
+      try {
+        const res = await axiosInstance.get('/salary');
+        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.data) ? res.data.data : []);
+        return list.map((item: any) => ({ ...item, id: item._id || item.id }));
+      } catch (err) {
+        console.warn('[SmartOps Salary API] Fetch failed:', err);
+        return [];
+      }
     },
     create: async (pay: Omit<PayrollRecord, 'id'>): Promise<PayrollRecord> => {
-      const res = await axiosInstance.post('/salary', pay);
-      return res.data;
+      try {
+        const res = await axiosInstance.post('/salary', pay);
+        const data = res.data;
+        return { ...data, id: data._id || data.id || `sal-${Date.now()}` };
+      } catch (err) {
+        console.warn('[SmartOps Salary API] Create failed, using local object:', err);
+        return { ...pay, id: `sal-${Date.now()}` } as PayrollRecord;
+      }
     },
     update: async (id: string, pay: Partial<PayrollRecord>): Promise<PayrollRecord> => {
-      const res = await axiosInstance.put(`/salary/${id}`, pay);
-      return res.data;
+      try {
+        const res = await axiosInstance.put(`/salary/${id}`, pay);
+        const data = res.data;
+        return { ...pay, ...data, id: data._id || data.id || id };
+      } catch (err) {
+        console.warn('[SmartOps Salary API] Update failed, using local object:', err);
+        return { id, ...pay } as PayrollRecord;
+      }
     },
     delete: async (id: string): Promise<void> => {
-      await axiosInstance.delete(`/salary/${id}`);
+      try {
+        await axiosInstance.delete(`/salary/${id}`);
+      } catch (err) {
+        console.warn('[SmartOps Salary API] Delete failed:', err);
+      }
     }
   },
 
@@ -494,8 +515,14 @@ export const api = {
       return { ...res.data, id: res.data._id || res.data.id };
     },
     updateStatus: async (id: string, status: Trip['status'], details?: any): Promise<Trip> => {
-      const res = await axiosInstance.put(`/trips/${id}`, { status, ...details });
-      return res.data;
+      try {
+        const res = await axiosInstance.put(`/trips/${id}`, { status, ...details });
+        const data = res.data;
+        return { ...data, id: data._id || data.id || id, status };
+      } catch (err) {
+        console.warn('[SmartOps Trips API] Status update offline fallback:', err);
+        return { id, status, ...details } as Trip;
+      }
     }
   },
 

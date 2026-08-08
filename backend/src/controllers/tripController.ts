@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Response } from 'express';
 import Trip from '../models/Trip';
 import LocationHistory from '../models/LocationHistory';
@@ -12,6 +13,47 @@ import {
 } from '../services/googleMapsService';
 
 const GEOFENCE_RADIUS_METERS = parseInt(process.env.GEOFENCE_RADIUS_METERS || '100', 10);
+
+/**
+ * Helper to safely find a Trip document by _id, tripNumber, or custom id string
+ * Prevents Mongoose CastError (HTTP 400) when non-ObjectId trip strings (e.g. TRP-527398) are supplied.
+ */
+const findTripDoc = async (idOrNumber: string) => {
+  if (!idOrNumber) return null;
+  if (mongoose.Types.ObjectId.isValid(idOrNumber)) {
+    const doc = await Trip.findById(idOrNumber);
+    if (doc) return doc;
+  }
+  return await Trip.findOne({
+    $or: [
+      { tripNumber: idOrNumber },
+      { id: idOrNumber },
+      { invoiceNumber: idOrNumber }
+    ]
+  });
+};
+
+/**
+ * Helper to safely update a Trip document by _id, tripNumber, or custom id string
+ */
+const findAndUpdateTripDoc = async (idOrNumber: string, updateData: any) => {
+  if (!idOrNumber) return null;
+  if (mongoose.Types.ObjectId.isValid(idOrNumber)) {
+    const updated = await Trip.findByIdAndUpdate(idOrNumber, updateData, { new: true });
+    if (updated) return updated;
+  }
+  return await Trip.findOneAndUpdate(
+    {
+      $or: [
+        { tripNumber: idOrNumber },
+        { id: idOrNumber },
+        { invoiceNumber: idOrNumber }
+      ]
+    },
+    updateData,
+    { new: true }
+  );
+};
 
 export const getTrips = async (req: any, res: any): Promise<any> => {
   try {
@@ -157,7 +199,7 @@ export const getActiveTrip = async (req: any, res: any): Promise<any> => {
 
 export const getTripById = async (req: any, res: any): Promise<any> => {
   try {
-    const trip = await Trip.findById(req.params.id);
+    const trip = await findTripDoc(req.params.id);
     if (!trip) {
       res.status(404).json({ message: 'Trip not found.' });
       return;
@@ -181,7 +223,7 @@ export const assignTrip = async (req: any, res: any): Promise<any> => {
     const { id } = req.params;
     const { driverId, driverName, vehicleNumber } = req.body;
 
-    const trip = await Trip.findById(id);
+    const trip = await findTripDoc(id);
     if (!trip) {
       res.status(404).json({ message: 'Trip not found.' });
       return;
@@ -209,7 +251,7 @@ export const assignTrip = async (req: any, res: any): Promise<any> => {
 export const acceptTrip = async (req: any, res: any): Promise<any> => {
   try {
     const { id } = req.params;
-    const trip = await Trip.findById(id);
+    const trip = await findTripDoc(id);
     if (!trip) {
       res.status(404).json({ message: 'Trip not found.' });
       return;
@@ -230,7 +272,7 @@ export const startTrip = async (req: any, res: any): Promise<any> => {
     const { id } = req.body.id ? req.body : req.params;
     const tripId = id || req.params.id;
 
-    const trip = await Trip.findById(tripId);
+    const trip = await findTripDoc(tripId);
     if (!trip) {
       res.status(404).json({ message: 'Trip not found.' });
       return;
@@ -252,7 +294,7 @@ export const updateLocation = async (req: any, res: any): Promise<any> => {
     const { id, latitude, longitude, accuracy, speed, heading, distanceRemaining, eta, timestamp } = req.body;
     const tripId = id || req.params.id;
 
-    const existingTrip = await Trip.findById(tripId);
+    const existingTrip = await findTripDoc(tripId);
     if (!existingTrip) {
       res.status(404).json({ message: 'Trip not found.' });
       return;
@@ -408,7 +450,7 @@ export const arriveStop = async (req: any, res: any): Promise<any> => {
     const { id, stopId } = req.params;
     const { latitude, longitude } = req.body;
 
-    const trip = await Trip.findById(id);
+    const trip = await findTripDoc(id);
     if (!trip) {
       res.status(404).json({ message: 'Trip not found.' });
       return;
@@ -451,7 +493,7 @@ export const completeStop = async (req: any, res: any): Promise<any> => {
     const { id, stopId } = req.params;
     const { podId, stopReason, notes } = req.body;
 
-    const trip = await Trip.findById(id);
+    const trip = await findTripDoc(id);
     if (!trip) {
       res.status(404).json({ message: 'Trip not found.' });
       return;
@@ -489,7 +531,7 @@ export const reportDelay = async (req: any, res: any): Promise<any> => {
     const { id } = req.params;
     const { reason, note } = req.body;
 
-    const trip = await Trip.findById(id);
+    const trip = await findTripDoc(id);
     if (!trip) {
       res.status(404).json({ message: 'Trip not found.' });
       return;
@@ -511,7 +553,7 @@ export const reportIncident = async (req: any, res: any): Promise<any> => {
     const { id } = req.params;
     const { incidentType, description } = req.body;
 
-    const trip = await Trip.findById(id);
+    const trip = await findTripDoc(id);
     if (!trip) {
       res.status(404).json({ message: 'Trip not found.' });
       return;
@@ -531,7 +573,7 @@ export const reportIncident = async (req: any, res: any): Promise<any> => {
 export const getTripLiveTracking = async (req: any, res: any): Promise<any> => {
   try {
     const { id } = req.params;
-    const trip = await Trip.findById(id);
+    const trip = await findTripDoc(id);
     if (!trip) {
       res.status(404).json({ message: 'Trip not found.' });
       return;
@@ -620,15 +662,14 @@ export const completeTrip = async (req: any, res: any): Promise<any> => {
   try {
     const { id, signatureData, photo } = req.body;
     const tripId = id || req.params.id;
-    const updated = await Trip.findByIdAndUpdate(
+    const updated = await findAndUpdateTripDoc(
       tripId,
       {
         status: 'Completed',
         completedAt: new Date(),
         ...(signatureData ? { signatureData } : {}),
         ...(photo ? { photo } : {})
-      },
-      { new: true }
+      }
     );
     if (!updated) {
       res.status(404).json({ message: 'Trip not found.' });
@@ -643,8 +684,13 @@ export const completeTrip = async (req: any, res: any): Promise<any> => {
 
 export const updateTrip = async (req: any, res: any): Promise<any> => {
   try {
-    const updated = await Trip.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    emitTelemetryUpdate({ tripId: req.params.id, update: req.body });
+    const idParam = req.params.id;
+    const updated = await findAndUpdateTripDoc(idParam, req.body);
+    if (!updated) {
+      res.status(404).json({ message: `Trip not found.` });
+      return;
+    }
+    emitTelemetryUpdate({ tripId: updated._id.toString(), update: req.body });
     res.json(updated);
   } catch (err: any) {
     res.status(400).json({ message: err.message });
@@ -654,7 +700,7 @@ export const updateTrip = async (req: any, res: any): Promise<any> => {
 export const cancelTrip = async (req: any, res: any): Promise<any> => {
   try {
     const { id } = req.params;
-    const trip = await Trip.findById(id);
+    const trip = await findTripDoc(id);
     if (!trip) {
       res.status(404).json({ message: 'Trip not found.' });
       return;

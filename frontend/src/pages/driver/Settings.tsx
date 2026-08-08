@@ -13,7 +13,6 @@ export const Settings: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 
   // Settings states
-  const [language, setLanguage] = useState('English');
   const [soundAlerts, setSoundAlerts] = useState(true);
   const [notifyTrips, setNotifyTrips] = useState(true);
   const [notifyMaintenance, setNotifyMaintenance] = useState(true);
@@ -95,24 +94,6 @@ export const Settings: React.FC = () => {
                   <><Moon className="h-4 w-4 text-[#7DF5F5] dark:text-[#94A3B8]" /><span>Dark</span></>
                 )}
               </button>
-            </div>
-
-            {/* Language Selector */}
-            <div className="flex justify-between items-center pt-3.5 border-t border-[#E5E7EB] dark:border-[#334155] text-left">
-              <div className="space-y-0.5">
-                <span className="block text-[#111827] dark:text-[#F8FAFC]">Operating Language</span>
-                <span className="text-[11px] text-[#6B7280] dark:text-[#94A3B8] block font-semibold">Select navigation localization text scripts.</span>
-              </div>
-              <select
-                value={language}
-                onChange={e => setLanguage(e.target.value)}
-                className="h-9 border border-[#E5E7EB] dark:border-[#334155] bg-white dark:bg-[#0F172A] text-[#111827] dark:text-white rounded-xl px-3.5 text-xs focus:outline-none font-bold cursor-pointer"
-              >
-                <option>English</option>
-                <option>Hindi (हिंदी)</option>
-                <option>Marathi (मराठी)</option>
-                <option>Punjabi (ਪੰਜਾਬੀ)</option>
-              </select>
             </div>
           </div>
         </div>
