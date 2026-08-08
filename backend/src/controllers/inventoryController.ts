@@ -141,7 +141,7 @@ export const createInventory = async (req: AuthRequest, res: Response) => {
       reservedStock: Number(reservedStock) || 0,
       warehouse: warehouse || 'Primary Warehouse',
       storageLocation: storageLocation || 'Warehouse Floor',
-      supplier: supplier || '',
+      supplier: supplier && String(supplier).trim() ? String(supplier).trim() : 'General Supplier',
       batchNumber: batchNumber || '',
       expiryDate: expiryDate || '',
       manufacturingDate: manufacturingDate || '',
