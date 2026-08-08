@@ -448,13 +448,8 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Inventory CRUD triggers
   const createInventory = async (item: Omit<InventoryItem, 'id'>): Promise<InventoryItem> => {
     const created = await api.inventory.create(item);
-<<<<<<< HEAD
-    setInventory(prev => [...prev, created]);
-    addActivity('Inventory Created', `Added new item: ${item.itemName} (${item.sku})`, 'inventory');
-=======
     setInventory(prev => [created, ...prev]);
     addActivity('Inventory Created', `Added new item: ${item.itemName} (${item.sku || created.sku})`, 'inventory');
->>>>>>> 3df57350 (fix: remove MongoDB transactions and memory-server fallback, add localhost fallback, fix fleet and inventory CRUD reliability)
     if (created.quantity <= (created.minimumQuantity || 0)) {
       triggerNotification('Low Stock', 'Safety Limit Alert', `Stock level for ${item.itemName} is below minimum capacity.`, 'Warning');
     }
