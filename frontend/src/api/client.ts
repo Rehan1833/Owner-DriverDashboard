@@ -322,7 +322,7 @@ export const api = {
     },
     create: async (item: Omit<InventoryItem, 'id'>): Promise<InventoryItem> => {
       const res = await axiosInstance.post('/inventory', item);
-      return res.data;
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     update: async (id: string, item: Partial<InventoryItem>): Promise<InventoryItem> => {
       const res = await axiosInstance.put(`/inventory/${id}`, item);
@@ -414,11 +414,11 @@ export const api = {
     },
     create: async (vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle> => {
       const res = await axiosInstance.post('/fleet', vehicle);
-      return res.data;
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     update: async (id: string, vehicle: Partial<Vehicle>): Promise<Vehicle> => {
       const res = await axiosInstance.put(`/fleet/${id}`, vehicle);
-      return res.data;
+      return { ...res.data, id: res.data._id || res.data.id };
     },
     delete: async (id: string): Promise<void> => {
       await axiosInstance.delete(`/fleet/${id}`);

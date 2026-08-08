@@ -15,6 +15,8 @@ export const Fleet: React.FC = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [selectedPODTrip, setSelectedPODTrip] = useState<Trip | null>(null);
   const [trackingModalTrip, setTrackingModalTrip] = useState<Trip | null>(null);
+  const [fleetError, setFleetError] = useState<string | null>(null);
+  const [fleetSubmitting, setFleetSubmitting] = useState(false);
 
   const downloadPODPDF = (trip: Trip) => {
     alert(`Compiling Proof of Delivery PDF for ${trip.tripNumber}... Download started!`);
@@ -112,11 +114,20 @@ export const Fleet: React.FC = () => {
     }));
   };
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    createVehicle(form);
-    setCreateModalOpen(false);
-    resetForm();
+    setFleetError(null);
+    setFleetSubmitting(true);
+    try {
+      await createVehicle(form);
+      setCreateModalOpen(false);
+      resetForm();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to register vehicle.';
+      setFleetError(msg);
+    } finally {
+      setFleetSubmitting(false);
+    }
   };
 
   const handleEditClick = (veh: Vehicle) => {
@@ -137,18 +148,31 @@ export const Fleet: React.FC = () => {
     setEditModalOpen(true);
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedVehicle) {
-      updateVehicle(selectedVehicle.id, form);
+    if (!selectedVehicle) return;
+    setFleetError(null);
+    setFleetSubmitting(true);
+    try {
+      await updateVehicle(selectedVehicle.id, form);
+      setEditModalOpen(false);
+      resetForm();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to update vehicle.';
+      setFleetError(msg);
+    } finally {
+      setFleetSubmitting(false);
     }
-    setEditModalOpen(false);
-    resetForm();
   };
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = async (id: string) => {
     if (confirm('Are you sure you want to remove this vehicle asset from register?')) {
-      deleteVehicle(id);
+      try {
+        await deleteVehicle(id);
+      } catch (err: any) {
+        const msg = err?.response?.data?.message || err?.message || 'Failed to delete vehicle.';
+        setFleetError(msg);
+      }
     }
   };
 
@@ -359,7 +383,20 @@ export const Fleet: React.FC = () => {
         </Button>
       </div>
 
-      {/* Stats */}
+      {/* Fleet Error Banner */}
+      {fleetError && (
+        <div className="flex items-center gap-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3">
+          <span className="text-red-600 dark:text-red-400 text-sm font-semibold">⚠ {fleetError}</span>
+          <button
+            onClick={() => setFleetError(null)}
+            className="ml-auto text-red-400 hover:text-red-600 text-xs font-bold cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5EEFF] dark:border-[#334155] shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
           <div className="p-3.5 rounded-xl bg-[#006A6A]/10 text-[#006A6A] dark:text-[#14B8A6]">
@@ -583,8 +620,9 @@ export const Fleet: React.FC = () => {
               <Button type="button" variant="outline" onClick={() => modal.setOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary">
-                Save Vehicle
+              <Button type="submit" variant="primary" disabled={fleetSubmitting}>
+                {fleetSubmitting ? 'Saving...' : 'Save Vehicle'}
+
               </Button>
             </div>
           </form>

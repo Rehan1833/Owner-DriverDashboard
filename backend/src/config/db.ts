@@ -1,11 +1,10 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import path from 'path';
-import fs from 'fs';
 import User from '../models/User';
 import Product from '../models/Product';
 import Inventory from '../models/Inventory';
 import Company, { generateCompanyId } from '../models/Company';
+
 
 const seedDefaultInventory = async () => {
   try {
@@ -388,95 +387,66 @@ const seedDefaultAccounts = async () => {
 };
 
 export const connectDB = async () => {
+  const primaryUri = process.env.MONGO_URI || 'mongodb://localhost:27017/smartops';
+
+  // ── Attempt 1: Primary URI (Atlas or configured MONGO_URI) ─────────────────
   try {
-    const connStr = process.env.MONGO_URI || 'mongodb://localhost:27017/smartops';
-    console.log(`Connecting to MongoDB: ${connStr}...`);
-    
-    // Set connection timeouts so it doesn't hang indefinitely on offline DBs
-    const conn = await mongoose.connect(connStr, {
-      serverSelectionTimeoutMS: 5000
+    console.log(`Connecting to MongoDB: ${primaryUri.replace(/:([^:@]{4})[^:@]*@/, ':****@')}...`);
+    const conn = await mongoose.connect(primaryUri, {
+      serverSelectionTimeoutMS: 6000
     });
-    
     console.log(`MongoDB Connected successfully: ${conn.connection.host}`);
     await seedDefaultAccounts();
     await seedDefaultInventory();
 
-    // Clean up legacy/stale collection indexes (e.g., username_1)
+    // Drop legacy stale indexes
     try {
       if (mongoose.connection.db) {
-        const usersCollection = mongoose.connection.db.collection('users');
-        const indexes = await usersCollection.indexes();
-        if (indexes.some(idx => idx.name === 'username_1')) {
-          await usersCollection.dropIndex('username_1');
-          console.log('[DB FIX] Dropped legacy username_1 index from users collection.');
+        const usersCol = mongoose.connection.db.collection('users');
+        const indexes = await usersCol.indexes();
+        if (indexes.some((idx: any) => idx.name === 'username_1')) {
+          await usersCol.dropIndex('username_1');
+          console.log('[DB] Dropped legacy username_1 index.');
         }
       }
-    } catch (indexErr: any) {
-      console.log('[DB INDEX SYNC] Legacy index check completed:', indexErr.message);
+    } catch {
+      // ignore — index cleanup is non-critical
     }
-  } catch (err: any) {
-    console.error(`MongoDB connection warning: ${err.message}`);
-    console.log('Backend will operate in persistent local database fallback if local daemon is unavailable.');
-    
+    return;
+  } catch (primaryErr: any) {
+    console.warn(`[DB] Primary MongoDB unreachable: ${primaryErr.message}`);
+  }
+
+  // ── Attempt 2: Local MongoDB fallback (localhost:27017) ────────────────────
+  // This runs when Atlas is unavailable (e.g., IP not whitelisted in Atlas Network Access).
+  // Install MongoDB Community Edition locally if this also fails:
+  // https://www.mongodb.com/try/download/community
+  const localUri = 'mongodb://localhost:27017/smartops';
+  if (primaryUri !== localUri) {
     try {
-      console.log('Starting MongoMemoryServer with local disk storage persistence...');
-      // @ts-ignore
-      const { MongoMemoryServer } = await import('mongodb-memory-server');
-
-      const dataDir = path.join(process.cwd(), '.mongo_data');
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-      }
-
-      // Remove stale lock file if present from an unclean termination
-      const lockFile = path.join(dataDir, 'mongod.lock');
-      if (fs.existsSync(lockFile)) {
-        try {
-          fs.unlinkSync(lockFile);
-        } catch {
-          // ignore
-        }
-      }
-
-      let mongoServer: any;
-      try {
-        mongoServer = await MongoMemoryServer.create({
-          instance: {
-            dbPath: dataDir,
-            storageEngine: 'wiredTiger'
-          }
-        });
-      } catch (dbPathErr: any) {
-        console.warn(`Persistent dbPath creation warning: ${dbPathErr.message}. Falling back to standard MongoMemoryServer...`);
-        mongoServer = await MongoMemoryServer.create();
-      }
-
-      const mongoUri = mongoServer.getUri();
-      console.log(`MongoDB instance started at ${mongoUri}`);
-      
-      await mongoose.connect(mongoUri);
-      console.log('Connected successfully to local MongoDB fallback!');
+      console.log('[DB] Falling back to local MongoDB at mongodb://localhost:27017/smartops ...');
+      const conn = await mongoose.connect(localUri, {
+        serverSelectionTimeoutMS: 4000
+      });
+      console.log(`[DB] Connected to local MongoDB: ${conn.connection.host}`);
       await seedDefaultAccounts();
       await seedDefaultInventory();
-
-      const cleanup = async () => {
-        try {
-          await mongoose.disconnect();
-          await mongoServer.stop();
-        } catch {
-          // ignore
-        }
-      };
-      process.once('SIGINT', cleanup);
-      process.once('SIGTERM', cleanup);
-    } catch (fallbackErr: any) {
-      console.error(`Database startup failed: ${fallbackErr.message}`);
-      throw new Error(`MongoDB connection failed: ${fallbackErr.message}`);
+      return;
+    } catch (localErr: any) {
+      console.warn(`[DB] Local MongoDB also unavailable: ${localErr.message}`);
     }
   }
 
+  // ── Both connections failed ─────────────────────────────────────────────────
   if (mongoose.connection.readyState !== 1) {
-    throw new Error(`MongoDB connection readyState is not connected (state: ${mongoose.connection.readyState})`);
+    throw new Error(
+      `MongoDB connection failed. Please do ONE of the following:\n` +
+      `  1. Whitelist your current IP in Atlas Network Access:\n` +
+      `     https://cloud.mongodb.com → Network Access → Add IP Address → Allow Current IP\n` +
+      `  2. Install MongoDB Community Edition locally:\n` +
+      `     https://www.mongodb.com/try/download/community\n` +
+      `     Then run: mongod --dbpath ./data/db`
+    );
   }
 };
 

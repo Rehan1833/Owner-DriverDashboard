@@ -24,12 +24,13 @@ export const Inventory: React.FC = () => {
 
   const handleCreateSubmit = async (itemData: Omit<InventoryItem, 'id'>, openMoreDetails = false) => {
     try {
+      // createInventory now returns the real DB item with MongoDB _id
       const createdItem = await createInventory(itemData);
 
       setToast({
         id: `toast-${Date.now()}`,
         title: 'Inventory Item Created Successfully',
-        message: `${itemData.itemName} (${itemData.sku}) saved to stock.`,
+        message: `${createdItem.itemName} (${createdItem.sku}) saved to stock.`,
         actionLabel: 'Complete More Details',
         onAction: () => {
           setSelectedItem(createdItem);
@@ -42,11 +43,12 @@ export const Inventory: React.FC = () => {
         setEditModalOpen(true);
       }
     } catch (err: any) {
-      console.error('Failed to create inventory item:', err);
+      const msg = err?.response?.data?.message || err?.message || 'Failed to save inventory item.';
+      console.error('[Inventory] createInventory failed:', msg);
       setToast({
-        id: `toast-${Date.now()}`,
-        title: 'Failed to Create',
-        message: err?.response?.data?.message || err.message || 'Failed to create inventory item. Please try again.',
+        id: `toast-err-${Date.now()}`,
+        title: 'Failed to Add Item',
+        message: msg,
       });
       throw err;
     }
