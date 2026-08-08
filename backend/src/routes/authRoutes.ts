@@ -1,15 +1,13 @@
 import { Router } from 'express';
 import { register, login, logout, googleAuth, forgotPassword, resetPasswordWithSecurity, sendOTP, verifyOTP, getSecurityQuestion } from '../controllers/authController';
-import { globalAuthLimiter, loginLimiter, otpLimiter } from '../middleware/rateLimiter';
 import { authenticateJWT } from '../middleware/authMiddleware';
 
 const router = Router();
 
-// Apply global rate limiting across all auth endpoints (/api/auth/*)
-router.use(globalAuthLimiter);
+
 
 // Auth endpoints with specific rate limiters
-router.post('/login', loginLimiter, login);
+router.post('/login', login);
 router.post('/logout', (req, res, next) => {
   // Optional JWT middleware: attach user if header present, but don't block request if missing
   const authHeader = req.headers.authorization;
@@ -18,8 +16,8 @@ router.post('/logout', (req, res, next) => {
   }
   next();
 }, logout);
-router.post('/send-otp', otpLimiter, sendOTP);
-router.post('/verify-otp', otpLimiter, verifyOTP);
+router.post('/send-otp', sendOTP);
+router.post('/verify-otp', verifyOTP);
 
 // Other auth endpoints
 router.post('/register', register);

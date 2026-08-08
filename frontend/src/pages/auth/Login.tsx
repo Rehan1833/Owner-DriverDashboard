@@ -93,7 +93,7 @@ export const Login: React.FC = () => {
       } else if (err.message === 'Network Error' || !err.response) {
         setErrorMsg('Backend server is not running or unreachable at http://localhost:5000. Please ensure the Express server is running.');
       } else if (err.response?.status === 404) {
-        setErrorMsg('API endpoint not found. Please check backend server routes.');
+        setErrorMsg(err.response?.data?.message || 'API endpoint not found. Please check backend server routes.');
       } else if (err.response?.status === 401 || err.response?.status === 403) {
         setErrorMsg(err.response?.data?.message || 'Authentication failed. Please verify your email and password.');
       } else if (err.response?.data?.message) {
