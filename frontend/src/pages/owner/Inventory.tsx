@@ -24,13 +24,7 @@ export const Inventory: React.FC = () => {
 
   const handleCreateSubmit = async (itemData: Omit<InventoryItem, 'id'>, openMoreDetails = false) => {
     try {
-      await createInventory(itemData);
-
-      // Create a local reference for the created item for "Complete More Details" button action
-      const createdItem: InventoryItem = {
-        ...itemData,
-        id: `i-${Date.now()}`,
-      };
+      const createdItem = await createInventory(itemData);
 
       setToast({
         id: `toast-${Date.now()}`,
@@ -47,8 +41,14 @@ export const Inventory: React.FC = () => {
         setSelectedItem(createdItem);
         setEditModalOpen(true);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create inventory item:', err);
+      setToast({
+        id: `toast-${Date.now()}`,
+        title: 'Failed to Create',
+        message: err?.response?.data?.message || err.message || 'Failed to create inventory item. Please try again.',
+      });
+      throw err;
     }
   };
 
@@ -65,19 +65,34 @@ export const Inventory: React.FC = () => {
         title: 'Inventory Item Updated',
         message: 'Stock details modified successfully.',
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to update inventory item:', err);
+      setToast({
+        id: `toast-${Date.now()}`,
+        title: 'Failed to Update',
+        message: err?.response?.data?.message || err.message || 'Failed to update inventory item.',
+      });
+      throw err;
     }
   };
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = async (id: string) => {
     if (confirm('Are you sure you want to remove this stock record?')) {
-      deleteInventory(id);
-      setToast({
-        id: `toast-${Date.now()}`,
-        title: 'Inventory Item Removed',
-        message: 'Item has been deleted from your inventory.',
-      });
+      try {
+        await deleteInventory(id);
+        setToast({
+          id: `toast-${Date.now()}`,
+          title: 'Inventory Item Removed',
+          message: 'Item has been deleted from your inventory.',
+        });
+      } catch (err: any) {
+        console.error('Failed to delete inventory item:', err);
+        setToast({
+          id: `toast-${Date.now()}`,
+          title: 'Failed to Delete',
+          message: err?.response?.data?.message || err.message || 'Failed to delete inventory item.',
+        });
+      }
     }
   };
   // Calculate stats

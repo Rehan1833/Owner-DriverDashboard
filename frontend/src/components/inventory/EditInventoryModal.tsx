@@ -8,7 +8,7 @@ interface EditInventoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   item: InventoryItem | null;
-  onSubmit: (id: string, item: Partial<InventoryItem>) => void;
+  onSubmit: (id: string, item: Partial<InventoryItem>) => Promise<void>;
 }
 
 export const EditInventoryModal: React.FC<EditInventoryModalProps> = ({
@@ -82,11 +82,15 @@ export const EditInventoryModal: React.FC<EditInventoryModalProps> = ({
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!item) return;
-    onSubmit(item.id, form);
-    onClose();
+    try {
+      await onSubmit(item.id, form);
+      onClose();
+    } catch (err) {
+      // Keep modal open on failure
+    }
   };
 
   const categoryOptions = [

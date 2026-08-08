@@ -7,7 +7,7 @@ import { ArrowRight, ArrowLeft, Check, Sparkles, Package, ShieldAlert, Calendar,
 interface CreateInventoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (item: Omit<InventoryItem, 'id'>, requestCompleteDetails?: boolean) => void;
+  onSubmit: (item: Omit<InventoryItem, 'id'>, requestCompleteDetails?: boolean) => Promise<void>;
 }
 
 const generateRandomSKU = () => {
@@ -120,12 +120,16 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
     setForm(prev => ({ ...prev, sku: generateRandomSKU() }));
   };
 
-  const handleSubmit = (e: React.FormEvent, openMoreDetails = false) => {
+  const handleSubmit = async (e: React.FormEvent, openMoreDetails = false) => {
     e.preventDefault();
     if (!form.itemName.trim()) return;
 
-    onSubmit(form, openMoreDetails);
-    onClose();
+    try {
+      await onSubmit(form, openMoreDetails);
+      onClose();
+    } catch (err) {
+      // Keep modal open on failure
+    }
   };
 
   const categoryOptions = [

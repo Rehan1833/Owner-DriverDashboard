@@ -26,7 +26,7 @@ interface OperationsContextType {
   performLogout: () => void;
   logout: () => void;
   // Inventory CRUD
-  createInventory: (item: Omit<InventoryItem, 'id'>) => Promise<void>;
+  createInventory: (item: Omit<InventoryItem, 'id'>) => Promise<InventoryItem>;
   updateInventory: (id: string, item: Partial<InventoryItem>) => Promise<void>;
   deleteInventory: (id: string) => Promise<void>;
   // Attendance CRUD
@@ -438,9 +438,10 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const created = await api.inventory.create(item);
     setInventory(prev => [...prev, created]);
     addActivity('Inventory Created', `Added new item: ${item.itemName} (${item.sku})`, 'inventory');
-    if (created.quantity <= created.minimumQuantity) {
+    if (created.quantity <= (created.minimumQuantity || 0)) {
       triggerNotification('Low Stock', 'Safety Limit Alert', `Stock level for ${item.itemName} is below minimum capacity.`, 'Warning');
     }
+    return created;
   };
 
   const updateInventory = async (id: string, item: Partial<InventoryItem>) => {
