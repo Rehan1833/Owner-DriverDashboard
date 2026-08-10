@@ -4,6 +4,7 @@ import User from '../models/User';
 import Product from '../models/Product';
 import Inventory from '../models/Inventory';
 import Company, { generateCompanyId } from '../models/Company';
+import { seedCompanyData } from '../services/seedService';
 
 
 const seedDefaultInventory = async () => {
@@ -380,6 +381,14 @@ const seedDefaultAccounts = async () => {
       owner.companyId = company.companyId;
       if (!owner.companyName) owner.companyName = company.companyName;
       await owner.save();
+    }
+
+    // 4. Ensure company data (Vehicles, Trips, Inventory, Drivers, Attendance, Salaries, PODs) exists for all Owner accounts
+    const allOwners = await User.find({ role: 'Owner', companyId: { $ne: null } });
+    for (const ow of allOwners) {
+      if (ow.companyId) {
+        await seedCompanyData(ow.companyId, String(ow._id), ow.email, ow.companyName || 'SmartOps Logistics');
+      }
     }
   } catch (err: any) {
     console.error('Error seeding default accounts:', err.message);

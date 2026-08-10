@@ -8,6 +8,7 @@ import VerificationCode from '../models/VerificationCode';
 import { getNextSequenceValue } from '../models/Counter';
 import { sendMobileOTP } from '../utils/otpService';
 import { emitDriverOnline, emitDriverOffline } from '../sockets/telemetrySocket';
+import { seedCompanyData } from '../services/seedService';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'smartops_super_secret_key_123!';
 
@@ -394,6 +395,10 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
+    if (newUser.companyId) {
+      await seedCompanyData(newUser.companyId, String(newUser._id), newUser.email, newUser.companyName || undefined);
+    }
+
     const token = jwt.sign(
       { id: newUser._id, role: newUser.role, companyId: newCompanyId || null },
       JWT_SECRET,
@@ -520,6 +525,10 @@ export const login = async (req: Request, res: Response) => {
       if (typeof user.save === 'function') {
         await user.save();
       }
+    }
+
+    if (user.companyId) {
+      await seedCompanyData(user.companyId, String(user._id), user.email, user.companyName || undefined);
     }
 
     const token = jwt.sign(

@@ -301,6 +301,7 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setUser(res.user);
     localStorage.setItem('smartops_user', JSON.stringify(res.user));
     triggerNotification('System Alert', 'Session Initialized', `Welcome back ${res.user.fullName}! JWT validated.`, 'Info');
+    await refreshAllData();
   };
 
   const googleAuth = async (_googleToken: string, _role: UserRole) => {
