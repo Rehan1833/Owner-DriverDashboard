@@ -11,6 +11,10 @@ import {
   RotateCcw,
   Sun,
   Moon,
+  Edit2,
+  Check,
+  Lock,
+  X,
 } from 'lucide-react';
 
 interface OwnerSettingsState {
@@ -74,6 +78,9 @@ export const Settings: React.FC = () => {
     'https://api.dicebear.com/7.x/identicon/svg?seed=SmartOps'
   );
 
+  // Edit state for Company Information
+  const [isEditingCompany, setIsEditingCompany] = useState(false);
+
   useEffect(() => {
     if (user?.companyName) {
       setSettings(prev => ({ ...prev, companyName: user.companyName! }));
@@ -93,9 +100,24 @@ export const Settings: React.FC = () => {
   };
 
   // Actions
+  const handleSaveCompanyInfo = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    localStorage.setItem('smartops_owner_settings', JSON.stringify(settings));
+    setIsEditingCompany(false);
+
+    triggerNotification(
+      'System Alert',
+      'Company Info Saved',
+      'Corporate registration details saved successfully.',
+      'Info'
+    );
+    addActivity('Company Info Modified', 'Updated corporate registration details', 'task');
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('smartops_owner_settings', JSON.stringify(settings));
+    setIsEditingCompany(false);
 
     triggerNotification(
       'System Alert',
@@ -185,12 +207,59 @@ export const Settings: React.FC = () => {
         <div className="lg:col-span-2 space-y-8 text-left">
           {/* SECTION 1: COMPANY INFORMATION */}
           <section id="company" className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-6 shadow-sm space-y-6">
-            <div className="border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-3.5 flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-[#006A6A]/10 text-[#006A6A] dark:text-[#14B8A6]">
-                <Building2 className="h-5 w-5" />
+            <div className="border-b border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 pb-3.5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-[#006A6A]/10 text-[#006A6A] dark:text-[#14B8A6]">
+                  <Building2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-white uppercase tracking-wide">Company Information</h3>
+                </div>
               </div>
-              <h3 className="text-[15px] font-bold text-[#0B1C30] dark:text-white uppercase tracking-wide">Company Information</h3>
+
+              {!isEditingCompany ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditingCompany(true)}
+                  className="text-xs font-bold py-1.5 px-3.5 border-[#006A6A]/30 text-[#006A6A] hover:bg-[#006A6A]/10 dark:text-[#14B8A6] rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Edit2 className="h-3.5 w-3.5" /> Edit Info
+                </Button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold px-2.5 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" /> Editing Active
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditingCompany(false)}
+                    className="text-xs font-semibold py-1.5 px-3 rounded-xl border-slate-300 dark:border-slate-700 flex items-center gap-1"
+                  >
+                    <X className="h-3.5 w-3.5" /> Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={handleSaveCompanyInfo}
+                    className="text-xs font-bold py-1.5 px-3.5 rounded-xl flex items-center gap-1 bg-[#006A6A] hover:bg-[#005555] shadow-xs"
+                  >
+                    <Check className="h-3.5 w-3.5" /> Save Info
+                  </Button>
+                </div>
+              )}
             </div>
+
+            {!isEditingCompany && (
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                <Lock className="h-4 w-4 text-[#006A6A] dark:text-[#14B8A6] shrink-0" />
+                <span>Company information is currently locked in view-only mode. Click <strong>Edit Info</strong> above to modify corporate attributes.</span>
+              </div>
+            )}
 
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row gap-4 items-center">
@@ -202,16 +271,22 @@ export const Settings: React.FC = () => {
                 <div className="text-left">
                   <h4 className="text-sm font-bold text-slate-800 dark:text-[#CBD5E1]">Corporate Brand Logo</h4>
                   <p className="text-[11px] text-[#6D7A79] dark:text-[#6D7A79] mt-0.5 font-medium">Upload a 200x200 PNG or SVG branding asset.</p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={e => {
-                      if (e.target.files && e.target.files[0]) {
-                        setLogoPreview(URL.createObjectURL(e.target.files[0]));
-                      }
-                    }}
-                    className="mt-2 text-[11px] font-semibold text-[#6D7A79] file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[10px] file:font-semibold file:bg-slate-100 dark:file:bg-slate-800 file:text-[#545F73] dark:file:text-slate-300 hover:file:bg-slate-200 cursor-pointer"
-                  />
+                  {isEditingCompany ? (
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={e => {
+                        if (e.target.files && e.target.files[0]) {
+                          setLogoPreview(URL.createObjectURL(e.target.files[0]));
+                        }
+                      }}
+                      className="mt-2 text-[11px] font-semibold text-[#6D7A79] file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[10px] file:font-semibold file:bg-slate-100 dark:file:bg-slate-800 file:text-[#545F73] dark:file:text-slate-300 hover:file:bg-slate-200 cursor-pointer"
+                    />
+                  ) : (
+                    <span className="inline-block mt-2 text-[11px] font-medium text-slate-400 dark:text-slate-500 italic">
+                      Click Edit Info to change brand logo
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -220,18 +295,28 @@ export const Settings: React.FC = () => {
                   <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Company Registered Name</label>
                   <input
                     type="text"
+                    disabled={!isEditingCompany}
                     value={settings.companyName}
                     onChange={e => handleChange('companyName', e.target.value)}
-                    className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+                    className={`w-full px-4 h-12 text-sm border rounded-xl focus:outline-none transition-all font-medium ${
+                      isEditingCompany
+                        ? 'border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] shadow-sm'
+                        : 'border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 cursor-not-allowed'
+                    }`}
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">GST Identification Number</label>
                   <input
                     type="text"
+                    disabled={!isEditingCompany}
                     value={settings.gstNumber}
                     onChange={e => handleChange('gstNumber', e.target.value)}
-                    className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+                    className={`w-full px-4 h-12 text-sm border rounded-xl focus:outline-none transition-all font-medium ${
+                      isEditingCompany
+                        ? 'border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] shadow-sm'
+                        : 'border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 cursor-not-allowed'
+                    }`}
                   />
                 </div>
               </div>
@@ -240,9 +325,14 @@ export const Settings: React.FC = () => {
                 <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Registered Office Address</label>
                 <textarea
                   rows={2}
+                  disabled={!isEditingCompany}
                   value={settings.address}
                   onChange={e => handleChange('address', e.target.value)}
-                  className="w-full px-4 py-3 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium resize-none"
+                  className={`w-full px-4 py-3 text-sm border rounded-xl focus:outline-none transition-all font-medium resize-none ${
+                    isEditingCompany
+                      ? 'border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] shadow-sm'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 cursor-not-allowed'
+                  }`}
                 />
               </div>
 
@@ -250,9 +340,14 @@ export const Settings: React.FC = () => {
                 <label className="text-[13px] font-bold text-[#545F73] dark:text-[#CBD5E1] uppercase">Branch Locations Directory</label>
                 <input
                   type="text"
+                  disabled={!isEditingCompany}
                   value={settings.branchDetails}
                   onChange={e => handleChange('branchDetails', e.target.value)}
-                  className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
+                  className={`w-full px-4 h-12 text-sm border rounded-xl focus:outline-none transition-all font-medium ${
+                    isEditingCompany
+                      ? 'border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] shadow-sm'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 cursor-not-allowed'
+                  }`}
                 />
               </div>
             </div>

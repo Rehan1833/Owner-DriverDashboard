@@ -11,8 +11,9 @@ interface CreateInventoryModalProps {
 }
 
 const generateRandomSKU = () => {
-  const num = Math.floor(100000 + Math.random() * 900000);
-  return `SKU-${num}`;
+  const time = Date.now().toString().slice(-4);
+  const rand = Math.floor(100 + Math.random() * 900);
+  return `SKU-${time}${rand}`;
 };
 
 export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
@@ -227,27 +228,17 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
 
               {/* SKU Code */}
               <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-[12px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
-                    SKU Code <span className="text-red-500 font-bold">*</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleRegenerateSKU}
-                    className="text-[11px] text-[#006A6A] hover:underline font-semibold cursor-pointer"
-                  >
-                    Auto-Generate
-                  </button>
-                </div>
+                <label className="text-[12px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                  SKU Code <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="text"
                   required
+                  readOnly
                   name="sku"
-                  placeholder="e.g. SKU-10029"
                   value={form.sku}
-                  onChange={handleChange}
-                  onKeyDown={handleKeyDown}
-                  className="w-full px-4 h-11 text-sm border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-mono font-semibold text-slate-800 dark:text-slate-200"
+                  tabIndex={-1}
+                  className="w-full px-4 h-11 text-sm border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 font-mono font-extrabold rounded-xl focus:outline-none cursor-not-allowed select-none shadow-xs"
                 />
               </div>
 

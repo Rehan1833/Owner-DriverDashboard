@@ -29,8 +29,8 @@ export const VehicleInfo: React.FC = () => {
     <div className="space-y-6 max-w-4xl mx-auto text-left animate-fade-in">
       {/* Title */}
       <div>
-        <h2 className="text-[26px] font-extrabold text-[#1F2937] dark:text-[#F8FAFC] tracking-tight leading-none">Assigned Fleet Vehicle Information</h2>
-        <p className="text-[13px] text-[#4B5563] dark:text-[#94A3B8] mt-1.5 font-medium">Review live engine telemetry logs, registration certificates, and maintenance warnings.</p>
+        <h2 className="text-[26px] font-extrabold text-[#0B1C30] dark:text-[#F8FAFC] tracking-tight leading-none">Assigned Fleet Vehicle Information</h2>
+        <p className="text-[13px] text-[#545F73] dark:text-[#94A3B8] mt-1.5 font-medium">Review live engine telemetry logs, registration certificates, and maintenance warnings.</p>
       </div>
 
       {/* Main Grid */}
@@ -44,8 +44,8 @@ export const VehicleInfo: React.FC = () => {
               <Truck className="h-10 w-10" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-base font-bold text-[#1F2937] dark:text-[#F8FAFC]">{driverVehicle.vehicleNumber}</h3>
-              <p className="text-xs text-[#4B5563] dark:text-[#94A3B8] font-semibold">{driverVehicle.vehicleType}</p>
+              <h3 className="text-base font-extrabold text-[#0B1C30] dark:text-[#F8FAFC]">{driverVehicle.vehicleNumber}</h3>
+              <p className="text-xs text-[#545F73] dark:text-[#94A3B8] font-bold">{driverVehicle.vehicleType}</p>
               <div className="pt-2">
                 <Badge variant={driverVehicle.status === 'Moving' ? 'success' : 'info'}>
                   {driverVehicle.status}
@@ -62,8 +62,8 @@ export const VehicleInfo: React.FC = () => {
             
             <div className="space-y-3.5">
               <div className="flex justify-between items-end">
-                <span className="text-2xl font-bold text-[#1F2937] dark:text-[#F8FAFC] font-mono">{(driverVehicle.fuelLevel ?? 78)}%</span>
-                <span className="text-[11px] text-[#4B5563] dark:text-[#94A3B8] font-semibold">Capacity: 350 Liters</span>
+                <span className="text-2xl font-black text-[#0B1C30] dark:text-[#F8FAFC] font-mono">{(driverVehicle.fuelLevel ?? 78)}%</span>
+                <span className="text-[11px] text-[#545F73] dark:text-[#94A3B8] font-bold">Capacity: 350 Liters</span>
               </div>
               
               <div className="w-full h-3 bg-[#F3F4F6] dark:bg-slate-800 rounded-full overflow-hidden">
@@ -86,43 +86,43 @@ export const VehicleInfo: React.FC = () => {
           
           {/* Key Specifications */}
           <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-4 text-left">
-            <h4 className="text-[15px] font-extrabold text-[#1F2937] dark:text-[#F8FAFC] border-b border-[#E5E7EB] dark:border-[#334155] pb-3 flex items-center gap-1.5 uppercase tracking-wide">
+            <h4 className="text-[15px] font-extrabold text-[#0B1C30] dark:text-[#F8FAFC] border-b border-[#E5E7EB] dark:border-[#334155] pb-3 flex items-center gap-1.5 uppercase tracking-wide">
               <Wrench className="h-4 w-4 text-[#006A6A]" /> Vehicle Engine Telemetry Specs
             </h4>
             <div className="grid grid-cols-2 gap-6 text-xs font-bold">
               <div>
-                <span className="text-[#4B5563] dark:text-[#94A3B8] block font-extrabold text-[10px] uppercase">Current Odometer</span>
-                <span className="font-bold font-mono text-[#1F2937] dark:text-[#F8FAFC] block mt-1">{(driverVehicle.odometer || 48200).toLocaleString()} km</span>
+                <span className="text-[#545F73] dark:text-[#94A3B8] block font-extrabold text-[10px] uppercase">Current Odometer</span>
+                <span className="font-extrabold font-mono text-[#0B1C30] dark:text-[#F8FAFC] block mt-1">{(driverVehicle.odometer || 48200).toLocaleString()} km</span>
               </div>
               <div>
-                <span className="text-[#4B5563] dark:text-[#94A3B8] block font-extrabold text-[10px] uppercase">Fuel Mileage Efficiency</span>
-                <span className="font-bold text-[#1F2937] dark:text-[#F8FAFC] block mt-1">{driverVehicle.mileage || 6.2} km/Liter</span>
+                <span className="text-[#545F73] dark:text-[#94A3B8] block font-extrabold text-[10px] uppercase">Fuel Mileage Efficiency</span>
+                <span className="font-extrabold text-[#0B1C30] dark:text-[#F8FAFC] block mt-1">{driverVehicle.mileage || 6.2} km/Liter</span>
               </div>
               <div>
-                <span className="text-[#4B5563] dark:text-[#94A3B8] block font-extrabold text-[10px] uppercase">Last Serviced Date</span>
-                <span className="font-bold text-[#1F2937] dark:text-[#F8FAFC] block mt-1">2026-06-05</span>
+                <span className="text-[#545F73] dark:text-[#94A3B8] block font-extrabold text-[10px] uppercase">Last Serviced Date</span>
+                <span className="font-extrabold text-[#0B1C30] dark:text-[#F8FAFC] block mt-1">2026-06-05</span>
               </div>
               <div>
-                <span className="text-[#4B5563] dark:text-[#94A3B8] block font-extrabold text-[10px] uppercase">Maintenance Cycle Due</span>
-                <span className="font-bold text-[#1F2937] dark:text-[#F8FAFC] block mt-1">Within 4,800 km</span>
+                <span className="text-[#545F73] dark:text-[#94A3B8] block font-extrabold text-[10px] uppercase">Maintenance Cycle Due</span>
+                <span className="font-extrabold text-[#0B1C30] dark:text-[#F8FAFC] block mt-1">Within 4,800 km</span>
               </div>
             </div>
           </div>
 
           {/* Compliance & Documents Table */}
           <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-[#E5E7EB] dark:border-[#334155] shadow-sm space-y-4 text-left">
-            <h4 className="text-[15px] font-extrabold text-[#1F2937] dark:text-[#F8FAFC] border-b border-[#E5E7EB] dark:border-[#334155] pb-3 flex items-center gap-1.5 uppercase tracking-wide">
+            <h4 className="text-[15px] font-extrabold text-[#0B1C30] dark:text-slate-100 border-b border-[#E5E7EB] dark:border-[#334155] pb-3 flex items-center gap-1.5 uppercase tracking-wide">
               <FileText className="h-4 w-4 text-[#006A6A]" /> Regulatory Vehicle Compliances
             </h4>
             
             <div className="space-y-4 pt-1">
               {docs.map((doc, idx) => (
-                <div key={idx} className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-xs p-3.5 border border-[#E5E7EB] dark:border-[#334155] rounded-xl hover:bg-[#F9FAFB] dark:hover:bg-slate-800/40 transition-colors gap-2 shadow-sm bg-white dark:bg-[#1E293B]">
+                <div key={idx} className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-4 border border-[#E5E7EB] dark:border-[#334155] rounded-xl hover:bg-[#F9FAFB] dark:hover:bg-slate-800/40 transition-colors gap-2 shadow-sm bg-white dark:bg-[#1E293B]">
                   <div>
-                    <p className="font-bold text-[#1F2937] dark:text-[#F8FAFC] leading-normal">{doc.name}</p>
-                    <p className="text-[10px] text-[#4B5563] dark:text-[#94A3B8] mt-0.5 font-bold uppercase font-mono">Ref: {doc.id} • Expiry: {doc.date}</p>
+                    <p className="text-sm font-extrabold text-[#0B1C30] dark:text-slate-100 leading-snug">{doc.name}</p>
+                    <p className="text-[11px] text-[#545F73] dark:text-[#94A3B8] mt-1 font-bold uppercase font-mono">Ref: {doc.id} • Expiry: {doc.date}</p>
                   </div>
-                  <Badge variant="success" className="text-[10px] self-start sm:self-auto flex items-center gap-0.5">
+                  <Badge variant="success" className="text-[11px] self-start sm:self-auto flex items-center gap-1 px-3 py-1 font-bold">
                     <ShieldCheck className="h-3.5 w-3.5" /> Approved
                   </Badge>
                 </div>

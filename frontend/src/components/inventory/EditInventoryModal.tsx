@@ -136,17 +136,18 @@ export const EditInventoryModal: React.FC<EditInventoryModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                SKU Code <span className="text-red-500 font-bold">*</span>
+              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center justify-between">
+                <span>SKU Code <span className="text-red-500 font-bold">*</span></span>
+                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Fixed Identifier</span>
               </label>
               <input
                 type="text"
                 required
+                readOnly
                 name="sku"
-                placeholder="e.g. SKU-10029"
                 value={form.sku}
-                onChange={handleChange}
-                className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none font-mono font-semibold"
+                tabIndex={-1}
+                className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-mono font-extrabold rounded-lg focus:outline-none cursor-not-allowed select-none"
               />
             </div>
 
