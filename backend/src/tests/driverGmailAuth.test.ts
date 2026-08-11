@@ -165,5 +165,83 @@ describe('Secure Driver & Owner Authentication & OTP Verification API', () => {
       expect(res.body).toHaveProperty('token');
       expect(res.body.user.isEmailVerified).toBe(true);
     });
+
+    it('should reject Driver logging in from Owner portal', async () => {
+      const mockDriverUser = {
+        _id: 'driver-303',
+        fullName: 'Test Driver',
+        email: 'driver.gmail@gmail.com',
+        role: 'Driver',
+        companyId: 'CMP-20202',
+        isEmailVerified: true,
+        save: jest.fn().mockResolvedValue(true),
+        comparePassword: jest.fn().mockResolvedValue(true)
+      };
+
+      (User.findOne as jest.Mock).mockResolvedValue(mockDriverUser);
+
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'driver.gmail@gmail.com',
+          password: 'driverpassword123',
+          role: 'Owner'
+        });
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toContain('Access denied. This account is registered as a Driver. Please select the Driver portal to sign in.');
+    });
+
+    it('should reject Owner logging in from Driver portal', async () => {
+      const mockOwnerUser = {
+        _id: 'owner-404',
+        fullName: 'Test Owner',
+        email: 'owner.company@gmail.com',
+        role: 'Owner',
+        companyId: 'CMP-20202',
+        isEmailVerified: true,
+        save: jest.fn().mockResolvedValue(true),
+        comparePassword: jest.fn().mockResolvedValue(true)
+      };
+
+      (User.findOne as jest.Mock).mockResolvedValue(mockOwnerUser);
+
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'owner.company@gmail.com',
+          password: 'ownerpassword123',
+          role: 'Driver'
+        });
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toContain('Access denied. This account is registered as an Owner. Please select the Owner portal to sign in.');
+    });
+
+    it('should allow Driver to log in from Driver portal', async () => {
+      const mockDriverUser = {
+        _id: 'driver-505',
+        fullName: 'Driver Gmail',
+        email: 'driver.gmail@gmail.com',
+        role: 'Driver',
+        companyId: 'CMP-20202',
+        isEmailVerified: true,
+        save: jest.fn().mockResolvedValue(true),
+        comparePassword: jest.fn().mockResolvedValue(true)
+      };
+
+      (User.findOne as jest.Mock).mockResolvedValue(mockDriverUser);
+
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'driver.gmail@gmail.com',
+          password: 'driverpassword123',
+          role: 'Driver'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.user.role).toBe('Driver');
+    });
   });
 });

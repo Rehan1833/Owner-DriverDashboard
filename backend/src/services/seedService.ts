@@ -15,6 +15,7 @@ export const seedCompanyData = async (
   companyName: string = 'SmartOps Logistics'
 ) => {
   if (!companyId) return;
+  if (process.env.NODE_ENV === 'test') return;
 
   try {
     const ownerIdStr = ownerId ? String(ownerId) : '65f1a2b3c4d5e6f7a8b9c0d1';

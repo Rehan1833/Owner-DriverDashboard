@@ -107,9 +107,9 @@ class LocalStorageFallback {
 export const api = {
   // 1. AUTH API
   auth: {
-    login: async (email: string, _role: string, password?: string): Promise<{ token: string; user: User }> => {
+    login: async (email: string, role: string, password?: string): Promise<{ token: string; user: User }> => {
       try {
-        const res = await axiosInstance.post('/auth/login', { email, password: password || '' });
+        const res = await axiosInstance.post('/auth/login', { email, role, password: password || '' });
         const receivedToken: string = res.data.token || '';
         if (receivedToken) {
           localStorage.setItem('smartops_jwt', receivedToken);

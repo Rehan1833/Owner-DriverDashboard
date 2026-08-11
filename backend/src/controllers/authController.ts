@@ -457,7 +457,7 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
     if (!email || !password) {
       return res.status(400).json({ message: 'Email address and password are required.' });
     }
@@ -485,6 +485,28 @@ export const login = async (req: Request, res: Response) => {
 
     if (user.isEmailVerified === false) {
       return res.status(403).json({ message: 'Account verification pending or account disabled.' });
+    }
+
+    // Role strict check: If role is specified, verify user.role matches requested portal role
+    if (role && String(role).trim() !== '') {
+      const requestedRole = String(role).trim().toLowerCase();
+      const userRole = String(user.role).trim().toLowerCase();
+
+      if (userRole !== requestedRole) {
+        if (user.role === 'Driver') {
+          return res.status(403).json({
+            message: 'Access denied. This account is registered as a Driver. Please select the Driver portal to sign in.'
+          });
+        }
+        if (user.role === 'Owner') {
+          return res.status(403).json({
+            message: 'Access denied. This account is registered as an Owner. Please select the Owner portal to sign in.'
+          });
+        }
+        return res.status(403).json({
+          message: `Access denied. Account role (${user.role}) does not match the selected ${role} portal.`
+        });
+      }
     }
 
     if (user.role === 'Driver') {
