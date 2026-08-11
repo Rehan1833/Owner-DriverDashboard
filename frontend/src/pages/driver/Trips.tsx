@@ -158,7 +158,7 @@ export const Trips: React.FC = () => {
       {displayedTrips.length === 0 ? (
         <div className="bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-12 text-center max-w-xl mx-auto space-y-4">
           <Truck className="w-12 h-12 text-slate-400 mx-auto" />
-          <h4 className="text-base font-bold text-slate-800 dark:text-slate-100">No Trips Found in "{activeTab}" Category</h4>
+          <h4 className="text-base font-bold text-[#1F2937] dark:text-slate-100">No Trips Found in "{activeTab}" Category</h4>
           <p className="text-xs text-slate-400">Assignments will appear here when dispatched by your Fleet Manager.</p>
         </div>
       ) : (
@@ -173,7 +173,7 @@ export const Trips: React.FC = () => {
                 <div className="flex items-center justify-between border-b border-[#E5EEFF] dark:border-[#334155] pb-3">
                   <div>
                     <span className="text-[10px] font-extrabold text-[#6D7A79] uppercase tracking-wider block">Trip Reference</span>
-                    <span className="font-mono font-extrabold text-base text-slate-900 dark:text-white">
+                    <span className="font-mono font-extrabold text-base text-[#1F2937] dark:text-white">
                       {trip.tripNumber}
                     </span>
                   </div>
@@ -186,23 +186,23 @@ export const Trips: React.FC = () => {
                 <div className="space-y-2 text-xs">
                   <div className="p-2.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/50">
                     <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold block mb-0.5 uppercase">Origin</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200 block truncate">📍 {trip.pickupLocation}</span>
+                    <span className="font-semibold text-[#1F2937] dark:text-slate-200 block truncate">📍 {trip.pickupLocation}</span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-red-50/60 dark:bg-red-950/20 border border-red-200/50">
                     <span className="text-[10px] text-red-700 dark:text-red-400 font-bold block mb-0.5 uppercase">Destination</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200 block truncate">🏁 {trip.dropLocation}</span>
+                    <span className="font-semibold text-[#1F2937] dark:text-slate-200 block truncate">🏁 {trip.dropLocation}</span>
                   </div>
                 </div>
 
                 {/* Cargo Details */}
                 <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700">
                   <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Material</span>
-                    <span className="font-bold text-slate-800 dark:text-white truncate block">{trip.material}</span>
+                    <span className="text-[#4B5563] dark:text-slate-400 block text-[10px] uppercase font-bold">Material</span>
+                    <span className="font-bold text-[#1F2937] dark:text-white truncate block">{trip.material}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Truck</span>
-                    <span className="font-bold text-slate-800 dark:text-white truncate block">{trip.vehicleNumber}</span>
+                    <span className="text-[#4B5563] dark:text-slate-400 block text-[10px] uppercase font-bold">Truck</span>
+                    <span className="font-bold text-[#1F2937] dark:text-white truncate block">{trip.vehicleNumber}</span>
                   </div>
                 </div>
               </div>
@@ -251,17 +251,17 @@ export const Trips: React.FC = () => {
         >
           <div className="space-y-4 text-left text-xs">
             <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1">
-              <span className="text-slate-400 font-bold block">Assigned Truck & Driver</span>
-              <p className="font-extrabold text-slate-800 dark:text-white text-sm">{selectedDetailsTrip.driverName} ({selectedDetailsTrip.vehicleNumber})</p>
+              <span className="text-[#4B5563] dark:text-slate-400 font-bold block">Assigned Truck & Driver</span>
+              <p className="font-extrabold text-[#1F2937] dark:text-white text-sm">{selectedDetailsTrip.driverName} ({selectedDetailsTrip.vehicleNumber})</p>
             </div>
 
             <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
-              <span className="font-bold text-slate-700 dark:text-slate-300 block uppercase text-[10px]">Freight Cargo Specifications</span>
-              <div className="grid grid-cols-2 gap-2 text-slate-700 dark:text-slate-300">
-                <div>Material: <strong className="text-slate-900 dark:text-white">{selectedDetailsTrip.material}</strong></div>
-                <div>Weight: <strong className="text-slate-900 dark:text-white">{selectedDetailsTrip.weight}</strong></div>
-                <div>Invoice #: <strong className="text-slate-900 dark:text-white">{selectedDetailsTrip.invoiceNumber}</strong></div>
-                <div>Priority: <strong className="text-slate-900 dark:text-white">{selectedDetailsTrip.priority || 'Normal'}</strong></div>
+              <span className="font-bold text-[#4B5563] dark:text-slate-300 block uppercase text-[10px]">Freight Cargo Specifications</span>
+              <div className="grid grid-cols-2 gap-2 text-[#4B5563] dark:text-slate-300">
+                <div>Material: <strong className="text-[#1F2937] dark:text-white">{selectedDetailsTrip.material}</strong></div>
+                <div>Weight: <strong className="text-[#1F2937] dark:text-white">{selectedDetailsTrip.weight}</strong></div>
+                <div>Invoice #: <strong className="text-[#1F2937] dark:text-white">{selectedDetailsTrip.invoiceNumber}</strong></div>
+                <div>Priority: <strong className="text-[#1F2937] dark:text-white">{selectedDetailsTrip.priority || 'Normal'}</strong></div>
               </div>
             </div>
 
