@@ -244,7 +244,7 @@ export interface PayrollRecord {
   deduction: number;
   tax: number;
   finalSalary: number;
-  paymentStatus: 'Pending' | 'Paid';
+  paymentStatus: 'Pending' | 'Paid' | 'Approved';
   paymentDate?: string;
   // UI Compatibility fields
   netPay?: number;

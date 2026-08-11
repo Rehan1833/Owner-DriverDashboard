@@ -289,7 +289,7 @@ export const Inventory: React.FC = () => {
         data={inventory}
         columns={columns}
         searchKey="itemName"
-        searchPlaceholder="Search inventory by item name..."
+        searchPlaceholder="Search inventory by material name, SKU, category, warehouse, or supplier..."
         filterComponent={handleFilter}
         exportFileName="inventory-crud-ledger"
       />

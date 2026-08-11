@@ -58,6 +58,19 @@ const ServerError = lazy(() => import('./pages/errors/ServerError').then(m => ({
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 const App: React.FC = () => {
+  React.useEffect(() => {
+    const handleWheel = () => {
+      const activeEl = document.activeElement;
+      if (activeEl && activeEl.tagName === 'INPUT' && (activeEl as HTMLInputElement).type === 'number') {
+        (activeEl as HTMLInputElement).blur();
+      }
+    };
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
+
   return (
     <ErrorBoundary>
       <ThemeProvider>

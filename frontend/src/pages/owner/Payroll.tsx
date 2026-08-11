@@ -318,7 +318,7 @@ export const Payroll: React.FC = () => {
         data={payroll}
         columns={columns}
         searchKey="employee"
-        searchPlaceholder="Search employee pay slips..."
+        searchPlaceholder="Search employee pay slips by name, payment status, or salary amount..."
         exportFileName="payroll-ledger"
       />
 
@@ -349,7 +349,7 @@ export const Payroll: React.FC = () => {
                 onChange={handleInputChange}
                 className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium cursor-pointer"
               >
-                <option value="">Select Emp Name</option>
+                <option value="">Select Employee Name (e.g. Harpreet Singh)</option>
                 {employeeList.map((emp) => (
                   <option key={emp} value={emp}>
                     {emp}
@@ -368,8 +368,10 @@ export const Payroll: React.FC = () => {
                   type="number"
                   required
                   name="basicSalary"
-                  value={form.basicSalary}
+                  placeholder="e.g. 35000"
+                  value={form.basicSalary || ''}
                   onChange={handleInputChange}
+                  onWheel={(e) => e.currentTarget.blur()}
                   className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
@@ -379,8 +381,10 @@ export const Payroll: React.FC = () => {
                 <input
                   type="number"
                   name="overtime"
-                  value={form.overtime}
+                  placeholder="e.g. 2500"
+                  value={form.overtime || ''}
                   onChange={handleInputChange}
+                  onWheel={(e) => e.currentTarget.blur()}
                   className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
@@ -391,8 +395,10 @@ export const Payroll: React.FC = () => {
               <input
                 type="number"
                 name="bonus"
-                value={form.bonus}
+                placeholder="e.g. 1500"
+                value={form.bonus || ''}
                 onChange={handleInputChange}
+                onWheel={(e) => e.currentTarget.blur()}
                 className="w-full px-4 h-12 text-sm border border-[#E5EEFF] dark:border-[#334155] bg-[#F8F9FF] focus:bg-white focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
               />
             </div>

@@ -303,9 +303,11 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
                   required
                   min="0"
                   name="quantity"
-                  value={form.quantity}
+                  placeholder="e.g. 450"
+                  value={form.quantity || ''}
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}
+                  onWheel={(e) => e.currentTarget.blur()}
                   className="w-full px-4 h-11 text-sm border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
@@ -320,10 +322,11 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
                   min="0"
                   step="0.01"
                   name="purchasePrice"
-                  placeholder="0.00"
+                  placeholder="e.g. 1200.00"
                   value={form.purchasePrice || ''}
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}
+                  onWheel={(e) => e.currentTarget.blur()}
                   className="w-full px-4 h-11 text-sm border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
@@ -338,10 +341,11 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
                   min="0"
                   step="0.01"
                   name="sellingPrice"
-                  placeholder="0.00"
+                  placeholder="e.g. 1850.00"
                   value={form.sellingPrice || ''}
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}
+                  onWheel={(e) => e.currentTarget.blur()}
                   className="w-full px-4 h-11 text-sm border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] rounded-xl focus:outline-none transition-all shadow-sm font-medium"
                 />
               </div>
@@ -380,7 +384,7 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
                   <input
                     type="text"
                     name="warehouse"
-                    placeholder="e.g. Default Warehouse"
+                    placeholder="e.g. Main Warehouse A"
                     value={form.warehouse}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
@@ -392,7 +396,7 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
                   <input
                     type="text"
                     name="storageLocation"
-                    placeholder="e.g. Shelf A-4"
+                    placeholder="e.g. Shelf A-4, Rack 2"
                     value={form.storageLocation}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
@@ -404,7 +408,7 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
                   <input
                     type="text"
                     name="supplier"
-                    placeholder="e.g. Apex Industrial Supplies"
+                    placeholder="e.g. Apex Steel Corp Ltd"
                     value={form.supplier}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
@@ -426,9 +430,11 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
                     type="number"
                     min="0"
                     name="reservedStock"
-                    value={form.reservedStock}
+                    placeholder="e.g. 25"
+                    value={form.reservedStock || ''}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
+                    onWheel={(e) => e.currentTarget.blur()}
                     className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
                   />
                 </div>
@@ -438,9 +444,11 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
                     type="number"
                     min="0"
                     name="minimumQuantity"
-                    value={form.minimumQuantity}
+                    placeholder="e.g. 50"
+                    value={form.minimumQuantity || ''}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
+                    onWheel={(e) => e.currentTarget.blur()}
                     className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
                   />
                 </div>
@@ -450,9 +458,11 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
                     type="number"
                     min="0"
                     name="maximumStockLevel"
-                    value={form.maximumStockLevel}
+                    placeholder="e.g. 1000"
+                    value={form.maximumStockLevel || ''}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
+                    onWheel={(e) => e.currentTarget.blur()}
                     className="w-full px-3 h-9 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
                   />
                 </div>
@@ -504,7 +514,7 @@ export const CreateInventoryModal: React.FC<CreateInventoryModalProps> = ({
               <textarea
                 name="description"
                 rows={2}
-                placeholder="Additional notes, specifications, or storage instructions..."
+                placeholder="e.g. High-grade cold-rolled industrial sheet metal used for chassis fabrication."
                 value={form.description}
                 onChange={handleChange}
                 className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl focus:ring-2 focus:ring-[#006A6A]/20 focus:border-[#006A6A] focus:outline-none"
