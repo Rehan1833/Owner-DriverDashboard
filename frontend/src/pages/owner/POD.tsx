@@ -30,7 +30,7 @@ export const POD: React.FC = () => {
   const [selectedPod, setSelectedPod] = useState<PODRecord | null>(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
-  const [zoomedImage, setZoomedImage] = useState<{ url: string; pod: PODRecord } | null>(null);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -251,9 +251,9 @@ export const POD: React.FC = () => {
           return (
             <div key={i} className={`border border-[#E5EEFF] dark:border-[#334155] p-5 rounded-2xl shadow-sm text-left flex items-start justify-between ${stat.bg}`}>
               <div className="space-y-1">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">{stat.title}</span>
+                <span className="text-[11px] font-bold text-[#374151] dark:text-slate-400 uppercase tracking-wider block">{stat.title}</span>
                 <h4 className={`text-3xl font-extrabold mt-1 leading-none ${stat.color}`}>{stat.val}</h4>
-                <p className="text-[10px] text-slate-400 dark:text-[#6D7A79] font-bold">{stat.desc}</p>
+                <p className="text-[10px] text-[#4B5563] dark:text-[#6D7A79] font-bold">{stat.desc}</p>
               </div>
               <div className="p-2 bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 rounded-xl shadow-sm text-slate-400">
                 <Icon className="h-4 w-4" />
@@ -383,20 +383,35 @@ export const POD: React.FC = () => {
                 paginatedPods.map(pod => (
                   <tr key={pod.id} className="hover:bg-[#F8F9FF]/50 dark:hover:bg-slate-800/30 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-[#E5EEFF] dark:border-[#334155] dark:border-slate-800 bg-slate-100 cursor-pointer hover:ring-2 hover:ring-[#006A6A]/40 hover:scale-105 transition-all" onClick={() => setZoomedImage({ url: pod.imageUrl, pod })}>
-                        <img src={pod.imageUrl} alt="POD" className="w-full h-full object-cover" />
+                      <div
+                        className="w-14 h-14 rounded-lg overflow-hidden border-2 border-[#006A6A] bg-slate-200 cursor-pointer relative group"
+                        onClick={() => {
+                          const url = pod.imageUrl || pod.images?.[0];
+                          console.log('[POD Zoom] imageUrl =', url?.substring(0, 80));
+                          if (url) setZoomedImage(url);
+                          else alert('No image available for this POD record.');
+                        }}
+                      >
+                        {pod.imageUrl || pod.images?.[0] ? (
+                          <img src={pod.imageUrl || pod.images?.[0]} alt="POD" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 text-[9px] font-bold text-center px-1">No Image</div>
+                        )}
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Eye className="h-4 w-4 text-white" />
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-bold text-[#0B1C30] dark:text-slate-100 leading-none">{pod.driverName}</p>
-                        <p className="text-[10px] text-slate-400 font-mono mt-1 font-bold">{pod.driverId}</p>
+                        <p className="font-bold leading-none" style={{ color: '#111827' }}>{pod.driverName}</p>
+                        <p className="text-[10px] font-mono mt-1 font-bold" style={{ color: '#374151' }}>{pod.driverId}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-mono font-bold text-slate-700 dark:text-[#CBD5E1]">{pod.orderNumber}</td>
-                    <td className="px-6 py-4 font-mono text-xs">{pod.vehicleNumber}</td>
-                    <td className="px-6 py-4 font-semibold text-[#545F73] dark:text-[#CBD5E1]">{pod.customerName}</td>
-                    <td className="px-6 py-4 text-xs font-mono text-slate-400">
+                    <td className="px-6 py-4 font-mono font-bold text-[#1a1a2e] dark:text-[#CBD5E1]">{pod.orderNumber}</td>
+                    <td className="px-6 py-4 font-mono text-xs font-semibold text-[#1a1a2e] dark:text-[#CBD5E1]">{pod.vehicleNumber}</td>
+                    <td className="px-6 py-4 font-semibold text-[#1a1a2e] dark:text-[#CBD5E1]">{pod.customerName}</td>
+                    <td className="px-6 py-4 text-xs font-mono font-semibold" style={{ color: '#111827' }}>
                       {new Date(pod.createdAt).toLocaleDateString()} {new Date(pod.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </td>
                     <td className="px-6 py-4">
@@ -529,7 +544,7 @@ export const POD: React.FC = () => {
                     <div className="relative rounded-xl overflow-hidden aspect-video border border-slate-200 dark:border-slate-800 bg-[#F8F9FF] flex items-center justify-center shadow-inner group">
                       <img src={selectedPod.imageUrl} alt="Cargo verification" className="max-h-full object-contain" />
                       <button
-                        onClick={() => setZoomedImage({ url: selectedPod.imageUrl, pod: selectedPod })}
+                        onClick={() => setZoomedImage(selectedPod.imageUrl)}
                         className="absolute bottom-3 right-3 p-2 bg-black/60 hover:bg-black text-white rounded-xl shadow cursor-pointer transition-colors text-xs font-bold flex items-center gap-1 border-0"
                       >
                         <Eye className="h-3.5 w-3.5" /> Full Zoom
@@ -725,62 +740,51 @@ export const POD: React.FC = () => {
       {/* FULL LARGE ZOOM MODAL */}
       <AnimatePresence>
         {zoomedImage && createPortal(
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setZoomedImage(null)}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center"
+            style={{ backgroundColor: 'rgba(0,0,0,0.92)' }}
+            onClick={() => setZoomedImage(null)}
+          >
+            {/* Close hint */}
+            <p className="absolute top-5 left-1/2 -translate-x-1/2 text-white/40 text-xs font-medium tracking-widest uppercase select-none">Click anywhere to close</p>
+
             <motion.div
-              initial={{ opacity: 0, scale: 0.92 }}
+              initial={{ opacity: 0, scale: 0.88 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.92 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative max-w-4xl max-h-[90vh] overflow-hidden"
+              exit={{ opacity: 0, scale: 0.88 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              className="relative max-w-5xl w-full mx-4 flex items-center justify-center"
               onClick={e => e.stopPropagation()}
             >
-              <img src={zoomedImage.url} alt="Large cargo proof zoom" className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-[0_30px_80px_rgba(0,0,0,0.6)] border border-white/10" />
-              
+              <img
+                src={zoomedImage}
+                alt="Cargo proof full view"
+                className="max-h-[88vh] max-w-full object-contain rounded-2xl shadow-[0_40px_100px_rgba(0,0,0,0.8)] border border-white/10"
+              />
+
               {/* Top-right action buttons */}
-              <div className="absolute top-4 right-4 flex gap-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedPod(zoomedImage.pod);
-                    setZoomedImage(null);
-                  }}
-                  className="p-2.5 bg-[#006A6A]/80 hover:bg-[#006A6A] text-white rounded-xl shadow-lg border border-white/15 flex items-center gap-1.5 justify-center cursor-pointer transition-all hover:scale-105"
-                  title="View Full Details"
-                >
-                  <Eye className="h-4 w-4" />
-                  <span className="text-[11px] font-bold tracking-wide">Details</span>
-                </button>
+              <div className="absolute top-3 right-3 flex gap-2">
                 <a
-                  href={zoomedImage.url}
+                  href={zoomedImage}
                   download="SmartOps-Cargo-Proof-Full.jpg"
-                  className="p-2.5 bg-black/60 hover:bg-black/90 text-white rounded-xl shadow-lg border border-white/10 flex items-center justify-center transition-all hover:scale-105"
+                  onClick={e => e.stopPropagation()}
+                  className="p-2.5 bg-white/10 hover:bg-white/25 backdrop-blur text-white rounded-xl shadow-lg border border-white/10 flex items-center gap-1.5 text-xs font-bold transition-colors"
                   title="Download Image"
                 >
-                  <Download className="h-4 w-4" />
+                  <Download className="h-4 w-4" /> Download
                 </a>
                 <button
                   onClick={() => setZoomedImage(null)}
-                  className="p-2.5 bg-black/60 hover:bg-black/90 text-white rounded-xl shadow-lg border border-white/10 flex items-center justify-center cursor-pointer transition-all hover:scale-105"
-                  title="Close"
+                  className="p-2.5 bg-white/10 hover:bg-rose-600 backdrop-blur text-white rounded-xl shadow-lg border border-white/10 flex items-center justify-center cursor-pointer transition-colors"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </button>
               </div>
-
-              {/* Bottom info bar */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-5 pt-12 rounded-b-2xl">
-                <div className="flex items-end justify-between">
-                  <div>
-                    <p className="text-white font-bold text-sm leading-none">{zoomedImage.pod.driverName}</p>
-                    <p className="text-white/60 text-[11px] font-mono mt-1">{zoomedImage.pod.orderNumber} • {zoomedImage.pod.vehicleNumber}</p>
-                  </div>
-                  <Badge variant={zoomedImage.pod.status === 'Approved' ? 'success' : zoomedImage.pod.status === 'Rejected' ? 'danger' : 'warning'} className="font-bold text-[10px] shadow-lg">
-                    {zoomedImage.pod.status}
-                  </Badge>
-                </div>
-              </div>
             </motion.div>
-          </div>,
+          </motion.div>,
           document.body
         )}
       </AnimatePresence>
