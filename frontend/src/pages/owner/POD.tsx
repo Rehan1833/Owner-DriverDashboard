@@ -785,56 +785,48 @@ export const POD: React.FC = () => {
       </AnimatePresence>
 
       {/* FULL LARGE ZOOM MODAL */}
-      <AnimatePresence>
-        {zoomedImage && createPortal(
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center"
-            style={{ backgroundColor: 'rgba(0,0,0,0.92)' }}
-            onClick={() => setZoomedImage(null)}
+      {zoomedImage && createPortal(
+        <div
+          className="fixed inset-0 flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.92)', zIndex: 99999 }}
+          onClick={() => setZoomedImage(null)}
+        >
+          {/* Close hint */}
+          <p className="absolute top-5 left-1/2 -translate-x-1/2 text-white/40 text-xs font-medium tracking-widest uppercase select-none">Click anywhere to close</p>
+
+          <div
+            className="relative max-w-5xl w-full mx-4 flex items-center justify-center"
+            onClick={e => e.stopPropagation()}
           >
-            {/* Close hint */}
-            <p className="absolute top-5 left-1/2 -translate-x-1/2 text-white/40 text-xs font-medium tracking-widest uppercase select-none">Click anywhere to close</p>
+            <img
+              src={zoomedImage}
+              alt="Cargo proof full view"
+              className="max-h-[88vh] max-w-full object-contain rounded-2xl border border-white/10"
+              style={{ boxShadow: '0 40px 100px rgba(0,0,0,0.8)' }}
+            />
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.88 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.88 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-              className="relative max-w-5xl w-full mx-4 flex items-center justify-center"
-              onClick={e => e.stopPropagation()}
-            >
-              <img
-                src={zoomedImage}
-                alt="Cargo proof full view"
-                className="max-h-[88vh] max-w-full object-contain rounded-2xl shadow-[0_40px_100px_rgba(0,0,0,0.8)] border border-white/10"
-              />
-
-              {/* Top-right action buttons */}
-              <div className="absolute top-3 right-3 flex gap-2">
-                <a
-                  href={zoomedImage}
-                  download="SmartOps-Cargo-Proof-Full.jpg"
-                  onClick={e => e.stopPropagation()}
-                  className="p-2.5 bg-white/10 hover:bg-white/25 backdrop-blur text-white rounded-xl shadow-lg border border-white/10 flex items-center gap-1.5 text-xs font-bold transition-colors"
-                  title="Download Image"
-                >
-                  <Download className="h-4 w-4" /> Download
-                </a>
-                <button
-                  onClick={() => setZoomedImage(null)}
-                  className="p-2.5 bg-white/10 hover:bg-rose-600 backdrop-blur text-white rounded-xl shadow-lg border border-white/10 flex items-center justify-center cursor-pointer transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>,
-          document.body
-        )}
-      </AnimatePresence>
+            {/* Top-right action buttons */}
+            <div className="absolute top-3 right-3 flex gap-2">
+              <a
+                href={zoomedImage}
+                download="SmartOps-Cargo-Proof-Full.jpg"
+                onClick={e => e.stopPropagation()}
+                className="p-2.5 bg-white/10 hover:bg-white/25 backdrop-blur text-white rounded-xl shadow-lg border border-white/10 flex items-center gap-1.5 text-xs font-bold transition-colors"
+                title="Download Image"
+              >
+                <Download className="h-4 w-4" /> Download
+              </a>
+              <button
+                onClick={(e) => { e.stopPropagation(); setZoomedImage(null); }}
+                className="p-2.5 bg-white/10 hover:bg-rose-600 backdrop-blur text-white rounded-xl shadow-lg border border-white/10 flex items-center justify-center cursor-pointer transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* UPLOAD POD MODAL */}
       <AnimatePresence>
