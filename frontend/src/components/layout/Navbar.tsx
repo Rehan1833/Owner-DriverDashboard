@@ -59,7 +59,6 @@ export const Navbar: React.FC = () => {
     if (settings.soundEnabled) {
       soundPlayer.play('Success', settings.soundVolume);
     }
-    triggerNotification('System Alert', 'Notifications Clean', 'All unread notifications marked as read.', 'Info');
     setShowNotifications(false);
   };
 
@@ -170,9 +169,7 @@ export const Navbar: React.FC = () => {
           >
             <Bell className="h-4 w-4" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#BA1A1A] text-white rounded-full text-[9px] font-extrabold flex items-center justify-center border-2 border-white dark:border-[#111827] animate-bounce">
-                {unreadCount}
-              </span>
+              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#BA1A1A] rounded-full ring-2 ring-white dark:ring-[#111827] animate-pulse" />
             )}
           </button>
 
@@ -199,18 +196,26 @@ export const Navbar: React.FC = () => {
                       <div
                         key={notif.id}
                         onClick={handleNotificationsClick}
-                        className="p-3.5 hover:bg-[#F3F4F6] dark:hover:bg-[#0F172A]/60 transition-colors cursor-pointer"
+                        className={`p-3.5 transition-colors cursor-pointer ${
+                          notif.read
+                            ? 'opacity-65 hover:bg-[#F3F4F6] dark:hover:bg-[#0F172A]/40'
+                            : 'bg-[#006A6A]/5 dark:bg-[#006A6A]/10 hover:bg-[#F3F4F6] dark:hover:bg-[#0F172A]/60'
+                        }`}
                       >
                         <div className="flex gap-2.5">
-                          <span
-                            className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                              notif.severity === 'Error'
-                                ? 'bg-[#BA1A1A]'
-                                : notif.severity === 'Warning'
-                                ? 'bg-[#F59E0B]'
-                                : 'bg-[#006A6A]'
-                            }`}
-                          />
+                          {!notif.read ? (
+                            <span
+                              className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                                notif.severity === 'Error'
+                                  ? 'bg-[#BA1A1A]'
+                                  : notif.severity === 'Warning'
+                                  ? 'bg-[#F59E0B]'
+                                  : 'bg-[#006A6A]'
+                              }`}
+                            />
+                          ) : (
+                            <span className="w-2 h-2 rounded-full mt-1.5 shrink-0 bg-slate-300 dark:bg-slate-600 opacity-40" />
+                          )}
                           <div className="flex-1 min-w-0">
                             <p className="text-[11px] font-bold text-[#111827] dark:text-[#F8FAFC] leading-tight">{notif.title}</p>
                             <p className="text-[10px] text-[#4B5563] dark:text-[#94A3B8] leading-tight mt-0.5 break-words">{notif.message}</p>

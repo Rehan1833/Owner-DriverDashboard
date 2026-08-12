@@ -32,8 +32,7 @@ import {
   User,
   FileCheck,
   Download,
-  Sparkles,
-  X
+  Sparkles
 } from 'lucide-react';
 import { Trip } from '../../types';
 import { api } from '../../api/client';
@@ -188,36 +187,12 @@ export const OwnerTrips: React.FC = () => {
   };
 
   const calculateFreshness = (trip: Trip) => {
-    if (!trip.lastGpsUpdate && !(trip as any).lastUpdated && !trip.latitude) {
-      return { relativeTime: 'No updates', label: 'Offline', isOnline: false, color: 'text-slate-500 bg-slate-100 dark:bg-slate-800 border-slate-300' };
-    }
-    const lastTimeStr = trip.lastGpsUpdate || (trip as any).lastUpdated || trip.timestamp;
-    const lastTime = lastTimeStr ? new Date(lastTimeStr).getTime() : Date.now();
-    const diffSecs = Math.max(0, Math.floor((Date.now() - lastTime) / 1000));
-    
-    let relativeTime = 'Just now';
-    if (diffSecs >= 60) {
-      const diffMins = Math.floor(diffSecs / 60);
-      if (diffMins >= 60) {
-        const diffHours = Math.floor(diffMins / 60);
-        relativeTime = `${diffHours}h ago`;
-      } else {
-        relativeTime = `${diffMins}m ago`;
-      }
-    } else {
-      relativeTime = `${diffSecs}s ago`;
-    }
-
-    const isOnline = (trip as any).isOnline ?? (diffSecs < 120);
-
-    return {
-      relativeTime,
-      isOnline,
-      label: isOnline ? `Online (${relativeTime})` : `Offline (${relativeTime})`,
-      color: isOnline 
-        ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300' 
-        : 'text-slate-700 bg-slate-100 dark:bg-slate-800 border-slate-300'
-    };
+    if (!trip.lastGpsUpdate && !trip.latitude) return { label: '⚫ GPS Disabled', status: 'OFFLINE', color: 'text-slate-500 bg-slate-100 dark:bg-slate-800 border-slate-300' };
+    const lastTime = trip.lastGpsUpdate ? new Date(trip.lastGpsUpdate).getTime() : new Date(trip.timestamp || Date.now()).getTime();
+    const diffMins = Math.floor((Date.now() - lastTime) / 60000);
+    if (diffMins < 2) return { label: '🟢 Driver Online', status: 'ONLINE', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300' };
+    if (diffMins < 5) return { label: `🟠 Driver Idle (${diffMins}m)`, status: 'IDLE', color: 'text-amber-700 bg-amber-50 dark:bg-amber-950/40 border-amber-300' };
+    return { label: '🔴 Offline', status: 'OFFLINE', color: 'text-red-700 bg-red-50 dark:bg-red-950/40 border-red-300' };
   };
 
   const handleOpenHistory = async (trip: Trip) => {
@@ -534,277 +509,158 @@ export const OwnerTrips: React.FC = () => {
         onClose={() => setIsCreateModalOpen(false)}
       />
 
-      {/* DRIVER CARD SIDE DRAWER (Enterprise SaaS Logistics Panel) */}
+      {/* DRIVER CARD SIDE DRAWER */}
       {activeDrawerTrip && (() => {
         const fresh = calculateFreshness(activeDrawerTrip);
         const lat = activeDrawerTrip.latitude || 18.5204;
         const lng = activeDrawerTrip.longitude || 73.8567;
         const liveMapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-        const pct = calculateTripProgress(activeDrawerTrip.status);
 
         return (
-          <div
-            className="fixed inset-0 z-50 bg-slate-900/20 flex justify-end transition-opacity"
-            onClick={() => setActiveDrawerTrip(null)}
-          >
-            <div
-              className="w-full max-w-[480px] md:max-w-[440px] sm:max-w-full bg-white dark:bg-[#0F172A] h-full shadow-2xl overflow-y-auto flex flex-col border-l border-slate-200 dark:border-slate-800 animate-in slide-in-from-right"
-              onClick={e => e.stopPropagation()}
-            >
-              {/* Header Bar */}
-              <div className="p-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F172A] sticky top-0 z-20">
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#006A6A] to-teal-500 text-white font-extrabold text-lg flex items-center justify-center shadow-md shrink-0">
+          <div className="fixed inset-0 z-50 bg-slate-900/60 flex justify-end transition-opacity">
+            <div className="w-full max-w-md bg-white dark:bg-[#1E293B] h-full shadow-2xl overflow-y-auto flex flex-col border-l border-slate-200 dark:border-slate-700 animate-in slide-in-from-right">
+              {/* Drawer Header */}
+              <div className="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-teal-600 text-white font-bold flex items-center justify-center text-sm shadow-md">
                     {(activeDrawerTrip.driverName || 'D')[0]}
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-[20px] font-bold text-[#0F172A] dark:text-[#F8FAFC] tracking-tight leading-none truncate">
-                      {activeDrawerTrip.driverName}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[14px] font-medium font-mono text-slate-500 dark:text-slate-400">
-                        {activeDrawerTrip.driverId || 'DRV-8106'}
-                      </span>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${fresh.color}`}>
-                        {fresh.label}
-                      </span>
-                    </div>
+                  <div>
+                    <h3 className="font-bold text-sm">{activeDrawerTrip.driverName}</h3>
+                    <span className="font-mono text-xs text-teal-400">{activeDrawerTrip.driverId || 'DRV-2026-000001'}</span>
                   </div>
                 </div>
                 <button
                   onClick={() => setActiveDrawerTrip(null)}
-                  aria-label="Close drawer"
-                  className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer shrink-0 ml-2"
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
                 >
-                  <X className="h-5 w-5" />
+                  <XCircle className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Drawer Body */}
-              <div className="p-6 space-y-6 text-left flex-1 text-xs">
-                
-                {/* 1. Primary Information Cards Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
-                    <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 block mb-1">
-                      Assigned Vehicle
+              <div className="p-5 space-y-5 text-left flex-1 text-xs">
+                {/* Live Status Badge & Telemetry Bar */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${fresh.color}`}>
+                    {fresh.label}
+                  </span>
+                  <div className="flex items-center gap-3 font-mono font-semibold text-slate-600 dark:text-slate-300">
+                    <span className="flex items-center gap-1">
+                      <Battery className="w-3.5 h-3.5 text-emerald-500" /> {(activeDrawerTrip as any).battery || 92}%
                     </span>
-                    <span className="text-[16px] font-bold text-[#0F172A] dark:text-[#F8FAFC] font-mono block">
-                      {activeDrawerTrip.vehicleNumber}
-                    </span>
-                  </div>
-
-                  <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
-                    <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 block mb-1">
-                      Company
-                    </span>
-                    <span className="text-[16px] font-bold text-[#0F172A] dark:text-[#F8FAFC] block truncate" title={company?.companyName || 'Fourise Pvt. Ltd.'}>
-                      {company?.companyName || 'Fourise Pvt. Ltd.'}
+                    <span className="flex items-center gap-1">
+                      <Wifi className="w-3.5 h-3.5 text-blue-500" /> {(activeDrawerTrip as any).network || '4G'}
                     </span>
                   </div>
+                </div>
 
-                  <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
-                    <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 block mb-1">
-                      Driver Phone
-                    </span>
-                    <a
-                      href={`tel:${activeDrawerTrip.customerPhone || '9876543210'}`}
-                      className="text-[16px] font-bold text-[#006A6A] dark:text-teal-400 hover:underline flex items-center gap-1.5"
-                    >
-                      <PhoneCall className="w-4 h-4 text-[#006A6A] shrink-0" />
-                      <span>{activeDrawerTrip.customerPhone || '9876543210'}</span>
+                {/* Driver & Trip Info Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold mb-0.5">Assigned Vehicle</span>
+                    <span className="font-bold text-slate-800 dark:text-white font-mono">{activeDrawerTrip.vehicleNumber}</span>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold mb-0.5">Company</span>
+                    <span className="font-bold text-slate-800 dark:text-white">{company?.companyName || 'Fourise Pvt. Ltd.'}</span>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold mb-0.5">Driver Phone</span>
+                    <a href={`tel:${activeDrawerTrip.customerPhone}`} className="font-bold text-teal-600 hover:underline flex items-center gap-1">
+                      <PhoneCall className="w-3 h-3" /> {activeDrawerTrip.customerPhone || '9876543210'}
                     </a>
                   </div>
 
-                  <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
-                    <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 block mb-1">
-                      Trip Number
-                    </span>
-                    <span className="text-[16px] font-bold text-[#0F172A] dark:text-[#F8FAFC] font-mono block">
-                      {activeDrawerTrip.tripNumber}
-                    </span>
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold mb-0.5">Trip Number</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-white">{activeDrawerTrip.tripNumber}</span>
                   </div>
                 </div>
 
-                {/* 2. Current Address Location Card */}
-                <div className="p-4 bg-teal-50/80 dark:bg-teal-950/40 rounded-2xl border border-teal-200/80 dark:border-teal-800/80 space-y-1.5 shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[13px] font-semibold text-teal-800 dark:text-teal-300 uppercase tracking-wider flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-[#006A6A] dark:text-teal-400" /> Current Address Location
-                    </span>
-                    <span className="text-[11px] font-bold text-teal-700 dark:text-teal-400 bg-teal-100 dark:bg-teal-900/60 px-2 py-0.5 rounded-full">
-                      Live GPS
-                    </span>
-                  </div>
-                  <p className="text-[16px] font-extrabold text-[#0F172A] dark:text-slate-100 leading-snug break-words mt-1">
-                    {activeDrawerTrip.currentAddress || activeDrawerTrip.currentLocation || 'Pune DC Gate 1, Maharashtra'}
+                {/* Current Location Address */}
+                <div className="p-3.5 bg-teal-50/60 dark:bg-teal-950/40 rounded-xl border border-teal-200 dark:border-teal-800 space-y-1">
+                  <span className="text-teal-800 dark:text-teal-300 font-bold block text-[11px] uppercase tracking-wider flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-teal-600" /> Current Address Location
+                  </span>
+                  <p className="font-semibold text-slate-800 dark:text-slate-100 text-xs">
+                    {activeDrawerTrip.currentAddress || activeDrawerTrip.currentLocation || 'Near Pune Railway Station'}
                   </p>
                 </div>
 
-                {/* 3. Trip Progress & Checkpoint Timeline Card */}
-                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 space-y-4 shadow-2xs">
+                {/* Telemetry Metrics */}
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-slate-400 block text-[10px]">Speed</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-white text-xs">{activeDrawerTrip.speed || 0} km/h</span>
+                  </div>
+                  <div className="p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-slate-400 block text-[10px]">GPS Accuracy</span>
+                    <span className="font-mono font-bold text-emerald-600 text-xs">{activeDrawerTrip.accuracy || 10} m</span>
+                  </div>
+                  <div className="p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-slate-400 block text-[10px]">ETA</span>
+                    <span className="font-mono font-bold text-teal-600 text-xs">{activeDrawerTrip.eta || '30 mins'}</span>
+                  </div>
+                </div>
+
+                {/* Google Map View */}
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400">
-                      Trip Lifecycle Progress
-                    </span>
-                    <span className="text-[16px] font-bold text-[#006A6A] dark:text-teal-400 font-mono">
-                      {pct}%
-                    </span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300">Live Driver GPS Map</span>
+                    <a
+                      href={liveMapUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-teal-600 hover:underline flex items-center gap-1 font-bold"
+                    >
+                      Open Google Maps <ExternalLink className="w-3 h-3" />
+                    </a>
                   </div>
-
-                  {/* Progress Bar */}
-                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-[#006A6A] to-emerald-500 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-
-                  {/* Route Waypoints Timeline */}
-                  <div className="space-y-2.5 pt-1">
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0 border border-emerald-300">
-                        ✓
-                      </div>
-                      <div className="min-w-0">
-                        <span className="text-[11px] font-bold text-slate-400 block uppercase">Pickup Origin</span>
-                        <span className="text-[13px] font-bold text-[#0F172A] dark:text-slate-200 truncate block">
-                          📍 {activeDrawerTrip.pickupLocation || 'Pune Central Logistics Hub'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="ml-3 pl-3 border-l-2 border-dashed border-teal-400/40 py-1 space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-slate-500 font-medium">Waypoint / Checkpoint 1</span>
-                        <span className="text-emerald-600 font-bold">Passed</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-[11px] shrink-0 border border-rose-300">
-                        🏁
-                      </div>
-                      <div className="min-w-0">
-                        <span className="text-[11px] font-bold text-slate-400 block uppercase">Destination Dropoff</span>
-                        <span className="text-[13px] font-bold text-[#0F172A] dark:text-slate-200 truncate block">
-                          🎯 {activeDrawerTrip.dropLocation || 'Chakan Industrial Zone'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  <GoogleDriverMap
+                    driverLocation={{
+                      lat,
+                      lng,
+                      speed: activeDrawerTrip.speed || 0,
+                      address: activeDrawerTrip.currentAddress
+                    }}
+                    pickupLocation={{
+                      lat: activeDrawerTrip.pickupCoordinates?.lat || 18.5204,
+                      lng: activeDrawerTrip.pickupCoordinates?.lng || 73.8567,
+                      address: activeDrawerTrip.pickupLocation
+                    }}
+                    dropLocation={{
+                      lat: activeDrawerTrip.dropCoordinates?.lat || 18.7602,
+                      lng: activeDrawerTrip.dropCoordinates?.lng || 73.8612,
+                      address: activeDrawerTrip.dropLocation
+                    }}
+                    height="200px"
+                  />
                 </div>
 
-                {/* 4. Live Telemetry Metric Cards Grid */}
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
-                    <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 block mb-1">Current Speed</span>
-                    <span className="text-[16px] font-bold text-[#0F172A] dark:text-white font-mono block">
-                      {activeDrawerTrip.speed || 0} km/h
-                    </span>
-                  </div>
-
-                  <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
-                    <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 block mb-1">GPS Accuracy</span>
-                    <span className="text-[16px] font-bold text-emerald-600 dark:text-emerald-400 font-mono block">
-                      ±{activeDrawerTrip.accuracy || 10} m
-                    </span>
-                  </div>
-
-                  <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
-                    <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 block mb-1">ETA</span>
-                    <span className="text-[16px] font-bold text-[#006A6A] dark:text-teal-300 font-mono block">
-                      {activeDrawerTrip.eta || '34 Mins'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* 5. Device Telemetry & Signal Bar */}
-                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
-                  <div>
-                    <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Distance Left</span>
-                    <span className="text-[16px] font-bold text-[#0F172A] dark:text-white font-mono">
-                      {activeDrawerTrip.distanceRemaining || 18.4} km
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 font-mono font-bold text-xs">
-                    <span className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
-                      <Battery className="w-4 h-4 text-emerald-600" /> {(activeDrawerTrip as any).battery || 92}%
-                    </span>
-                    <span className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-xl border border-blue-200 dark:border-blue-800/50">
-                      <Wifi className="w-4 h-4 text-blue-600" /> {(activeDrawerTrip as any).network || '4G'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* 6. Live Telemetry Coordinates Banner */}
-                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 space-y-2 shadow-2xs">
-                  <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 block uppercase tracking-wider">
-                    Raw Telemetry Coordinates
-                  </span>
-                  <div className="grid grid-cols-2 gap-2 font-mono text-xs text-[#0F172A] dark:text-slate-200">
-                    <div>Lat: <strong className="font-bold">{lat.toFixed(5)}° N</strong></div>
-                    <div>Lng: <strong className="font-bold">{lng.toFixed(5)}° E</strong></div>
-                    <div>Heading: <strong className="font-bold">90° (East)</strong></div>
-                    <div>Updated: <strong className="font-bold text-emerald-600">Just now</strong></div>
-                  </div>
-                </div>
-
-                {/* 7. Google Map Widget Container */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[13px] font-bold text-[#0F172A] dark:text-slate-200">
-                      Live Driver GPS Navigation Map
-                    </span>
-                  </div>
-                  <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-md">
-                    <GoogleDriverMap
-                      driverLocation={{
-                        lat,
-                        lng,
-                        speed: activeDrawerTrip.speed || 0,
-                        address: activeDrawerTrip.currentAddress
-                      }}
-                      pickupLocation={{
-                        lat: activeDrawerTrip.pickupCoordinates?.lat || 18.5204,
-                        lng: activeDrawerTrip.pickupCoordinates?.lng || 73.8567,
-                        address: activeDrawerTrip.pickupLocation
-                      }}
-                      dropLocation={{
-                        lat: activeDrawerTrip.dropCoordinates?.lat || 18.7602,
-                        lng: activeDrawerTrip.dropCoordinates?.lng || 73.8612,
-                        address: activeDrawerTrip.dropLocation
-                      }}
-                      height="260px"
-                      showControls={true}
-                    />
-                  </div>
-
-                  {/* Full-width Open in Google Maps Button */}
+                {/* Action Buttons */}
+                <div className="pt-2 flex items-center gap-2">
                   <a
                     href={liveMapUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-3 bg-[#006A6A] hover:bg-[#005555] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99] cursor-pointer"
+                    className="flex-1 py-2.5 bg-[#006A6A] hover:bg-[#005555] text-white rounded-xl font-bold text-center flex items-center justify-center gap-1.5 shadow-md"
                   >
-                    <span>📍 Open in Google Maps</span>
-                    <ExternalLink className="w-4 h-4 text-teal-100" />
+                    📍 Live Map
                   </a>
-                </div>
 
-                {/* 8. Extra Operational Actions (View POD if available) */}
-                {(activeDrawerTrip.status === 'POD Uploaded' || activeDrawerTrip.status === 'Delivered' || activeDrawerTrip.status === 'Completed') && (
-                  <div className="pt-2">
+                  {(activeDrawerTrip.status === 'POD Uploaded' || activeDrawerTrip.status === 'Delivered' || activeDrawerTrip.status === 'Completed') && (
                     <Button
                       variant="outline"
                       onClick={() => setPodModalTrip(activeDrawerTrip)}
-                      className="w-full py-3 border-blue-300 text-blue-700 font-bold bg-blue-50 hover:bg-blue-100 rounded-xl"
+                      className="py-2.5 px-3 border-blue-300 text-blue-700 font-bold bg-blue-50"
                     >
-                      <FileCheck className="w-4 h-4 mr-2" /> View Verified Proof of Delivery (POD)
+                      <FileCheck className="w-4 h-4 mr-1" /> View POD
                     </Button>
-                  </div>
-                )}
-
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -829,13 +685,13 @@ export const OwnerTrips: React.FC = () => {
           title={`Location History Audit Trail - ${historyTrip.tripNumber}`}
         >
           <div className="space-y-4 text-left">
-            <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-100 dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-white">
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-900 p-3.5 rounded-xl border border-slate-700 text-xs text-white">
               <div>
                 <span className="font-bold block">Driver: {historyTrip.driverName} ({historyTrip.driverId || 'DRV-2026-000001'})</span>
-                <span className="text-slate-500 dark:text-slate-400 text-[11px]">Vehicle: {historyTrip.vehicleNumber} · Status: {historyTrip.status}</span>
+                <span className="text-slate-400 text-[11px]">Vehicle: {historyTrip.vehicleNumber} · Status: {historyTrip.status}</span>
               </div>
               <div className="text-right">
-                <span className="bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md font-mono text-[11px] font-bold border border-emerald-200 dark:border-emerald-500/30">
+                <span className="bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-md font-mono text-[11px] font-bold border border-emerald-500/30">
                   {locationHistoryRecords.length} GPS Trail Records
                 </span>
               </div>
@@ -879,48 +735,25 @@ export const OwnerTrips: React.FC = () => {
         >
           <div className="space-y-4 text-left text-xs">
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                <span className="text-slate-500 dark:text-slate-400 block mb-1 font-bold text-[11px] uppercase tracking-wider">Assigned Driver</span>
-                <span className="font-extrabold text-slate-900 dark:text-white text-xs block">{viewDetailsTrip.driverName}</span>
-                <span className="font-mono text-[10px] text-teal-700 dark:text-teal-400 font-bold bg-teal-50 dark:bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-200 dark:border-teal-800 inline-block mt-1">
-                  {viewDetailsTrip.driverId || 'DRV-2026-000001'}
-                </span>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                <span className="text-slate-400 block mb-0.5 font-bold">Assigned Driver</span>
+                <span className="font-bold text-slate-800 dark:text-white">{viewDetailsTrip.driverName} ({viewDetailsTrip.driverId || 'DRV-2026-000001'})</span>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                <span className="text-slate-500 dark:text-slate-400 block mb-1 font-bold text-[11px] uppercase tracking-wider">Assigned Truck</span>
-                <span className="font-mono font-extrabold text-slate-900 dark:text-white text-xs bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 inline-block">
-                  {viewDetailsTrip.vehicleNumber}
-                </span>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                <span className="text-slate-400 block mb-0.5 font-bold">Assigned Truck</span>
+                <span className="font-bold text-slate-800 dark:text-white">{viewDetailsTrip.vehicleNumber}</span>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
-              <span className="font-extrabold text-slate-900 dark:text-white block border-b border-slate-200 dark:border-slate-700 pb-1.5 uppercase tracking-wider text-[11px]">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+              <span className="font-bold text-slate-700 dark:text-slate-300 block border-b border-slate-200 dark:border-slate-700 pb-1 uppercase tracking-wide text-[10px]">
                 Cargo & Invoice Specification
               </span>
-              <div className="grid grid-cols-2 gap-3 text-slate-700 dark:text-slate-200">
-                <div>
-                  <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold block mb-0.5">Material</span>
-                  <strong className="text-slate-900 dark:text-white font-extrabold text-xs">{viewDetailsTrip.material || 'General Freight'}</strong>
-                </div>
-                <div>
-                  <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold block mb-0.5">Weight</span>
-                  <strong className="text-slate-900 dark:text-white font-extrabold text-xs">{viewDetailsTrip.weight || '1.5 Tons'}</strong>
-                </div>
-                <div>
-                  <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold block mb-0.5">Invoice #</span>
-                  <strong className="font-mono text-slate-900 dark:text-white font-extrabold text-xs">{viewDetailsTrip.invoiceNumber || 'INV-2026-001'}</strong>
-                </div>
-                <div>
-                  <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold block mb-0.5">Priority</span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase inline-block ${
-                    viewDetailsTrip.priority === 'Urgent' ? 'bg-red-500/20 text-red-600 border border-red-500/30' :
-                    viewDetailsTrip.priority === 'High' ? 'bg-amber-500/20 text-amber-600 border border-amber-500/30' :
-                    'bg-blue-500/20 text-blue-600 border border-blue-500/30'
-                  }`}>
-                    {viewDetailsTrip.priority || 'Normal'}
-                  </span>
-                </div>
+              <div className="grid grid-cols-2 gap-2 text-slate-600 dark:text-slate-300">
+                <div>Material: <strong className="text-slate-900 dark:text-white">{viewDetailsTrip.material}</strong></div>
+                <div>Weight: <strong className="text-slate-900 dark:text-white">{viewDetailsTrip.weight}</strong></div>
+                <div>Invoice #: <strong className="text-slate-900 dark:text-white">{viewDetailsTrip.invoiceNumber}</strong></div>
+                <div>Priority: <strong className="text-slate-900 dark:text-white">{viewDetailsTrip.priority || 'Normal'}</strong></div>
               </div>
             </div>
           </div>

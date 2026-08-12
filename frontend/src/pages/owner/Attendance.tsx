@@ -9,7 +9,7 @@ import { Table } from '../../components/tables/Table';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, UserCheck, UserX, UserMinus, Clock, AlertTriangle, Truck, TrendingUp,
-  Navigation, Activity, ShieldAlert, DollarSign, MapPin, Calendar, Award,
+  Navigation, Activity, DollarSign, MapPin, Calendar, Award,
   FileText, Eye, LogOut, ExternalLink, Bell, SlidersHorizontal, ArrowUpRight,
   ArrowDownRight, Search, Download, CheckCircle2, AlertOctagon, HelpCircle, Info
 } from 'lucide-react';
@@ -181,14 +181,7 @@ export const Attendance: React.FC = () => {
   }, [activeTripsCount, completedTripsCount]);
 
 
-  // Mock Notifications for alerts strip
-  const systemAlerts = useMemo(() => {
-    return notifications.map(n => ({
-      type: n.severity === 'Error' ? 'emergency' : n.severity === 'Warning' ? 'delay' : 'info',
-      msg: `${n.title}: ${n.message}`,
-      time: n.timestamp
-    }));
-  }, [notifications]);
+
 
   // 2. TABLE FILTERING LOGIC
   const filteredAttendance = useMemo(() => {
@@ -347,23 +340,7 @@ export const Attendance: React.FC = () => {
         </div>
       </div>
 
-      {/* Real-time System Alarms Strip */}
-      <div className="bg-[#0B1C30] border border-[#E5EEFF] dark:border-[#334155] rounded-2xl p-4.5 text-white shadow-lg relative flex flex-col gap-2.5">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl shrink-0 flex items-center justify-center animate-pulse">
-            <ShieldAlert className="h-4 w-4" />
-          </div>
-          <span className="text-xs font-bold text-[#14B8A6] uppercase tracking-wider">Active System Warning Signals</span>
-        </div>
-        <div className="divide-y divide-slate-800/50 space-y-2.5 pt-1">
-          {systemAlerts.map((alert, i) => (
-            <div key={i} className="flex justify-between items-start pt-2.5 first:pt-0 gap-4 text-xs">
-              <span className="font-semibold text-slate-200 whitespace-normal break-words leading-relaxed">{alert.msg}</span>
-              <span className="text-[10px] text-[#6D7A79] shrink-0 font-mono mt-0.5">{alert.time}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+
 
       {/* metrics grid: 8 KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
