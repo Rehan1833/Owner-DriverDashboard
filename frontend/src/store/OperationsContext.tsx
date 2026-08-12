@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole, Vehicle, Trip, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord, Company } from '../types';
+import { User, UserRole, Vehicle, Trip, InventoryItem, PayrollRecord, SystemNotification, ActivityItem, AttendanceRecord, Company, DriverRecord } from '../types';
 import { mockNotifications, mockActivities, mockInventory, mockPayroll } from '../api/mockData';
 import { api } from '../api/client';
 import { io } from 'socket.io-client';
@@ -13,8 +13,10 @@ interface OperationsContextType {
   inventory: InventoryItem[];
   payroll: PayrollRecord[];
   attendance: AttendanceRecord[];
+  drivers: DriverRecord[];
   notifications: SystemNotification[];
   activities: ActivityItem[];
+  refreshDrivers: () => Promise<void>;
   login: (email: string, role: UserRole, password?: string) => Promise<void>;
   googleAuth: (googleToken: string, role: UserRole) => Promise<any>;
   register: (payload: any) => Promise<{ success?: boolean; message: string; otpCode?: string; token?: string; user?: User }>;
@@ -105,6 +107,7 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [payroll, setPayroll] = useState<PayrollRecord[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [drivers, setDrivers] = useState<DriverRecord[]>([]);
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [company, setCompany] = useState<Company | null>(null);
@@ -118,12 +121,13 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return;
     }
     try {
-      const [invData, attData, salData, fltData, trpData] = await Promise.allSettled([
+      const [invData, attData, salData, fltData, trpData, drvData] = await Promise.allSettled([
         api.inventory.getAll(),
         api.attendance.getAll(),
         api.salary.getAll(),
         api.fleet.getAll(),
-        api.trips.getAll()
+        api.trips.getAll(),
+        api.drivers.getAll({ limit: 100 })
       ]);
 
       if (invData.status === 'fulfilled') setInventory(invData.value || []);
@@ -131,6 +135,11 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (salData.status === 'fulfilled') setPayroll(salData.value || []);
       if (fltData.status === 'fulfilled') setVehicles(fltData.value || []);
       if (trpData.status === 'fulfilled') setTrips(trpData.value || []);
+      if (drvData.status === 'fulfilled') {
+        const dVal = drvData.value;
+        const dList = Array.isArray(dVal?.data) ? dVal.data : (Array.isArray(dVal) ? dVal : []);
+        setDrivers(dList);
+      }
 
       if (user.role === 'Owner') {
         try {
@@ -680,8 +689,10 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         inventory,
         payroll,
         attendance,
+        drivers,
         notifications,
         activities,
+        refreshDrivers: refreshAllData,
         login,
         googleAuth,
         register,

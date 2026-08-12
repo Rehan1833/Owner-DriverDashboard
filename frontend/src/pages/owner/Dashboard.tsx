@@ -150,6 +150,7 @@ const KPICard: React.FC<{
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const {
+    drivers,
     vehicles,
     trips,
     inventory,
@@ -223,6 +224,7 @@ export const Dashboard: React.FC = () => {
   };
 
   // Safe array references to prevent blank page crashes
+  const safeDrivers = drivers || [];
   const safeTrips = trips || [];
   const safeVehicles = vehicles || [];
   const safeInventory = inventory || [];
@@ -243,21 +245,44 @@ export const Dashboard: React.FC = () => {
     }));
   }, [safeTrips]);
 
+  // Dynamic employee headcount based on real driver accounts
+  const totalEmployeesCount = useMemo(() => {
+    if (safeDrivers.length > 0) return safeDrivers.length;
+    
+    // Fallback if drivers array is loading
+    const names = new Set<string>();
+    safeVehicles.forEach(v => { if (v?.driver) names.add(v.driver); });
+    safeAttendance.forEach(a => { if (a?.employeeName || a?.driverId) names.add(a.employeeName || a.driverId); });
+    return Math.max(names.size, 1);
+  }, [safeDrivers, safeVehicles, safeAttendance]);
+
+  // Count distinct drivers present today, capped at totalEmployeesCount
+  const presentCount = useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayAttendance = safeAttendance.filter(a => a?.date === todayStr);
+    
+    let active = 0;
+    if (todayAttendance.length > 0) {
+      active = todayAttendance.filter(a => a?.attendanceStatus === 'Present' || a?.attendanceStatus === 'Late').length;
+    } else {
+      const latestPerDriver = new Map<string, string>();
+      safeAttendance.forEach(a => {
+        const key = a.driverId || a.employeeName;
+        if (key && !latestPerDriver.has(key)) {
+          latestPerDriver.set(key, a.attendanceStatus);
+        }
+      });
+      active = Array.from(latestPerDriver.values()).filter(status => status === 'Present' || status === 'Late').length;
+    }
+    
+    return Math.min(active, totalEmployeesCount);
+  }, [safeAttendance, totalEmployeesCount]);
+
   // Calculated Metrics for the 10 KPI Cards
   const activeVehiclesCount = safeVehicles.filter(v => v?.status === 'Moving').length;
   const lowStockCount = safeInventory.filter(i => (i?.quantity ?? 0) <= (i?.minimumQuantity ?? 0)).length;
-  const presentCount = safeAttendance.filter(a => a?.attendanceStatus === 'Present' || a?.attendanceStatus === 'Late').length;
   const pendingTripsCount = safeTrips.filter(t => t?.status !== 'Completed').length;
   const processedPayrollCount = safePayroll.filter(p => p?.paymentStatus === 'Paid').length;
-
-  // Dynamic employee count
-  const totalEmployeesCount = useMemo(() => {
-    const names = new Set<string>();
-    safeVehicles.forEach(v => { if (v?.driver) names.add(v.driver); });
-    safeAttendance.forEach(a => { if (a?.employeeName) names.add(a.employeeName); });
-    safePayroll.forEach(p => { if (p?.employee) names.add(p.employee); });
-    return Math.max(names.size, 1);
-  }, [safeVehicles, safeAttendance, safePayroll]);
 
   // Dynamic Chart Datasets
   const totalInventoryRevenue = useMemo(() => {

@@ -123,7 +123,7 @@ const MetricCard: React.FC<{
 };
 
 export const Attendance: React.FC = () => {
-  const { attendance, vehicles, trips, payroll, notifications, triggerNotification } = useOperations();
+  const { attendance, vehicles, trips, payroll, notifications, triggerNotification, drivers } = useOperations();
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -133,51 +133,118 @@ export const Attendance: React.FC = () => {
   const [attendanceFilter, setAttendanceFilter] = useState('All');
   const [dateFilter, setDateFilter] = useState('');
 
-  // 1. DYNAMIC KPI CALCULATION
+  // 1. DYNAMIC ACCURATE KPI CALCULATION
   const todayStr = new Date().toISOString().split('T')[0];
-  const totalDriversCount = vehicles.length + 1; // Seeding accounts
+  const todayLocal = new Date().toLocaleDateString('en-CA');
 
-  const todayAttendance = attendance.filter(a => a.date === todayStr);
-  const presentDriversCount = todayAttendance.filter(a => a.attendanceStatus === 'Present' || a.attendanceStatus === 'Late' || a.status === 'Present' || a.status === 'Late').length;
-  const lateCheckInCount = todayAttendance.filter(a => a.attendanceStatus === 'Late' || a.status === 'Late').length;
-  const checkedOutDriversCount = todayAttendance.filter(a => a.checkOut).length;
+  // Total drivers in pool: use registered drivers list or unique attendance/vehicles count
+  const totalDriversCount = useMemo(() => {
+    if (drivers && drivers.length > 0) return drivers.length;
+    const uniqueDrivers = new Set<string>();
+    attendance.forEach(a => { if (a?.driverId || a?.employeeName) uniqueDrivers.add(a.driverId || a.employeeName); });
+    vehicles.forEach(v => { if (v?.driver) uniqueDrivers.add(v.driver); });
+    return uniqueDrivers.size > 0 ? uniqueDrivers.size : 1;
+  }, [drivers, attendance, vehicles]);
+
+  // Today's attendance records
+  const todayAttendance = useMemo(() => {
+    return attendance.filter(a => {
+      if (!a) return false;
+      return a.date === todayStr || a.date === todayLocal || (a.checkIn && a.checkIn.includes(todayStr));
+    });
+  }, [attendance, todayStr, todayLocal]);
+
+  // Drivers currently present / on duty
+  const presentDriversCount = useMemo(() => {
+    const presentDriverIds = new Set<string>();
+    
+    // Checked in today with Present or Late status
+    todayAttendance.forEach(a => {
+      if (a.attendanceStatus === 'Present' || a.attendanceStatus === 'Late' || a.status === 'Present' || a.status === 'Late') {
+        presentDriverIds.add(a.driverId || a.employeeName);
+      }
+    });
+
+    // Currently active on duty status across attendance records
+    attendance.forEach(a => {
+      if (a.currentStatus === 'On Duty' || a.currentStatus === 'On Trip' || a.currentStatus === 'On Break') {
+        presentDriverIds.add(a.driverId || a.employeeName);
+      }
+    });
+
+    return presentDriverIds.size;
+  }, [todayAttendance, attendance]);
+
+  const lateCheckInCount = useMemo(() => {
+    const lateDriverIds = new Set<string>();
+    todayAttendance.forEach(a => {
+      if (a.attendanceStatus === 'Late' || a.status === 'Late') {
+        lateDriverIds.add(a.driverId || a.employeeName);
+      }
+    });
+    return lateDriverIds.size;
+  }, [todayAttendance]);
+
+  const checkedOutDriversCount = useMemo(() => {
+    const checkedOutDriverIds = new Set<string>();
+    todayAttendance.forEach(a => {
+      if (a.checkOut || a.checkOutTime || a.currentStatus === 'Off Duty') {
+        checkedOutDriverIds.add(a.driverId || a.employeeName);
+      }
+    });
+    return checkedOutDriverIds.size;
+  }, [todayAttendance]);
+
   const absentDriversCount = Math.max(0, totalDriversCount - presentDriversCount);
 
-  const onDutyCount = attendance.filter(a => a.currentStatus === 'On Duty' || a.currentStatus === 'On Trip').length;
-  const offDutyCount = totalDriversCount - onDutyCount;
-  const onLeaveCount = attendance.filter(a => a.attendanceStatus === 'On Leave').length;
-  const overtimeCount = attendance.filter(a => a.overtime && a.overtime > 0).length;
-  const activeTripsCount = trips.filter(t => t.status !== 'Completed').length;
-  const completedTripsCount = trips.filter(t => t.status === 'Completed').length;
+  const totalOvertimeHours = useMemo(() => {
+    return attendance.reduce((sum, a) => sum + (a.overtime || 0), 0);
+  }, [attendance]);
 
-  // Calculate dynamic progress percentages for circular rings in Attendance
+  const overtimeCount = useMemo(() => {
+    return attendance.filter(a => (a.overtime || 0) > 0).length;
+  }, [attendance]);
+
+  const activeTripsCount = useMemo(() => {
+    return trips.filter(t => t.status !== 'Completed' && t.status !== 'Cancelled').length;
+  }, [trips]);
+
+  const completedTripsCount = useMemo(() => {
+    return trips.filter(t => t.status === 'Completed' || t.status === 'Delivered').length;
+  }, [trips]);
+
+  // Dynamic progress ring percentages
   const presentDriversProgress = useMemo(() => {
-    return totalDriversCount > 0 ? Math.round((presentDriversCount / totalDriversCount) * 100) : 0;
+    return totalDriversCount > 0 ? Math.min(100, Math.round((presentDriversCount / totalDriversCount) * 100)) : 0;
   }, [presentDriversCount, totalDriversCount]);
 
   const absentDriversProgress = useMemo(() => {
-    return totalDriversCount > 0 ? Math.round((absentDriversCount / totalDriversCount) * 100) : 0;
+    return totalDriversCount > 0 ? Math.min(100, Math.round((absentDriversCount / totalDriversCount) * 100)) : 0;
   }, [absentDriversCount, totalDriversCount]);
 
   const lateDriversProgress = useMemo(() => {
-    return presentDriversCount > 0 ? Math.round((lateCheckInCount / presentDriversCount) * 100) : 0;
-  }, [lateCheckInCount, presentDriversCount]);
+    return presentDriversCount > 0
+      ? Math.min(100, Math.round((lateCheckInCount / presentDriversCount) * 100))
+      : (totalDriversCount > 0 ? Math.min(100, Math.round((lateCheckInCount / totalDriversCount) * 100)) : 0);
+  }, [lateCheckInCount, presentDriversCount, totalDriversCount]);
 
   const checkedOutDriversProgress = useMemo(() => {
-    return presentDriversCount > 0 ? Math.round((checkedOutDriversCount / presentDriversCount) * 100) : 0;
-  }, [checkedOutDriversCount, presentDriversCount]);
+    return presentDriversCount > 0
+      ? Math.min(100, Math.round((checkedOutDriversCount / presentDriversCount) * 100))
+      : (totalDriversCount > 0 ? Math.min(100, Math.round((checkedOutDriversCount / totalDriversCount) * 100)) : 0);
+  }, [checkedOutDriversCount, presentDriversCount, totalDriversCount]);
 
   const overtimeProgress = useMemo(() => {
-    return presentDriversCount > 0 ? Math.round((overtimeCount / presentDriversCount) * 100) : 0;
-  }, [overtimeCount, presentDriversCount]);
+    return totalDriversCount > 0 ? Math.min(100, Math.round((overtimeCount / totalDriversCount) * 100)) : 0;
+  }, [overtimeCount, totalDriversCount]);
 
   const activeTransitProgress = useMemo(() => {
-    return totalDriversCount > 0 ? Math.round((activeTripsCount / totalDriversCount) * 100) : 0;
+    return totalDriversCount > 0 ? Math.min(100, Math.round((activeTripsCount / totalDriversCount) * 100)) : 0;
   }, [activeTripsCount, totalDriversCount]);
 
   const completedDeliveryProgress = useMemo(() => {
     const totalRuns = activeTripsCount + completedTripsCount;
-    return totalRuns > 0 ? Math.round((completedTripsCount / totalRuns) * 100) : 0;
+    return totalRuns > 0 ? Math.min(100, Math.round((completedTripsCount / totalRuns) * 100)) : 0;
   }, [activeTripsCount, completedTripsCount]);
 
 
@@ -290,37 +357,129 @@ export const Attendance: React.FC = () => {
     });
   };
 
-  // Recharts Analytics Datasets
-  const trendData = [
-    { day: 'Mon', Present: 5, Late: 1, Absent: 0 },
-    { day: 'Tue', Present: 6, Late: 0, Absent: 0 },
-    { day: 'Wed', Present: 4, Late: 2, Absent: 0 },
-    { day: 'Thu', Present: 5, Late: 1, Absent: 1 },
-    { day: 'Fri', Present: 6, Late: 0, Absent: 0 },
-    { day: 'Sat', Present: 4, Late: 1, Absent: 0 },
-    { day: 'Sun', Present: 2, Late: 0, Absent: 0 },
-  ];
+  // 3. DYNAMIC RECHARTS ANALYTICS DATASETS (Derived directly from real attendance & trips)
+  const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  const workingHoursData = [
-    { day: 'Mon', hours: 7.8 },
-    { day: 'Tue', hours: 8.5 },
-    { day: 'Wed', hours: 9.2 },
-    { day: 'Thu', hours: 8.0 },
-    { day: 'Fri', hours: 9.5 },
-    { day: 'Sat', hours: 7.2 },
-    { day: 'Sun', hours: 6.0 },
-  ];
+  const dynamicTrendData = useMemo(() => {
+    const countsByDay: Record<string, { Present: number; Late: number; Absent: number }> = {
+      Mon: { Present: 0, Late: 0, Absent: 0 },
+      Tue: { Present: 0, Late: 0, Absent: 0 },
+      Wed: { Present: 0, Late: 0, Absent: 0 },
+      Thu: { Present: 0, Late: 0, Absent: 0 },
+      Fri: { Present: 0, Late: 0, Absent: 0 },
+      Sat: { Present: 0, Late: 0, Absent: 0 },
+      Sun: { Present: 0, Late: 0, Absent: 0 }
+    };
 
-  const lateArrivalData = [
-    { name: 'On-Time', value: 82, color: 'var(--color-success)' },
-    { name: 'Late Arrival', value: 14, color: 'var(--color-warning)' },
-    { name: 'Absent Logs', value: 4, color: 'var(--color-danger)' }
-  ];
+    if (attendance && attendance.length > 0) {
+      attendance.forEach(record => {
+        let dayName = 'Mon';
+        if (record.date) {
+          const dateObj = new Date(record.date);
+          if (!isNaN(dateObj.getTime())) {
+            dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+          }
+        }
+        if (!countsByDay[dayName]) countsByDay[dayName] = { Present: 0, Late: 0, Absent: 0 };
 
-  const tripCompletionData = [
-    { name: 'Success Deliveries', value: 92, color: 'var(--color-primary)' },
-    { name: 'Delayed Transit', value: 8, color: 'var(--color-danger)' }
-  ];
+        if (record.attendanceStatus === 'Late' || record.status === 'Late') {
+          countsByDay[dayName].Late += 1;
+        } else if (record.attendanceStatus === 'Absent' || record.status === 'Absent') {
+          countsByDay[dayName].Absent += 1;
+        } else {
+          countsByDay[dayName].Present += 1;
+        }
+      });
+    }
+
+    return daysOfWeek.map(day => ({
+      day,
+      Present: countsByDay[day]?.Present || 0,
+      Late: countsByDay[day]?.Late || 0,
+      Absent: countsByDay[day]?.Absent || 0
+    }));
+  }, [attendance]);
+
+  const dynamicWorkingHoursData = useMemo(() => {
+    const hoursByDay: Record<string, { totalHours: number; count: number }> = {
+      Mon: { totalHours: 0, count: 0 },
+      Tue: { totalHours: 0, count: 0 },
+      Wed: { totalHours: 0, count: 0 },
+      Thu: { totalHours: 0, count: 0 },
+      Fri: { totalHours: 0, count: 0 },
+      Sat: { totalHours: 0, count: 0 },
+      Sun: { totalHours: 0, count: 0 }
+    };
+
+    if (attendance && attendance.length > 0) {
+      attendance.forEach(record => {
+        let dayName = 'Mon';
+        if (record.date) {
+          const dateObj = new Date(record.date);
+          if (!isNaN(dateObj.getTime())) {
+            dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+          }
+        }
+        if (!hoursByDay[dayName]) hoursByDay[dayName] = { totalHours: 0, count: 0 };
+
+        const hrs = record.workingHours || 0;
+        if (hrs > 0) {
+          hoursByDay[dayName].totalHours += hrs;
+          hoursByDay[dayName].count += 1;
+        }
+      });
+    }
+
+    return daysOfWeek.map(day => {
+      const item = hoursByDay[day];
+      const avg = item && item.count > 0 ? parseFloat((item.totalHours / item.count).toFixed(1)) : 0;
+      return { day, hours: avg };
+    });
+  }, [attendance]);
+
+  const dynamicLateArrivalData = useMemo(() => {
+    let onTime = 0;
+    let late = 0;
+    let absent = 0;
+
+    if (attendance && attendance.length > 0) {
+      attendance.forEach(a => {
+        if (a.attendanceStatus === 'Late' || a.status === 'Late') late += 1;
+        else if (a.attendanceStatus === 'Absent' || a.status === 'Absent') absent += 1;
+        else onTime += 1;
+      });
+    } else {
+      onTime = presentDriversCount;
+      late = lateCheckInCount;
+      absent = absentDriversCount;
+    }
+
+    return [
+      { name: 'On-Time', value: onTime, color: 'var(--color-success, #10B981)' },
+      { name: 'Late Arrival', value: late, color: 'var(--color-warning, #F59E0B)' },
+      { name: 'Absent Logs', value: absent, color: 'var(--color-danger, #EF4444)' }
+    ];
+  }, [attendance, presentDriversCount, lateCheckInCount, absentDriversCount]);
+
+  const dynamicTripCompletionData = useMemo(() => {
+    let success = 0;
+    let delayed = 0;
+
+    if (trips && trips.length > 0) {
+      trips.forEach(t => {
+        if (t.status === 'Completed' || t.status === 'Delivered' || t.status === 'POD Uploaded') {
+          success += 1;
+        } else {
+          delayed += 1;
+        }
+      });
+    }
+
+    return [
+      { name: 'Success Deliveries', value: success, color: 'var(--color-primary, #006A6A)' },
+      { name: 'Delayed / In-Transit', value: delayed, color: 'var(--color-danger, #EF4444)' }
+    ];
+  }, [trips]);
 
   return (
     <div className="space-y-8 animate-fade-in text-left">
@@ -396,8 +555,8 @@ export const Attendance: React.FC = () => {
         />
         <MetricCard
           title="Overtime Hours"
-          value={`${overtimeCount} drivers`}
-          change="Shift overtime logs"
+          value={`${totalOvertimeHours.toFixed(totalOvertimeHours % 1 === 0 ? 0 : 1)} hrs`}
+          change={overtimeCount > 0 ? `${overtimeCount} driver${overtimeCount === 1 ? '' : 's'} logged` : 'Shift overtime logs'}
           isPositive={true}
           icon={Clock}
           progress={overtimeProgress}
@@ -578,22 +737,6 @@ export const Attendance: React.FC = () => {
                 </Badge>
               ),
               sortKey: 'attendanceStatus'
-            },
-            {
-              header: 'Action Hub',
-              accessor: (row: AttendanceRecord) => (
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => {
-                      setSelectedRecord(row);
-                      setDrawerOpen(true);
-                    }}
-                    className="p-1 px-2.5 text-[10px] font-bold border border-slate-200 dark:border-slate-800 text-[#545F73] dark:text-[#CBD5E1] hover:bg-[#F8F9FF] dark:hover:bg-slate-800 bg-white dark:bg-[#1E293B] rounded-xl cursor-pointer shadow-sm"
-                  >
-                    <Eye className="h-3 w-3 inline mr-1" /> Inspect Logs
-                  </Button>
-                </div>
-              )
             }
           ]}
           searchKey="employeeName"
@@ -791,64 +934,64 @@ export const Attendance: React.FC = () => {
       </AnimatePresence>
 
       {/* Analytics Section with Recharts */}
-      <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-6">
-        <div className="border-b border-gray-50 pb-3 flex justify-between items-center">
+      <div className="bg-white dark:bg-[#1E293B] rounded-3xl p-6 border border-gray-100 dark:border-[#334155] shadow-sm space-y-6">
+        <div className="border-b border-gray-50 dark:border-[#334155] pb-3 flex justify-between items-center">
           <div>
-            <h3 className="text-sm font-bold text-slate-800">Operational Duty & Shifts Analytics Desk</h3>
-            <p className="text-xs text-slate-400 mt-1">Review historical trends, productivity graphs, and checkout compliance.</p>
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Operational Duty & Shifts Analytics Desk</h3>
+            <p className="text-xs text-slate-400 dark:text-[#94A3B8] mt-1">Review historical trends, productivity graphs, and checkout compliance.</p>
           </div>
-          <Badge variant="info">June - July 2026</Badge>
+          <Badge variant="info">LIVE TELEMETRY LOGS</Badge>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Chart 1: Attendance Trend Area Chart */}
-          <div className="border border-gray-100 rounded-2xl p-4 bg-[#F8F9FF]/50 space-y-2">
-            <h4 className="text-xs font-bold text-slate-700">Weekly Shift Attendance Trend</h4>
+          <div className="border border-gray-100 dark:border-slate-800 rounded-2xl p-4 bg-[#F8F9FF]/50 dark:bg-[#0F172A]/40 space-y-2">
+            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200">Weekly Shift Attendance Trend</h4>
             <div className="h-60 pt-2">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                <AreaChart data={dynamicTrendData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                   <defs>
                     <linearGradient id="areaColorPresent" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-success)" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="var(--color-success)" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="var(--color-success, #10B981)" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="var(--color-success, #10B981)" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-outline-variant)" />
-                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: "var(--color-text-muted)" }} stroke="var(--color-border)" />
-                  <YAxis tick={{ fontSize: 10, fill: "var(--color-text-muted)" }} stroke="var(--color-border)" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-outline-variant, #E2E8F0)" />
+                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: "var(--color-text-muted, #64748B)" }} stroke="var(--color-border, #CBD5E1)" />
+                  <YAxis tick={{ fontSize: 10, fill: "var(--color-text-muted, #64748B)" }} stroke="var(--color-border, #CBD5E1)" />
                   <Tooltip />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: 10 }} />
-                  <Area type="monotone" dataKey="Present" stroke="var(--color-success)" fillOpacity={1} fill="url(#areaColorPresent)" strokeWidth={2} />
-                  <Area type="monotone" dataKey="Late" stroke="var(--color-warning)" fillOpacity={0} strokeWidth={1.5} />
+                  <Area type="monotone" dataKey="Present" stroke="var(--color-success, #10B981)" fillOpacity={1} fill="url(#areaColorPresent)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="Late" stroke="var(--color-warning, #F59E0B)" fillOpacity={0} strokeWidth={1.5} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Chart 2: Weekly Working Hours Line Chart */}
-          <div className="border border-gray-100 dark:border-slate-800 rounded-2xl p-4 bg-[#F8F9FF]/50 dark:bg-[#1E293B]/40 space-y-2">
-            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-100">Average Daily Shift Duty Hours</h4>
+          <div className="border border-gray-100 dark:border-slate-800 rounded-2xl p-4 bg-[#F8F9FF]/50 dark:bg-[#0F172A]/40 space-y-2">
+            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200">Average Daily Shift Duty Hours</h4>
             <div className="h-60 pt-2">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={workingHoursData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-outline-variant)" />
-                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: "var(--color-text-muted)" }} stroke="var(--color-border)" />
-                  <YAxis tick={{ fontSize: 10, fill: "var(--color-text-muted)" }} stroke="var(--color-border)" />
+                <LineChart data={dynamicWorkingHoursData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-outline-variant, #E2E8F0)" />
+                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: "var(--color-text-muted, #64748B)" }} stroke="var(--color-border, #CBD5E1)" />
+                  <YAxis tick={{ fontSize: 10, fill: "var(--color-text-muted, #64748B)" }} stroke="var(--color-border, #CBD5E1)" />
                   <Tooltip formatter={(value) => [`${value} hrs`, 'Duty Hours']} />
-                  <Line type="monotone" dataKey="hours" stroke="var(--color-primary)" strokeWidth={2.5} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="hours" stroke="var(--color-primary, #006A6A)" strokeWidth={2.5} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Chart 3: Donut chart for late check-in reports */}
-          <div className="border border-gray-100 rounded-2xl p-4 bg-[#F8F9FF]/50 space-y-2">
-            <h4 className="text-xs font-bold text-slate-700">Check-In Arrival Compliance Distribution</h4>
+          <div className="border border-gray-100 dark:border-slate-800 rounded-2xl p-4 bg-[#F8F9FF]/50 dark:bg-[#0F172A]/40 space-y-2">
+            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200">Check-In Arrival Compliance Distribution</h4>
             <div className="h-60 flex justify-center items-center">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={lateArrivalData}
+                    data={dynamicLateArrivalData}
                     cx="50%"
                     cy="45%"
                     innerRadius={50}
@@ -856,7 +999,7 @@ export const Attendance: React.FC = () => {
                     paddingAngle={3}
                     dataKey="value"
                   >
-                    {lateArrivalData.map((entry, index) => (
+                    {dynamicLateArrivalData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -868,13 +1011,13 @@ export const Attendance: React.FC = () => {
           </div>
 
           {/* Chart 4: Trip Completion Success rate */}
-          <div className="border border-gray-100 rounded-2xl p-4 bg-[#F8F9FF]/50 space-y-2">
-            <h4 className="text-xs font-bold text-slate-700">Delivery Route SLA Targets</h4>
+          <div className="border border-gray-100 dark:border-slate-800 rounded-2xl p-4 bg-[#F8F9FF]/50 dark:bg-[#0F172A]/40 space-y-2">
+            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200">Delivery Route SLA Targets</h4>
             <div className="h-60 flex justify-center items-center">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={tripCompletionData}
+                    data={dynamicTripCompletionData}
                     cx="50%"
                     cy="45%"
                     innerRadius={50}
@@ -882,7 +1025,7 @@ export const Attendance: React.FC = () => {
                     paddingAngle={3}
                     dataKey="value"
                   >
-                    {tripCompletionData.map((entry, index) => (
+                    {dynamicTripCompletionData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>

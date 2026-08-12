@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   Navigation,
   MapPin,
@@ -7,12 +6,14 @@ import {
   Compass,
   Clock,
   ExternalLink,
-  Zap,
   LocateFixed,
   Layers,
-  Activity,
   Maximize2,
-  RefreshCw
+  ZoomIn,
+  ZoomOut,
+  AlertTriangle,
+  Info,
+  Map as MapIcon
 } from 'lucide-react';
 
 export interface MapLocation {
@@ -43,534 +44,418 @@ interface GoogleDriverMapProps {
 declare global {
   interface Window {
     google?: any;
-    initGoogleMapCallback?: () => void;
+    L?: any;
   }
 }
 
-const DARK_MAP_STYLE = [
-  { elementType: 'geometry', stylers: [{ color: '#0f172a' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#020617' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#94a3b8' }] },
-  {
-    featureType: 'administrative.locality',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#cbd5e1' }]
-  },
-  {
-    featureType: 'poi',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#64748b' }]
-  },
-  {
-    featureType: 'poi.park',
-    elementType: 'geometry',
-    stylers: [{ color: '#1e293b' }]
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry',
-    stylers: [{ color: '#1e293b' }]
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#0f172a' }]
-  },
-  {
-    featureType: 'road',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#94a3b8' }]
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry',
-    stylers: [{ color: '#2563eb' }]
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#1d4ed8' }]
-  },
-  {
-    featureType: 'water',
-    elementType: 'geometry',
-    stylers: [{ color: '#020617' }]
-  },
-  {
-    featureType: 'water',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#38bdf8' }]
-  }
-];
-
 export const GoogleDriverMap: React.FC<GoogleDriverMapProps> = ({
-  driverLocation = { lat: 18.5204, lng: 73.8567, address: 'Pune Central Depot', speed: 45, heading: 90 },
-  pickupLocation = { lat: 18.5204, lng: 73.8567, address: 'Pune Central Logistics Depot' },
-  dropLocation = { lat: 18.7602, lng: 73.8612, address: 'Chakan Industrial Zone' },
-  locationHistory = [],
-  driverName = 'Driver',
+  driverLocation = { lat: 18.5204, lng: 73.8567, speed: 0, heading: 0 },
+  pickupLocation,
+  dropLocation,
+  driverName = 'Driver Operator',
   vehicleNumber = 'MH-12-QW-9874',
   tripNumber = 'TRP-ACTIVE',
-  eta = '25 Mins',
-  distanceRemaining = 18.4,
+  eta = 'Calculated live',
+  distanceRemaining = 0,
   status = 'In Transit',
-  height = '440px',
+  height = '480px',
   showControls = true
 }) => {
-  const mapRef = useRef<HTMLDivElement | null>(null);
-  const [mapInstance, setMapInstance] = useState<any>(null);
-  const [driverMarker, setDriverMarker] = useState<any>(null);
-  const [directionsRenderer, setDirectionsRenderer] = useState<any>(null);
-  const [trafficLayer, setTrafficLayer] = useState<any>(null);
-  const [isTrafficOn, setIsTrafficOn] = useState<boolean>(true);
-  const [mapType, setMapType] = useState<'dark' | 'roadmap' | 'satellite'>('roadmap');
-  const [isGoogleLoaded, setIsGoogleLoaded] = useState<boolean>(false);
-  const [loadError, setLoadError] = useState<boolean>(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [mapEngine, setMapEngine] = useState<'google_embed' | 'interactive'>('google_embed');
+  const [mapType, setMapType] = useState<'roadmap' | 'satellite' | 'dark'>('roadmap');
+
+  // Reverse Geocoded Addresses
+  const [driverAddress, setDriverAddress] = useState<string>(driverLocation?.address || '');
+  const [dropAddress, setDropAddress] = useState<string>(dropLocation?.address || '');
+
+  // Leaflet map instance references
+  const leafletMapRef = useRef<any>(null);
+  const leafletDriverMarkerRef = useRef<any>(null);
+  const leafletRoutePolylineRef = useRef<any>(null);
+  const leafletTileLayerRef = useRef<any>(null);
+
+  // Google Maps instance references
+  const googleMapRef = useRef<any>(null);
 
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-  const isKeyConfigured = Boolean(apiKey && apiKey.trim() !== '' && !apiKey.includes('your_google'));
+  const isGoogleKeyConfigured = Boolean(apiKey && apiKey.trim() !== '' && !apiKey.includes('your_google'));
 
-  // 1. Load Google Maps JS SDK
+  const lat = driverLocation?.lat || 18.5204;
+  const lng = driverLocation?.lng || 73.8567;
+  const speed = driverLocation?.speed || 0;
+  const heading = driverLocation?.heading || 0;
+
+  // ── 1. Dynamic Reverse Geocoding for Driver & Destination ────────────────────
   useEffect(() => {
-    if (!isKeyConfigured) {
-      setIsGoogleLoaded(false);
-      return;
+    let isMounted = true;
+
+    // Driver location address
+    if (lat && lng) {
+      if (driverLocation.address && driverLocation.address.trim() !== '' && !driverLocation.address.includes('Capturing')) {
+        setDriverAddress(driverLocation.address);
+      } else {
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, {
+          headers: { 'User-Agent': 'SmartOpsLogisticsApp/1.0' }
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (isMounted && data?.display_name) {
+              setDriverAddress(data.display_name);
+            }
+          })
+          .catch(() => {
+            if (isMounted) setDriverAddress(`${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`);
+          });
+      }
     }
 
-    if (window.google?.maps) {
-      setIsGoogleLoaded(true);
-      return;
+    // Destination address
+    if (dropLocation?.lat && dropLocation?.lng) {
+      if (dropLocation.address && dropLocation.address.trim() !== '') {
+        setDropAddress(dropLocation.address);
+      } else {
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${dropLocation.lat}&lon=${dropLocation.lng}&format=json`, {
+          headers: { 'User-Agent': 'SmartOpsLogisticsApp/1.0' }
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (isMounted && data?.display_name) {
+              setDropAddress(data.display_name);
+            }
+          })
+          .catch(() => {
+            if (isMounted) setDropAddress(`${dropLocation.lat.toFixed(5)}° N, ${dropLocation.lng.toFixed(5)}° E`);
+          });
+      }
     }
 
-    const scriptId = 'google-maps-js-sdk';
+    return () => {
+      isMounted = false;
+    };
+  }, [lat, lng, driverLocation?.address, dropLocation?.lat, dropLocation?.lng, dropLocation?.address]);
+
+  // ── 2. Load Leaflet JS & CSS dynamically for interactive map engine ─────────────
+  useEffect(() => {
+    if (window.L) return;
+
+    const cssId = 'leaflet-css-sdk';
+    if (!document.getElementById(cssId)) {
+      const link = document.createElement('link');
+      link.id = cssId;
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+
+    const scriptId = 'leaflet-js-sdk';
     let script = document.getElementById(scriptId) as HTMLScriptElement;
-
     if (!script) {
       script = document.createElement('script');
       script.id = scriptId;
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry,drawing`;
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
       script.async = true;
-      script.defer = true;
-
-      script.onload = () => {
-        setIsGoogleLoaded(true);
-      };
-
-      script.onerror = (err) => {
-        console.error('Google Maps JS Script Load Error:', err);
-        setLoadError(true);
-        setIsGoogleLoaded(false);
-      };
-
       document.head.appendChild(script);
-    } else {
-      script.addEventListener('load', () => setIsGoogleLoaded(true));
     }
-  }, [apiKey, isKeyConfigured]);
+  }, []);
 
-  // 2. Initialize Map & Directions API
+  // ── 3. Initialize Leaflet Map when switching to Interactive view ───────────────
   useEffect(() => {
-    if (!isGoogleLoaded || !mapRef.current || !window.google?.maps) return;
+    if (mapEngine !== 'interactive' || !containerRef.current || !(window as any).L) return;
+
+    const L = (window as any).L;
 
     try {
-      const centerLat = driverLocation.lat || pickupLocation.lat;
-      const centerLng = driverLocation.lng || pickupLocation.lng;
-
-      const map = new window.google.maps.Map(mapRef.current, {
-        center: { lat: centerLat, lng: centerLng },
-        zoom: 13,
-        mapTypeId: mapType === 'satellite' ? window.google.maps.MapTypeId.SATELLITE : window.google.maps.MapTypeId.ROADMAP,
-        styles: mapType === 'dark' ? DARK_MAP_STYLE : null,
-        zoomControl: true,
-        streetViewControl: false,
-        fullscreenControl: true,
-        mapTypeControl: false
-      });
-
-      setMapInstance(map);
-
-      // Traffic Layer
-      const traffic = new window.google.maps.TrafficLayer();
-      if (isTrafficOn) {
-        traffic.setMap(map);
-      }
-      setTrafficLayer(traffic);
-
-      // Pickup Marker (Green Dot)
-      new window.google.maps.Marker({
-        position: { lat: pickupLocation.lat, lng: pickupLocation.lng },
-        map,
-        title: `Pickup: ${pickupLocation.address || 'Pickup Point'}`,
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 9,
-          fillColor: '#10B981',
-          fillOpacity: 1,
-          strokeColor: '#FFFFFF',
-          strokeWeight: 3
-        }
-      });
-
-      // Dropoff Marker (Red Dot)
-      new window.google.maps.Marker({
-        position: { lat: dropLocation.lat, lng: dropLocation.lng },
-        map,
-        title: `Destination: ${dropLocation.address || 'Dropoff Point'}`,
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 9,
-          fillColor: '#EF4444',
-          fillOpacity: 1,
-          strokeColor: '#FFFFFF',
-          strokeWeight: 3
-        }
-      });
-
-      const isDriverOffline = status === 'Offline';
-      const markerColor = isDriverOffline ? '#64748B' : '#10B981';
-
-      // Driver Vehicle Marker (Green for Online, Gray for Offline)
-      const dMarker = new window.google.maps.Marker({
-        position: { lat: driverLocation.lat, lng: driverLocation.lng },
-        map,
-        title: `Driver: ${driverName} (${vehicleNumber}) - ${isDriverOffline ? 'Offline' : 'Online'}`,
-        icon: {
-          path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-          scale: 8,
-          fillColor: markerColor,
-          fillOpacity: 1,
-          strokeColor: '#FFFFFF',
-          strokeWeight: 2,
-          rotation: driverLocation.heading || 0
-        }
-      });
-
-      const infoWindow = new window.google.maps.InfoWindow({
-        content: `
-          <div style="color: #0f172a; padding: 6px; font-family: system-ui, -apple-system, sans-serif;">
-            <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #1e293b;">🚚 ${driverName} (${vehicleNumber})</div>
-            <div style="font-size: 12px; color: #475569;">📍 ${driverLocation.address || 'Location'}</div>
-            <div style="margin-top: 8px; font-size: 12px; background: ${isDriverOffline ? '#f1f5f9' : '#e0f2fe'}; color: ${isDriverOffline ? '#475569' : '#0369a1'}; padding: 4px 8px; border-radius: 6px; font-weight: 600; display: inline-block;">
-              ${isDriverOffline ? '⚪ Offline (Last Known Location)' : `🟢 Live Location | ⚡ Speed: ${driverLocation.speed || 0} km/h | ETA: ${eta}`}
-            </div>
-          </div>
-        `
-      });
-
-      dMarker.addListener('click', () => {
-        infoWindow.open(map, dMarker);
-      });
-
-      setDriverMarker(dMarker);
-
-      // Directions Service & Renderer for turn-by-turn road route
-      const renderer = new window.google.maps.DirectionsRenderer({
-        map,
-        suppressMarkers: true,
-        polylineOptions: {
-          strokeColor: '#3B82F6',
-          strokeWeight: 5,
-          strokeOpacity: 0.85
-        }
-      });
-      setDirectionsRenderer(renderer);
-
-      // Calculate driving route on road
-      const directionsService = new window.google.maps.DirectionsService();
-      directionsService.route(
-        {
-          origin: { lat: driverLocation.lat, lng: driverLocation.lng },
-          destination: { lat: dropLocation.lat, lng: dropLocation.lng },
-          travelMode: window.google.maps.TravelMode.DRIVING
-        },
-        (result: any, status: string) => {
-          if (status === 'OK' && result) {
-            renderer.setDirections(result);
-          } else {
-            console.warn('Google Directions API fallback to straight geodesic line:', status);
-            // Fallback Polyline
-            new window.google.maps.Polyline({
-              path: [
-                { lat: pickupLocation.lat, lng: pickupLocation.lng },
-                { lat: driverLocation.lat, lng: driverLocation.lng },
-                { lat: dropLocation.lat, lng: dropLocation.lng }
-              ],
-              geodesic: true,
-              strokeColor: '#3B82F6',
-              strokeOpacity: 0.8,
-              strokeWeight: 5,
-              map
-            });
-          }
-        }
-      );
-
-      // Location History Trail Polyline
-      if (locationHistory && locationHistory.length > 0) {
-        const historyPath = locationHistory.map(pt => ({ lat: pt.lat, lng: pt.lng }));
-        new window.google.maps.Polyline({
-          path: historyPath,
-          geodesic: true,
-          strokeColor: '#10B981',
-          strokeOpacity: 0.95,
-          strokeWeight: 5,
-          map
+      if (!leafletMapRef.current) {
+        const map = L.map(containerRef.current, {
+          center: [lat, lng],
+          zoom: 15,
+          zoomControl: false,
+          attributionControl: false
         });
-      }
 
-      // Fit bounds to cover driver, pickup and dropoff
-      const bounds = new window.google.maps.LatLngBounds();
-      bounds.extend({ lat: pickupLocation.lat, lng: pickupLocation.lng });
-      bounds.extend({ lat: driverLocation.lat, lng: driverLocation.lng });
-      bounds.extend({ lat: dropLocation.lat, lng: dropLocation.lng });
-      if (locationHistory && locationHistory.length > 0) {
-        locationHistory.forEach(pt => bounds.extend({ lat: pt.lat, lng: pt.lng }));
-      }
-      map.fitBounds(bounds, 50);
+        leafletMapRef.current = map;
 
-    } catch (e) {
-      console.error('Error rendering Google Map:', e);
-    }
-  }, [isGoogleLoaded]);
+        const tileUrl = mapType === 'satellite'
+          ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+          : mapType === 'dark'
+          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+          : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
-  // 3. Dynamic Map Style / Type Update
-  useEffect(() => {
-    if (!mapInstance || !window.google?.maps) return;
-    if (mapType === 'satellite') {
-      mapInstance.setMapTypeId(window.google.maps.MapTypeId.SATELLITE);
-      mapInstance.setOptions({ styles: null });
-    } else if (mapType === 'roadmap') {
-      mapInstance.setMapTypeId(window.google.maps.MapTypeId.ROADMAP);
-      mapInstance.setOptions({ styles: null });
-    } else {
-      mapInstance.setMapTypeId(window.google.maps.MapTypeId.ROADMAP);
-      mapInstance.setOptions({ styles: DARK_MAP_STYLE });
-    }
-  }, [mapType, mapInstance]);
+        const tileLayer = L.tileLayer(tileUrl, { maxZoom: 19 }).addTo(map);
+        leafletTileLayerRef.current = tileLayer;
 
-  // 4. Update Driver position smoothly on GPS changes
-  useEffect(() => {
-    if (mapInstance && driverMarker && window.google?.maps) {
-      const newPos = new window.google.maps.LatLng(driverLocation.lat, driverLocation.lng);
-      driverMarker.setPosition(newPos);
-      if (driverLocation.heading !== undefined) {
-        const icon = driverMarker.getIcon();
-        if (icon) {
-          icon.rotation = driverLocation.heading;
-          driverMarker.setIcon(icon);
+        // Custom Driver Vehicle Marker Pin
+        const driverIcon = L.divIcon({
+          className: 'custom-driver-leaflet-pin',
+          html: `
+            <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4));">
+              <div style="background: #006A6A; color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 11px; font-family: monospace; border: 1px solid #14B8A6; white-space: nowrap; margin-bottom: 2px;">
+                ${vehicleNumber}
+              </div>
+              <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #006A6A, #10B981); border: 2px solid white; display: flex; align-items: center; justify-content: center; transform: rotate(${heading}deg); transition: transform 0.4s ease;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+              </div>
+            </div>
+          `,
+          iconSize: [42, 60],
+          iconAnchor: [21, 52]
+        });
+
+        const dMarker = L.marker([lat, lng], { icon: driverIcon }).addTo(map);
+        dMarker.bindPopup(`
+          <div style="font-family: system-ui, sans-serif; padding: 4px; color: #0b1c30;">
+            <div style="font-weight: 800; font-size: 13px;">🚚 ${driverName}</div>
+            <div style="font-size: 11px; color: #006A6A; font-weight: 700; margin-top: 2px;">Vehicle: ${vehicleNumber}</div>
+            <div style="font-size: 11px; color: #475569; margin-top: 4px;">📍 ${driverAddress || 'Current GPS Position'}</div>
+            <div style="font-size: 10px; font-weight: 700; color: #10B981; margin-top: 4px;">⚡ Speed: ${Math.round(speed)} km/h</div>
+          </div>
+        `);
+        leafletDriverMarkerRef.current = dMarker;
+
+        // Destination Marker & Route Polyline
+        if (dropLocation?.lat && dropLocation?.lng) {
+          const dropIcon = L.divIcon({
+            className: 'custom-drop-leaflet-pin',
+            html: `
+              <div style="display: flex; flex-direction: column; align-items: center; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));">
+                <div style="background: #EF4444; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-size: 10px; border: 1px solid white; white-space: nowrap; margin-bottom: 2px;">
+                  Destination
+                </div>
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: #EF4444; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </div>
+              </div>
+            `,
+            iconSize: [30, 45],
+            iconAnchor: [15, 42]
+          });
+
+          const dropMarker = L.marker([dropLocation.lat, dropLocation.lng], { icon: dropIcon }).addTo(map);
+          dropMarker.bindPopup(`<b>Destination:</b> ${dropAddress || dropLocation.address || 'Drop Point'}`);
+
+          // OSRM Driving Route Line
+          fetch(`https://router.project-osrm.org/route/v1/driving/${lng},${lat};${dropLocation.lng},${dropLocation.lat}?overview=full&geometries=geojson`)
+            .then(res => res.json())
+            .then(data => {
+              if (data?.routes?.[0]?.geometry?.coordinates) {
+                const routeCoords = data.routes[0].geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]);
+                if (leafletRoutePolylineRef.current) leafletRoutePolylineRef.current.remove();
+                
+                const polyline = L.polyline(routeCoords, {
+                  color: '#006A6A',
+                  weight: 5,
+                  opacity: 0.85,
+                  lineCap: 'round',
+                  lineJoin: 'round'
+                }).addTo(map);
+                leafletRoutePolylineRef.current = polyline;
+                map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+              }
+            })
+            .catch(() => {
+              const line = L.polyline([[lat, lng], [dropLocation.lat, dropLocation.lng]], {
+                color: '#006A6A',
+                weight: 4,
+                dashArray: '8, 8'
+              }).addTo(map);
+              leafletRoutePolylineRef.current = line;
+            });
+        }
+      } else {
+        const map = leafletMapRef.current;
+        if (leafletDriverMarkerRef.current) {
+          leafletDriverMarkerRef.current.setLatLng([lat, lng]);
+        }
+        if (leafletTileLayerRef.current) {
+          map.removeLayer(leafletTileLayerRef.current);
+          const tileUrl = mapType === 'satellite'
+            ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+            : mapType === 'dark'
+            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+            : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+          leafletTileLayerRef.current = L.tileLayer(tileUrl, { maxZoom: 19 }).addTo(map);
         }
       }
+    } catch (err) {
+      console.warn('Leaflet render error:', err);
     }
-  }, [driverLocation.lat, driverLocation.lng, driverLocation.heading]);
+  }, [mapEngine, lat, lng, heading, mapType, dropLocation?.lat, dropLocation?.lng]);
 
-  // Controls Handlers
-  const handleCenterDriver = () => {
-    if (mapInstance && window.google?.maps) {
-      mapInstance.panTo({ lat: driverLocation.lat, lng: driverLocation.lng });
-      mapInstance.setZoom(15);
-    }
-  };
+  const googleNavUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${encodeURIComponent(dropAddress || (dropLocation ? `${dropLocation.lat},${dropLocation.lng}` : driverAddress || 'Destination'))}&travelmode=driving`;
 
-  const handleFitRouteBounds = () => {
-    if (mapInstance && window.google?.maps) {
-      const bounds = new window.google.maps.LatLngBounds();
-      bounds.extend({ lat: pickupLocation.lat, lng: pickupLocation.lng });
-      bounds.extend({ lat: driverLocation.lat, lng: driverLocation.lng });
-      bounds.extend({ lat: dropLocation.lat, lng: dropLocation.lng });
-      mapInstance.fitBounds(bounds, 50);
-    }
-  };
+  const isOffline = status === 'Offline';
 
-  const handleToggleTraffic = () => {
-    if (!trafficLayer || !mapInstance) return;
-    if (isTrafficOn) {
-      trafficLayer.setMap(null);
-      setIsTrafficOn(false);
-    } else {
-      trafficLayer.setMap(mapInstance);
-      setIsTrafficOn(true);
-    }
-  };
+  // Google Maps Embed URL (Reliable endpoint without Embed API activation restriction)
+  const googleEmbedUrl = `https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
 
-  const googleNavUrl = `https://www.google.com/maps/dir/?api=1&origin=${driverLocation.lat},${driverLocation.lng}&destination=${dropLocation.lat},${dropLocation.lng}&travelmode=driving`;
+  // ── No Driver Geolocation State ─────────────────────────────────────────────
+  if (!lat && !lng) {
+    return (
+      <div style={{ height }} className="w-full rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center p-6 text-center text-white space-y-3">
+        <AlertTriangle className="h-10 w-10 text-amber-400 animate-pulse" />
+        <h4 className="text-base font-bold">GPS Location Unavailable</h4>
+        <p className="text-xs text-slate-400 max-w-sm">No live GPS telemetry stream detected for vehicle <strong className="text-white">{vehicleNumber}</strong>.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/80 shadow-md bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
-      {/* Top Overlay Bar */}
-      <div className="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700/60 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 flex items-center justify-center text-teal-600 dark:text-teal-400">
-            <Truck className="w-5 h-5 animate-pulse" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-sm text-slate-900 dark:text-slate-100">{driverName}</span>
-              <span className="px-2 py-0.5 text-xs font-mono font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 rounded border border-teal-200 dark:border-teal-800">
-                {vehicleNumber}
+    <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl bg-slate-900 text-slate-800 dark:text-white">
+      {/* ── 🎯 EXACT GOOGLE MAPS FLOATING INFO CARD OVERLAY (Top Left - Matching Screenshot) ── */}
+      <div className="absolute top-3 left-3 z-20 max-w-[280px] sm:max-w-sm bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-2xl border border-slate-200 dark:border-slate-700/80 text-slate-900 dark:text-white transition-all text-left">
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-1 min-w-0 flex-1">
+            <h3 className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900 dark:text-white leading-tight truncate">
+              {driverName} ({vehicleNumber})
+            </h3>
+            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-normal line-clamp-2" title={driverAddress}>
+              {driverAddress || 'Locating current street address...'}
+            </p>
+            <div className="flex items-center gap-2 pt-1 text-xs">
+              <span className="font-bold text-amber-500 flex items-center gap-1">
+                4.8 ★ <span className="text-slate-400 font-normal dark:text-slate-500">(206)</span>
+              </span>
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                ⚡ {Math.round(speed)} km/h
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-xs sm:max-w-md font-medium mt-0.5">
-              📍 {driverLocation.address || `${driverLocation.lat.toFixed(4)}, ${driverLocation.lng.toFixed(4)}`}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="text-right hidden sm:block mr-1">
-            <p className="text-xs text-slate-400 font-medium">ETA / Distance</p>
-            <p className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">{eta} ({distanceRemaining} km)</p>
           </div>
 
-          <a
-            href={googleNavUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#006A6A] hover:bg-[#005555] text-white text-xs font-bold shadow-md transition-all active:scale-95"
-          >
-            <Navigation className="w-3.5 h-3.5" />
-            <span>Google Navigation</span>
-            <ExternalLink className="w-3 h-3 text-teal-100" />
-          </a>
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Share / Open External Details */}
+            <a
+              href={googleNavUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-blue-600 dark:text-blue-400 transition-colors shadow-xs"
+              title="Open Google Maps Location"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+
+            {/* Blue Google Maps Directions Button (Matching Screenshot Icon) */}
+            <a
+              href={googleNavUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-9 h-9 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+              title="Get Google Maps Navigation Directions"
+            >
+              <Navigation className="w-5 h-5 fill-white text-white" />
+            </a>
+          </div>
         </div>
       </div>
 
-      {/* Main Google Maps Render Container */}
-      {isKeyConfigured && isGoogleLoaded && !loadError ? (
-        <div ref={mapRef} style={{ height, width: '100%' }} className="z-0" />
-      ) : (
-        /* Fallback Modern Graphic Map when key loading or offline */
-        <div
-          style={{ height }}
-          className="relative w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col items-center justify-center p-6 text-center overflow-hidden text-white"
+      {/* ── Top-Right Engine Switcher Badge ── */}
+      <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
+        <button
+          onClick={() => setMapEngine(mapEngine === 'google_embed' ? 'interactive' : 'google_embed')}
+          className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 shadow-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-1.5 cursor-pointer"
         >
-          {/* Radial Grid Pattern */}
-          <div
-            className="absolute inset-0 opacity-15 pointer-events-none"
-            style={{
-              backgroundImage: 'radial-gradient(#38bdf8 1px, transparent 1px)',
-              backgroundSize: '24px 24px'
-            }}
+          <MapIcon className="w-3.5 h-3.5 text-blue-500" />
+          <span>{mapEngine === 'google_embed' ? 'Google Maps View' : 'Live Route View'}</span>
+        </button>
+      </div>
+
+      {/* ── MAP VIEWPORT ── */}
+      <div className="relative w-full z-0" style={{ height }}>
+        {mapEngine === 'google_embed' ? (
+          /* NATIVE GOOGLE MAPS EMBED VIEW (Matching Screenshot) */
+          <iframe
+            title="Google Maps Current Geolocation Embed"
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            style={{ border: 0, height: '100%', width: '100%' }}
+            src={googleEmbedUrl}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="w-full h-full"
           />
+        ) : (
+          /* INTERACTIVE ROUTE MAP CANVAS */
+          <div ref={containerRef} style={{ height }} className="w-full h-full z-0" />
+        )}
+      </div>
 
-          {/* Interactive Driver Beacon Graphic */}
-          <div className="relative my-4 flex items-center justify-center">
-            <motion.div
-              animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0.2, 0.6] }}
-              transition={{ repeat: Infinity, duration: 2.5 }}
-              className="absolute w-28 h-28 rounded-full bg-teal-500/20 border border-teal-400/40"
-            />
-            <motion.div
-              animate={{ scale: [1, 1.2, 1], opacity: [0.8, 0.4, 0.8] }}
-              transition={{ repeat: Infinity, duration: 1.8 }}
-              className="absolute w-20 h-20 rounded-full bg-emerald-500/20 border border-emerald-400/40"
-            />
-            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#006A6A] to-emerald-500 flex items-center justify-center text-white shadow-xl border border-white/20">
-              <Truck className="w-7 h-7" />
-            </div>
-          </div>
-
-          {/* Location Status Telemetry */}
-          <div className="relative z-10 max-w-lg w-full bg-slate-900/80 backdrop-blur-md p-4 rounded-xl border border-slate-700/60 shadow-xl space-y-3">
-            <div className="flex items-center justify-between text-xs border-b border-slate-800 pb-2">
-              {status === 'Offline' ? (
-                <span className="flex items-center gap-1 text-slate-400 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-slate-400" /> Offline — Last Known Location
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-emerald-400 font-medium">
-                  <Zap className="w-3.5 h-3.5" /> Live Geolocation Active
-                </span>
-              )}
-              <span className="text-slate-400">
-                Speed: <strong className="text-white">{driverLocation.speed || 0} km/h</strong>
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-left text-xs">
-              <div className="p-2 rounded-lg bg-slate-800/60 border border-slate-700/40">
-                <span className="text-slate-400 block mb-0.5">{status === 'Offline' ? 'Last Known Address' : 'Pickup Location'}</span>
-                <span className="text-slate-200 font-medium truncate block">{driverLocation.address || pickupLocation.address}</span>
-              </div>
-              <div className="p-2 rounded-lg bg-slate-800/60 border border-slate-700/40">
-                <span className="text-slate-400 block mb-0.5">Destination</span>
-                <span className="text-slate-200 font-medium truncate block">{dropLocation.address}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-1">
-              <div className="flex items-center gap-1.5 text-xs text-slate-300">
-                <Compass className="w-4 h-4 text-teal-400" />
-                <span>Heading: {driverLocation.heading || 0}°</span>
-              </div>
-              <div className="flex items-center gap-1 text-xs font-semibold text-emerald-400">
-                <Clock className="w-3.5 h-3.5" /> ETA: {eta}
-              </div>
-            </div>
-          </div>
+      {/* ── Right Controls (When in Interactive Mode) ── */}
+      {showControls && mapEngine === 'interactive' && (
+        <div className="absolute top-16 right-3 z-10 flex flex-col gap-1.5">
+          <button
+            onClick={() => {
+              if (leafletMapRef.current) leafletMapRef.current.zoomIn();
+            }}
+            className="w-9 h-9 rounded-xl bg-white/95 dark:bg-slate-900/95 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer"
+            title="Zoom In"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => {
+              if (leafletMapRef.current) leafletMapRef.current.zoomOut();
+            }}
+            className="w-9 h-9 rounded-xl bg-white/95 dark:bg-slate-900/95 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer"
+            title="Zoom Out"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => {
+              if (leafletMapRef.current) leafletMapRef.current.setView([lat, lng], 15);
+            }}
+            className="w-9 h-9 rounded-xl bg-white/95 dark:bg-slate-900/95 hover:bg-slate-100 dark:hover:bg-slate-800 text-[#006A6A] dark:text-[#14B8A6] flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer"
+            title="Recenter Driver"
+          >
+            <LocateFixed className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setMapType(prev => prev === 'roadmap' ? 'satellite' : prev === 'satellite' ? 'dark' : 'roadmap')}
+            className="w-9 h-9 rounded-xl bg-white/95 dark:bg-slate-900/95 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer uppercase text-[10px] font-bold"
+            title="Toggle Map Style"
+          >
+            <Layers className="w-4 h-4 text-[#006A6A] dark:text-[#14B8A6]" />
+          </button>
         </div>
       )}
 
-      {/* Bottom Controls Bar */}
-      {showControls && (
-        <div className="absolute bottom-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 p-2 px-3 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700/60 text-xs shadow-md text-slate-800 dark:text-white">
-          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-medium">
-            <span className={`w-2 h-2 rounded-full ${status === 'Offline' ? 'bg-slate-400' : 'bg-emerald-500 animate-ping'}`} />
-            <span className={`font-bold ${status === 'Offline' ? 'text-slate-500 dark:text-slate-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-              Status: {status === 'Offline' ? 'Offline' : status}
-            </span>
-            <span className="text-slate-300 dark:text-slate-600">|</span>
-            <span className="text-slate-500 dark:text-slate-400">Trip: {tripNumber}</span>
-          </div>
-
-          {isKeyConfigured && isGoogleLoaded && (
-            <div className="flex items-center gap-1.5">
-              {/* Traffic Toggle */}
-              <button
-                onClick={handleToggleTraffic}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors border font-semibold ${
-                  isTrafficOn
-                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                }`}
-                title="Toggle Live Traffic"
-              >
-                <Activity className="w-3.5 h-3.5" />
-                <span>Traffic</span>
-              </button>
-
-              {/* Map Type Selector */}
-              <button
-                onClick={() => setMapType(prev => prev === 'dark' ? 'roadmap' : prev === 'roadmap' ? 'satellite' : 'dark')}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors border border-slate-200 dark:border-slate-700 capitalize font-semibold"
-                title="Change Map Style"
-              >
-                <Layers className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                <span>{mapType}</span>
-              </button>
-
-              {/* Recenter Route */}
-              <button
-                onClick={handleFitRouteBounds}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors border border-slate-200 dark:border-slate-700 font-semibold"
-                title="Fit Route to Screen"
-              >
-                <Maximize2 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                <span className="hidden sm:inline">Fit Route</span>
-              </button>
-
-              {/* Center Driver */}
-              <button
-                onClick={handleCenterDriver}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#006A6A] hover:bg-[#005555] text-white font-bold transition-colors shadow-xs"
-                title="Center Driver Position"
-              >
-                <LocateFixed className="w-3.5 h-3.5" />
-                <span>Center Driver</span>
-              </button>
-            </div>
+      {/* ── Bottom Telemetry Route Status Bar ── */}
+      <div className="absolute bottom-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 p-2.5 px-3.5 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 text-xs shadow-md text-slate-800 dark:text-white">
+        <div className="flex items-center gap-3">
+          <span className={`w-2.5 h-2.5 rounded-full ${isOffline ? 'bg-slate-400' : 'bg-emerald-500 animate-ping'}`} />
+          <span className="font-extrabold text-slate-900 dark:text-slate-100">
+            {isOffline ? '⚪ Driver Offline' : `🟢 ${status || 'Live Telemetry Active'}`}
+          </span>
+          <span className="text-slate-300 dark:text-slate-700">|</span>
+          <span className="font-semibold text-slate-600 dark:text-slate-300">
+            Speed: <strong className="text-emerald-600 dark:text-emerald-400 font-extrabold">{Math.round(speed)} km/h</strong>
+          </span>
+          {heading !== undefined && (
+            <>
+              <span className="text-slate-300 dark:text-slate-700">|</span>
+              <span className="font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                <Compass className="w-3.5 h-3.5 text-[#006A6A] dark:text-[#14B8A6]" /> {heading}°
+              </span>
+            </>
           )}
         </div>
-      )}
+
+        <div className="flex items-center gap-3">
+          {distanceRemaining > 0 && (
+            <span className="font-semibold text-slate-600 dark:text-slate-300">
+              Remaining: <strong className="text-slate-900 dark:text-white font-extrabold">{distanceRemaining} km</strong>
+            </span>
+          )}
+          {eta && (
+            <span className="font-extrabold text-[#006A6A] dark:text-[#14B8A6] flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5" /> ETA: {eta}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
