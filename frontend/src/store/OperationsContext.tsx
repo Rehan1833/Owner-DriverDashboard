@@ -102,8 +102,8 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [inventory, setInventory] = useState<InventoryItem[]>(mockInventory);
-  const [payroll, setPayroll] = useState<PayrollRecord[]>(mockPayroll);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [payroll, setPayroll] = useState<PayrollRecord[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
@@ -126,11 +126,11 @@ export const OperationsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         api.trips.getAll()
       ]);
 
-      if (invData.status === 'fulfilled') setInventory(invData.value && invData.value.length > 0 ? invData.value : mockInventory);
-      if (attData.status === 'fulfilled') setAttendance(attData.value);
-      if (salData.status === 'fulfilled') setPayroll(salData.value && salData.value.length > 0 ? salData.value : mockPayroll);
-      if (fltData.status === 'fulfilled') setVehicles(fltData.value);
-      if (trpData.status === 'fulfilled') setTrips(trpData.value);
+      if (invData.status === 'fulfilled') setInventory(invData.value || []);
+      if (attData.status === 'fulfilled') setAttendance(attData.value || []);
+      if (salData.status === 'fulfilled') setPayroll(salData.value || []);
+      if (fltData.status === 'fulfilled') setVehicles(fltData.value || []);
+      if (trpData.status === 'fulfilled') setTrips(trpData.value || []);
 
       if (user.role === 'Owner') {
         try {

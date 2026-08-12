@@ -383,13 +383,7 @@ const seedDefaultAccounts = async () => {
       await owner.save();
     }
 
-    // 4. Ensure company data (Vehicles, Trips, Inventory, Drivers, Attendance, Salaries, PODs) exists for all Owner accounts
-    const allOwners = await User.find({ role: 'Owner', companyId: { $ne: null } });
-    for (const ow of allOwners) {
-      if (ow.companyId) {
-        await seedCompanyData(ow.companyId, String(ow._id), ow.email, ow.companyName || 'SmartOps Logistics');
-      }
-    }
+    // 4. Ensure company data auto-seeding is disabled
   } catch (err: any) {
     console.error('Error seeding default accounts:', err.message);
   }
@@ -406,7 +400,6 @@ export const connectDB = async () => {
     });
     console.log(`MongoDB Connected successfully: ${conn.connection.host}`);
     await seedDefaultAccounts();
-    await seedDefaultInventory();
 
     // Drop legacy stale indexes
     try {
@@ -439,7 +432,6 @@ export const connectDB = async () => {
       });
       console.log(`[DB] Connected to local MongoDB: ${conn.connection.host}`);
       await seedDefaultAccounts();
-      await seedDefaultInventory();
       return;
     } catch (localErr: any) {
       console.warn(`[DB] Local MongoDB also unavailable: ${localErr.message}`);

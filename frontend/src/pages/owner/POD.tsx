@@ -10,13 +10,26 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText, Search, SlidersHorizontal, CheckCircle2, AlertOctagon, XCircle,
   Eye, Download, FileSpreadsheet, User, Truck, MapPin, Clock, Calendar,
-  ArrowRight, ShieldCheck, X, Clipboard, ArrowDown
+  ArrowRight, ShieldCheck, X, Clipboard, ArrowDown, Plus, Upload
 } from 'lucide-react';
 
 export const POD: React.FC = () => {
   const { user, triggerNotification } = useOperations();
   const [pods, setPods] = useState<PODRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Upload Modal State
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadForm, setUploadForm] = useState({
+    orderNumber: '',
+    vehicleNumber: '',
+    customerName: '',
+    customerAddress: '',
+    driverName: '',
+    imageUrl: '',
+    remarks: ''
+  });
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -216,8 +229,39 @@ export const POD: React.FC = () => {
   const rejectedCount = pods.filter(p => p.status === 'Rejected').length;
   const todayCount = pods.filter(p => {
     const todayStr = new Date().toISOString().split('T')[0];
-    return p.createdAt.startsWith(todayStr);
+    return (p.createdAt || '').startsWith(todayStr);
   }).length;
+
+  // Action: Upload new POD (Owner / Dispatcher)
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadForm.orderNumber || !uploadForm.vehicleNumber || !uploadForm.customerName || !uploadForm.customerAddress) {
+      triggerNotification('System Alert', 'Validation Error', 'Please fill in all required fields.', 'Warning');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const defaultImage = uploadForm.imageUrl.trim() || 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&auto=format&fit=crop';
+      await api.pod.upload({
+        orderNumber: uploadForm.orderNumber.trim(),
+        vehicleNumber: uploadForm.vehicleNumber.trim(),
+        customerName: uploadForm.customerName.trim(),
+        customerAddress: uploadForm.customerAddress.trim(),
+        imageUrl: defaultImage,
+        remarks: uploadForm.remarks.trim() || 'Manual POD logged via Owner Console',
+        ...(uploadForm.driverName.trim() ? { driverName: uploadForm.driverName.trim() } : {})
+      });
+      triggerNotification('System Alert', 'Log Registered', `POD for ${uploadForm.orderNumber} successfully created.`, 'Info');
+      setShowUploadModal(false);
+      setUploadForm({ orderNumber: '', vehicleNumber: '', customerName: '', customerAddress: '', driverName: '', imageUrl: '', remarks: '' });
+      fetchPods();
+    } catch (err: any) {
+      triggerNotification('System Alert', 'Error', err.response?.data?.message || err.message || 'Failed to upload POD.', 'Error');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <div className="space-y-8 pb-12 text-left animate-fade-in">
@@ -229,6 +273,9 @@ export const POD: React.FC = () => {
           <p className="text-[13px] text-[#6D7A79] dark:text-[#94A3B8] mt-1.5 font-medium">Audit incoming cargo receipts, verify customer signatures, and validate GPS drops.</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="primary" size="sm" onClick={() => setShowUploadModal(true)} className="flex items-center gap-1.5 bg-[#006A6A] hover:bg-[#005555] text-white shadow font-bold text-xs">
+            <Plus className="h-4 w-4" /> Upload POD
+          </Button>
           <Button variant="secondary" size="sm" onClick={handleExportCSV} className="flex items-center gap-1.5 border border-[#E5EEFF] dark:border-[#334155] bg-white shadow-sm font-bold text-xs text-[#545F73]">
             <FileSpreadsheet className="h-4 w-4" /> Export CSV
           </Button>
@@ -785,6 +832,141 @@ export const POD: React.FC = () => {
               </div>
             </motion.div>
           </motion.div>,
+          document.body
+        )}
+      </AnimatePresence>
+
+      {/* UPLOAD POD MODAL */}
+      <AnimatePresence>
+        {showUploadModal && createPortal(
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden text-left"
+            >
+              <div className="px-6 py-4 border-b border-[#E5EEFF] dark:border-slate-800 flex items-center justify-between bg-[#F8F9FF] dark:bg-[#0F172A]">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-[#006A6A]/10 text-[#006A6A] rounded-xl">
+                    <Upload className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-[#0B1C30] dark:text-white leading-none">Upload Proof of Delivery</h3>
+                    <p className="text-xs text-slate-400 mt-1 font-medium">Log a new delivery receipt into the audit system</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowUploadModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUploadSubmit} className="p-6 space-y-4 text-xs font-bold">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-slate-500 uppercase tracking-wider block">Order Number *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. ORD-90182"
+                      value={uploadForm.orderNumber}
+                      onChange={e => setUploadForm({ ...uploadForm, orderNumber: e.target.value })}
+                      className="w-full px-3 h-10 border border-[#E5EEFF] dark:border-slate-700 rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-800 dark:text-slate-100 font-mono focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-slate-500 uppercase tracking-wider block">Vehicle Plate *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. MH-12-PQ-4589"
+                      value={uploadForm.vehicleNumber}
+                      onChange={e => setUploadForm({ ...uploadForm, vehicleNumber: e.target.value })}
+                      className="w-full px-3 h-10 border border-[#E5EEFF] dark:border-slate-700 rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-800 dark:text-slate-100 font-mono focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-500 uppercase tracking-wider block">Customer Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. AutoCorp India Ltd."
+                    value={uploadForm.customerName}
+                    onChange={e => setUploadForm({ ...uploadForm, customerName: e.target.value })}
+                    className="w-full px-3 h-10 border border-[#E5EEFF] dark:border-slate-700 rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-500 uppercase tracking-wider block">Destination Address *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Bhiwandi Logistics Hub, Gate 4"
+                    value={uploadForm.customerAddress}
+                    onChange={e => setUploadForm({ ...uploadForm, customerAddress: e.target.value })}
+                    className="w-full px-3 h-10 border border-[#E5EEFF] dark:border-slate-700 rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-slate-500 uppercase tracking-wider block">Assigned Driver (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Driver Name"
+                      value={uploadForm.driverName}
+                      onChange={e => setUploadForm({ ...uploadForm, driverName: e.target.value })}
+                      className="w-full px-3 h-10 border border-[#E5EEFF] dark:border-slate-700 rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-slate-500 uppercase tracking-wider block">Cargo Photo URL (Optional)</label>
+                    <input
+                      type="url"
+                      placeholder="https://..."
+                      value={uploadForm.imageUrl}
+                      onChange={e => setUploadForm({ ...uploadForm, imageUrl: e.target.value })}
+                      className="w-full px-3 h-10 border border-[#E5EEFF] dark:border-slate-700 rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-500 uppercase tracking-wider block">Remarks / Delivery Notes</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Delivery cargo verified and stamped at receiving dock."
+                    value={uploadForm.remarks}
+                    onChange={e => setUploadForm({ ...uploadForm, remarks: e.target.value })}
+                    className="w-full p-3 border border-[#E5EEFF] dark:border-slate-700 rounded-xl bg-[#F8F9FF] dark:bg-[#0F172A] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#006A6A]/20 resize-none"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowUploadModal(false)}
+                    className="border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold h-10 px-4 rounded-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isUploading}
+                    className="bg-[#006A6A] hover:bg-[#005555] text-white font-bold text-xs h-10 px-5 rounded-xl border-0 shadow disabled:opacity-50"
+                  >
+                    {isUploading ? 'Uploading...' : 'Save POD Log'}
+                  </Button>
+                </div>
+              </form>
+            </motion.div>
+          </div>,
           document.body
         )}
       </AnimatePresence>

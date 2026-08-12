@@ -5,6 +5,7 @@ import User from '../models/User';
 import { emitPodUpdate } from '../sockets/telemetrySocket';
 
 // Create POD (Driver)
+// Create POD (Driver or Owner)
 export const createPOD = async (req: AuthRequest, res: Response) => {
   try {
     const {
@@ -17,7 +18,9 @@ export const createPOD = async (req: AuthRequest, res: Response) => {
       signatureUrl,
       remarks,
       latitude,
-      longitude
+      longitude,
+      driverName: customDriverName,
+      driverId: customDriverId
     } = req.body;
 
     const primaryImage = imageUrl || (Array.isArray(images) && images.length > 0 ? images[0] : null);
@@ -26,15 +29,10 @@ export const createPOD = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'Missing required delivery details.' });
     }
 
-    // Role-based auth verification
-    if (req.userRole !== 'Driver') {
-      return res.status(403).json({ message: 'Only active drivers can upload POD records.' });
-    }
-
-    // Fetch driver details
-    const driverUser = await User.findById(req.userId);
-    if (!driverUser) {
-      return res.status(404).json({ message: 'Driver profile not found.' });
+    // Fetch user profile
+    const currentUser = await User.findById(req.userId);
+    if (!currentUser) {
+      return res.status(404).json({ message: 'User profile not found.' });
     }
 
     // Prevent duplicate upload
@@ -47,10 +45,14 @@ export const createPOD = async (req: AuthRequest, res: Response) => {
     const count = await POD.countDocuments();
     const podId = `POD-2026-${String(count + 8801).padStart(4, '0')}`;
 
+    const assignedDriverName = customDriverName || currentUser.fullName || 'Dispatcher/Owner';
+    const assignedDriverId = customDriverId || req.userId;
+    const companyId = currentUser.companyId || req.companyId;
+
     const newPOD = new POD({
       podId,
-      driverId: req.userId,
-      driverName: driverUser.fullName,
+      driverId: assignedDriverId,
+      driverName: assignedDriverName,
       vehicleNumber,
       orderNumber,
       customerName,
@@ -62,7 +64,8 @@ export const createPOD = async (req: AuthRequest, res: Response) => {
       latitude,
       longitude,
       status: 'Pending',
-      companyId: driverUser.companyId || req.companyId,
+      companyId,
+      ownerId: req.userId
     });
 
     await newPOD.save();
@@ -76,7 +79,7 @@ export const createPOD = async (req: AuthRequest, res: Response) => {
         $or: [
           { invoiceNumber: orderNumber },
           { tripNumber: orderNumber },
-          { driverId: req.userId, status: { $nin: ['Completed', 'Cancelled'] } }
+          { driverId: assignedDriverId, status: { $nin: ['Completed', 'Cancelled'] } }
         ]
       });
 
@@ -92,7 +95,7 @@ export const createPOD = async (req: AuthRequest, res: Response) => {
 
         await TripEventModel.create({
           tripId: matchingTrip._id,
-          driverId: req.userId,
+          driverId: assignedDriverId,
           companyId: newPOD.companyId,
           eventType: 'pod-uploaded',
           title: 'POD Uploaded',
@@ -125,10 +128,23 @@ export const getPODs = async (req: AuthRequest, res: Response) => {
       filter.driverId = req.userId;
     } else {
       const companyId = req.companyId;
-      if (!companyId) {
-        return res.status(403).json({ message: 'Access denied: Company context required.' });
+      const companyUsers = companyId
+        ? await User.find({ $or: [{ companyId }, { _id: req.userId }] }).select('_id')
+        : await User.find({ _id: req.userId }).select('_id');
+      const userIds = companyUsers.map(u => String(u._id));
+
+      if (companyId) {
+        filter.$or = [
+          { companyId },
+          { driverId: { $in: [req.userId, ...userIds] } },
+          { ownerId: req.userId }
+        ];
+      } else {
+        filter.$or = [
+          { driverId: { $in: [req.userId, ...userIds] } },
+          { ownerId: req.userId }
+        ];
       }
-      filter.companyId = companyId;
     }
 
     // Query filters

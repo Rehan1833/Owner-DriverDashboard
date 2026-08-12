@@ -395,9 +395,6 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
-    if (newUser.companyId) {
-      await seedCompanyData(newUser.companyId, String(newUser._id), newUser.email, newUser.companyName || undefined);
-    }
 
     const token = jwt.sign(
       { id: newUser._id, role: newUser.role, companyId: newCompanyId || null },
@@ -549,9 +546,6 @@ export const login = async (req: Request, res: Response) => {
       }
     }
 
-    if (user.companyId) {
-      await seedCompanyData(user.companyId, String(user._id), user.email, user.companyName || undefined);
-    }
 
     const token = jwt.sign(
       {

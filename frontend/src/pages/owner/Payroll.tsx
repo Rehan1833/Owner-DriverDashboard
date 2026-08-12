@@ -30,10 +30,6 @@ export const Payroll: React.FC = () => {
           if (p.employee) namesSet.add(p.employee);
         });
 
-        if (namesSet.size === 0) {
-          ['Harpreet Singh', 'Rajesh Kumar', 'Vikram Sharma', 'Amit Patel', 'Suresh Verma'].forEach(n => namesSet.add(n));
-        }
-
         setEmployeeList(Array.from(namesSet));
       } catch (err) {
         console.warn('Could not fetch drivers list:', err);
@@ -41,9 +37,6 @@ export const Payroll: React.FC = () => {
         payroll.forEach(p => {
           if (p.employee) namesSet.add(p.employee);
         });
-        if (namesSet.size === 0) {
-          ['Harpreet Singh', 'Rajesh Kumar', 'Vikram Sharma', 'Amit Patel', 'Suresh Verma'].forEach(n => namesSet.add(n));
-        }
         setEmployeeList(Array.from(namesSet));
       }
     };
