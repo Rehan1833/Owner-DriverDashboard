@@ -481,27 +481,14 @@ export const OwnerTrips: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Table Container matching Screenshot */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E5EEFF] dark:border-[#334155] shadow-sm p-4 space-y-3">
-        {/* Export CSV Bar */}
-        <div className="flex justify-end">
-          <button
-            onClick={handleExportCSV}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors shadow-2xs"
-          >
-            <Download className="w-3.5 h-3.5 text-slate-500" /> Export CSV
-          </button>
+      {/* Main Table */}
+      {filteredTrips.length === 0 ? (
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E5EEFF] dark:border-[#334155] shadow-sm py-16 text-center text-[#6D7A79] dark:text-[#94A3B8] font-medium text-sm">
+          No matching records found.
         </div>
-
-        {/* Table or Empty State */}
-        {filteredTrips.length === 0 ? (
-          <div className="py-16 text-center text-[#6D7A79] dark:text-[#94A3B8] font-medium text-sm">
-            No matching records found.
-          </div>
-        ) : (
-          <Table data={filteredTrips} columns={columns} />
-        )}
-      </div>
+      ) : (
+        <Table data={filteredTrips} columns={columns} onExport={handleExportCSV} />
+      )}
 
       {/* Create Trip Modal */}
       <CreateTripModal

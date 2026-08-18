@@ -17,6 +17,8 @@ interface TableProps<T> {
   searchKey?: keyof T;
   filterComponent?: (data: T[]) => T[];
   exportFileName?: string;
+  hideExport?: boolean;
+  onExport?: () => void;
 }
 
 export function Table<T extends { id: string | number }>({
@@ -25,7 +27,9 @@ export function Table<T extends { id: string | number }>({
   searchPlaceholder = 'Search records...',
   searchKey,
   filterComponent,
-  exportFileName = 'export-data'
+  exportFileName = 'export-data',
+  hideExport = false,
+  onExport
 }: TableProps<T>) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<keyof T | null>(null);
@@ -97,8 +101,12 @@ export function Table<T extends { id: string | number }>({
     }
   };
 
-  // Mock Export Functionality
+  // Export Functionality
   const handleExport = () => {
+    if (onExport) {
+      onExport();
+      return;
+    }
     if (sortedData.length === 0) return;
     
     const headers = columns.map(c => c.header);
@@ -127,31 +135,35 @@ export function Table<T extends { id: string | number }>({
   return (
     <div className="flex flex-col h-full bg-white dark:bg-[#1E293B] border border-[#E5EEFF] dark:border-[#334155] rounded-[18px] shadow-sm overflow-hidden animate-fade-in">
       {/* Table Header Controls */}
-      <div className="flex flex-col sm:flex-row items-center justify-between p-6 gap-4 border-b border-[#E5EEFF] dark:border-[#334155] bg-transparent">
-        {searchKey ? (
-          <div className="relative w-full sm:max-w-[240px]">
-            <Search className="search-icon-glow absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none z-10" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder={searchPlaceholder}
-              className="navbar-search-input w-full pl-9 pr-3 h-9 text-xs border border-[#E5E7EB] dark:border-[#334155] rounded-full bg-slate-50/50 dark:bg-slate-800/40 text-[#111827] dark:text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#006A6A] focus:border-[#006A6A] transition-all font-medium"
-            />
-          </div>
-        ) : (
-          <div />
-        )}
-        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-          <Button variant="secondary" size="sm" onClick={handleExport} className="flex items-center gap-2 border border-[#E5EEFF] dark:border-[#334155] shadow-sm hover:shadow text-[#545F73] dark:text-[#CBD5E1]">
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
+      {(!hideExport || searchKey) && (
+        <div className="flex flex-col sm:flex-row items-center justify-between p-6 gap-4 border-b border-[#E5EEFF] dark:border-[#334155] bg-transparent">
+          {searchKey ? (
+            <div className="relative w-full sm:max-w-[240px]">
+              <Search className="search-icon-glow absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none z-10" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder={searchPlaceholder}
+                className="navbar-search-input w-full pl-9 pr-3 h-9 text-xs border border-[#E5E7EB] dark:border-[#334155] rounded-full bg-slate-50/50 dark:bg-slate-800/40 text-[#111827] dark:text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#006A6A] focus:border-[#006A6A] transition-all font-medium"
+              />
+            </div>
+          ) : (
+            <div />
+          )}
+          {!hideExport && (
+            <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+              <Button variant="secondary" size="sm" onClick={handleExport} className="flex items-center gap-2 border border-[#E5EEFF] dark:border-[#334155] shadow-sm hover:shadow text-[#545F73] dark:text-[#CBD5E1]">
+                <Download className="h-4 w-4" />
+                Export CSV
+              </Button>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* Main Table */}
       <div className="overflow-x-auto flex-1 min-h-[300px]">
