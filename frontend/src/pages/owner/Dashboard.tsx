@@ -252,7 +252,7 @@ export const Dashboard: React.FC = () => {
     // Fallback if drivers array is loading
     const names = new Set<string>();
     safeVehicles.forEach(v => { if (v?.driver) names.add(v.driver); });
-    safeAttendance.forEach(a => { if (a?.employeeName || a?.driverId) names.add(a.employeeName || a.driverId); });
+    safeAttendance.forEach(a => { const name = a?.employeeName || a?.driverId; if (name) names.add(name); });
     return Math.max(names.size, 1);
   }, [safeDrivers, safeVehicles, safeAttendance]);
 
@@ -269,7 +269,7 @@ export const Dashboard: React.FC = () => {
       safeAttendance.forEach(a => {
         const key = a.driverId || a.employeeName;
         if (key && !latestPerDriver.has(key)) {
-          latestPerDriver.set(key, a.attendanceStatus);
+          if (a.attendanceStatus) latestPerDriver.set(key, a.attendanceStatus);
         }
       });
       active = Array.from(latestPerDriver.values()).filter(status => status === 'Present' || status === 'Late').length;
